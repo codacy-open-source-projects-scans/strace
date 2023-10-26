@@ -47,6 +47,8 @@
 
 
 # if XLAT_RAW
+#  define XLAT_name raw
+
 #  define XLAT_KNOWN(val_, str_) STRINGIFY_VAL(val_)
 #  define XLAT_UNKNOWN(val_, dflt_) STRINGIFY_VAL(val_)
 
@@ -69,6 +71,8 @@
 #  define NRAW(...)
 #  define NVERB(...) __VA_ARGS__
 # elif XLAT_VERBOSE
+#  define XLAT_name verbose
+
 #  define XLAT_KNOWN(val_, str_) STRINGIFY_VAL(val_) " /* " str_ " */"
 #  define XLAT_UNKNOWN(val_, dflt_) STRINGIFY_VAL(val_) " /* " dflt_ " */"
 
@@ -91,6 +95,8 @@
 #  define NRAW(...) __VA_ARGS__
 #  define NVERB(...)
 # else /* !XLAT_RAW && !XLAT_VERBOSE */
+#  define XLAT_name abbrev
+
 #  define XLAT_KNOWN(val_, str_) str_
 #  define XLAT_UNKNOWN(val_, dflt_) STRINGIFY_VAL(val_) " /* " dflt_ " */"
 
@@ -490,5 +496,14 @@ f8ill_ptr_to_kulong(const void *const ptr)
 	} while (0)
 
 # define NLMSG_ATTR(nlh, hdrlen) ((void *)(nlh) + NLMSG_SPACE(hdrlen))
+
+#define RVAL_E2BIG " = -1 E2BIG (%m)\n"
+#define RVAL_EAGAIN " = -1 EAGAIN (%m)\n"
+#define RVAL_EBADF " = -1 EBADF (%m)\n"
+#define RVAL_EFAULT " = -1 EFAULT (%m)\n"
+#define RVAL_EINVAL " = -1 EINVAL (%m)\n"
+#define RVAL_ENOENT " = -1 ENOENT (%m)\n"
+#define RVAL_ENOSYS " = -1 ENOSYS (%m)\n"
+#define RVAL_EOVERFLOW " = -1 EOVERFLOW (%m)\n"
 
 #endif /* !STRACE_TESTS_H */

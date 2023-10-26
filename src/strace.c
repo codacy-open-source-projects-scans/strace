@@ -29,6 +29,7 @@
 #include <sys/prctl.h>
 
 #include "kill_save_errno.h"
+#include "exitkill.h"
 #include "filter_seccomp.h"
 #include "largefile_wrappers.h"
 #include "mmap_cache.h"
@@ -69,8 +70,8 @@ const unsigned int syscall_trap_sig = SIGTRAP | 0x80;
 cflag_t cflag = CFLAG_NONE;
 bool followfork;
 bool output_separately;
-unsigned int ptrace_setoptions = PTRACE_O_TRACESYSGOOD | PTRACE_O_TRACEEXEC
-				 | PTRACE_O_TRACEEXIT;
+static unsigned int ptrace_setoptions =
+	PTRACE_O_TRACESYSGOOD | PTRACE_O_TRACEEXEC | PTRACE_O_TRACEEXIT;
 static const struct xlat_data xflag_str[] = {
 	{ HEXSTR_NONE,			"none" },
 	{ HEXSTR_NON_ASCII_CHARS,	"non-ascii-chars" },
@@ -326,6 +327,7 @@ Tracing:\n\
      3, never:      fatal signals are always blocked (default if '-o FILE PROG')\n\
      4, never_tstp: fatal signals and SIGTSTP (^Z) are always blocked\n\
                     (useful to make 'strace -o FILE PROG' not stop on ^Z)\n\
+  --kill-on-exit kill all tracees if strace is killed\n\
 \n\
 Filtering:\n\
   -e trace=[!][?]{{SYSCALL|GROUP|all|/REGEX}[@64|@32|@x32]|none},\n\
@@ -1431,6 +1433,8 @@ startup_attach(void)
 						   " session");
 			break;
 		}
+
+		debug_msg("new tracer pid is %d", strace_tracer_pid);
 	}
 
 	for (unsigned int tcbi = 0; tcbi < tcbtabsize; ++tcbi) {
@@ -1633,17 +1637,7 @@ startup_child(char **argv, char **env)
 	}
 	if (strchr(filename, '/')) {
 		strcpy(pathname, filename);
-	}
-#ifdef USE_DEBUGGING_EXEC
-	/*
-	 * Debuggers customarily check the current directory
-	 * first regardless of the path but doing that gives
-	 * security geeks a panic attack.
-	 */
-	else if (stat_file(filename, &statbuf) == 0)
-		strcpy(pathname, filename);
-#endif /* USE_DEBUGGING_EXEC */
-	else {
+	} else {
 		const char *path;
 		size_t m, n, len;
 
@@ -1680,9 +1674,10 @@ startup_child(char **argv, char **env)
 		if (!path || !*path)
 			pathname[0] = '\0';
 	}
-	if (stat_file(pathname, &statbuf) < 0) {
-		perror_msg_and_die("Can't stat '%s'", filename);
-	}
+	if (filename && !*pathname)
+		error_msg_and_die("Cannot find executable '%s'", filename);
+	if (stat_file(pathname, &statbuf) < 0)
+		perror_msg_and_die("Cannot stat '%s'", pathname);
 
 	params_for_tracee.fd_to_close = (shared_log != stderr) ? fileno(shared_log) : -1;
 	params_for_tracee.run_euid = (statbuf.st_mode & S_ISUID) ? statbuf.st_uid : run_uid;
@@ -2216,6 +2211,7 @@ init(int argc, char *argv[])
 	int tflag_short = 0;
 	bool columns_set = false;
 	bool sortby_set = false;
+	bool opt_kill_on_exit = false;
 
 	/*
 	 * We can initialise global_path_set only after tracing backend
@@ -2276,6 +2272,7 @@ init(int argc, char *argv[])
 		GETOPT_DAEMONIZE,
 		GETOPT_HEX_STR,
 		GETOPT_FOLLOWFORKS,
+		GETOPT_KILL_ON_EXIT,
 		GETOPT_OUTPUT_SEPARATELY,
 		GETOPT_PIDNS_TRANSLATION,
 		GETOPT_SYSCALL_LIMIT,
@@ -2317,6 +2314,7 @@ init(int argc, char *argv[])
 		{ "help",		no_argument,	   0, 'h' },
 		{ "instruction-pointer", no_argument,      0, 'i' },
 		{ "interruptible",	required_argument, 0, 'I' },
+		{ "kill-on-exit",	no_argument,	   0, GETOPT_KILL_ON_EXIT },
 		{ "stack-traces",	no_argument,	   0, 'k' },
 		{ "syscall-limit",	required_argument, 0, GETOPT_SYSCALL_LIMIT },
 		{ "syscall-number",	no_argument,	   0, 'n' },
@@ -2461,6 +2459,9 @@ init(int argc, char *argv[])
 					  "option) are not supported by this "
 					  "build of strace");
 #endif
+			break;
+		case GETOPT_KILL_ON_EXIT:
+			opt_kill_on_exit = true;
 			break;
 		case 'n':
 			nflag = 1;
@@ -2717,18 +2718,6 @@ init(int argc, char *argv[])
 		}
 	}
 
-	if (seccomp_filtering && detach_on_execve) {
-		error_msg("--seccomp-bpf is not enabled because"
-			  " it is not compatible with -b");
-		seccomp_filtering = false;
-	}
-
-	if (seccomp_filtering && syscall_limit > 0) {
-		error_msg("--seccomp-bpf is not enabled because"
-			  " it is not compatible with --syscall-limit");
-		seccomp_filtering = false;
-	}
-
 	if (followfork_short) {
 		if (followfork) {
 			error_msg_and_die("-f and --follow-forks cannot"
@@ -2742,15 +2731,29 @@ init(int argc, char *argv[])
 		}
 	}
 
-	if (seccomp_filtering) {
-		if (nprocs && (!argc || debug_flag))
-			error_msg("--seccomp-bpf is not enabled for processes"
-				  " attached with -p");
-		if (!followfork) {
-			error_msg("--seccomp-bpf cannot be used without "
-				  "-f/--follow-forks, disabling");
+	if (seccomp_filtering && !followfork) {
+		error_msg("--seccomp-bpf cannot be used without"
+			  " -f/--follow-forks, disabling");
+		seccomp_filtering = false;
+	}
+
+	if (seccomp_filtering && detach_on_execve) {
+		error_msg("--seccomp-bpf is not enabled because"
+			  " it is not compatible with -b");
+		seccomp_filtering = false;
+	}
+
+	if (seccomp_filtering && syscall_limit > 0) {
+		error_msg("--seccomp-bpf is not enabled because"
+			  " it is not compatible with --syscall-limit");
+		seccomp_filtering = false;
+	}
+
+	if (seccomp_filtering && nprocs) {
+		error_msg("--seccomp-bpf is not enabled for processes"
+			  " attached with -p");
+		if (argc == 0)
 			seccomp_filtering = false;
-		}
 	}
 
 	if (optF) {
@@ -2874,8 +2877,21 @@ init(int argc, char *argv[])
 
 	if (seccomp_filtering)
 		check_seccomp_filter();
-	if (seccomp_filtering)
+	if (seccomp_filtering) {
 		ptrace_setoptions |= PTRACE_O_TRACESECCOMP;
+		if (nprocs == 0 && is_exitkill_supported())
+			ptrace_setoptions |= PTRACE_O_EXITKILL;
+	}
+
+	if (opt_kill_on_exit) {
+		if (nprocs)
+			error_msg_and_die("--kill-on-exit and -p/--attach"
+					  " are mutually exclusive options");
+		if (!is_exitkill_supported())
+			error_msg_and_die("PTRACE_O_EXITKILL is not supported"
+					  " by the kernel");
+		ptrace_setoptions |= PTRACE_O_EXITKILL;
+	}
 
 	debug_msg("ptrace_setoptions = %#x", ptrace_setoptions);
 	test_ptrace_seize();
@@ -3036,6 +3052,9 @@ pid2tcb(const int pid)
 static void
 cleanup(int fatal_sig)
 {
+	if (ptrace_setoptions & PTRACE_O_EXITKILL)
+		return;
+
 	if (!fatal_sig)
 		fatal_sig = SIGTERM;
 

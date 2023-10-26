@@ -102,6 +102,8 @@ libstrace_a_SOURCES =	\
 	evdev_mpers.c	\
 	eventfd.c	\
 	execve.c	\
+	exitkill.c	\
+	exitkill.h	\
 	fadvise.c	\
 	fallocate.c	\
 	fanotify.c	\
@@ -195,6 +197,7 @@ libstrace_a_SOURCES =	\
 	loop.c		\
 	lseek.c		\
 	macros.h	\
+	map_shadow_stack.c \
 	mem.c		\
 	membarrier.c	\
 	memfd_create.c	\
