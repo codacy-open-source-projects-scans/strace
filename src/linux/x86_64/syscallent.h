@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2021 The strace developers.
+ * Copyright (c) 2002-2023 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -342,4 +342,3 @@
 [334] = { 4,	0,		SEN(rseq),			"rseq"			},
 /* [335 ... 423] - reserved to sync up with other architectures */
 #include "syscallent-common.h"
-[453] = { 3,	TM,		SEN(map_shadow_stack),		"map_shadow_stack"	},
