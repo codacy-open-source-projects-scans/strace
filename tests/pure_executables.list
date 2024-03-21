@@ -52,6 +52,7 @@ dev--decode-fds-dev
 dev--decode-fds-none
 dev--decode-fds-path
 dev--decode-fds-socket
+dev-pty-yy
 dev-yy
 dup
 dup-P
@@ -342,6 +343,11 @@ listmount-success
 llseek
 lookup_dcookie
 lseek
+lsm_get_self_attr
+lsm_get_self_attr-success
+lsm_list_modules
+lsm_list_modules-success
+lsm_set_self_attr
 lstat
 lstat64
 madvise

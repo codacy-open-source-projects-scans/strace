@@ -682,11 +682,14 @@ struct finfo {
 	bool deleted;
 	struct {
 		unsigned int major, minor;
+
+		/* Use only when major == 5, minor == 2 (/dev/ptmx) */
+		int tty_index;
 	} dev;
 };
 
 extern struct finfo *
-get_finfo_for_dev(const char *path, struct finfo *finfo);
+get_finfo_for_dev(pid_t pid, int fd, const char *path, struct finfo *finfo);
 
 extern int
 term_ioctl_decode_command_number(struct tcb *tcp,
@@ -735,6 +738,9 @@ tfetch_mem_ignore_syserror(struct tcb *tcp, const kernel_ulong_t addr,
 {
 	return tfetch_mem64_ignore_syserror(tcp, addr, len, laddr);
 }
+# define tfetch_obj_ignore_syserror(pid, addr, objp)			\
+	tfetch_mem_ignore_syserror((pid), (addr),			\
+				   sizeof(*(objp)), (void *) (objp))
 
 /**
  * @return 0 on success, -1 on error (and print addr).

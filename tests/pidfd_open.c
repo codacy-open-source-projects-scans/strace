@@ -2,7 +2,7 @@
  * Check decoding of pidfd_open syscall.
  *
  * Copyright (c) 2019 Dmitry V. Levin <ldv@strace.io>
- * Copyright (c) 2019-2021 The strace developers.
+ * Copyright (c) 2019-2024 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
@@ -104,7 +104,7 @@ main(void)
 # if defined PRINT_PIDFD
 	       "%ld<pid:%d>\n", pid, pid_str, rc, pid
 # elif defined PRINT_PATHS
-	       "%ld<anon_inode:[pidfd]>\n", pid, pid_str, rc
+	       "%ld<%s>\n", pid, pid_str, rc, get_fd_path(rc)
 # else
 	       "%s\n", pid, pid_str, errstr
 # endif

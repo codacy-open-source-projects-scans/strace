@@ -3,7 +3,7 @@
  * Copyright (c) 1993 Branko Lankester <branko@hacktic.nl>
  * Copyright (c) 1993, 1994, 1995, 1996 Rick Sladkey <jrs@world.std.com>
  * Copyright (c) 1996-2001 Wichert Akkerman <wichert@cistron.nl>
- * Copyright (c) 1999-2023 The strace developers.
+ * Copyright (c) 1999-2024 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -461,7 +461,7 @@ SYS_FUNC(ioctl)
 		if (ioctl_command_overlaps(tcp->u_arg[1]) &&
 		    getfdpath_pid(tcp->pid, tcp->u_arg[0], path, sizeof(path),
 				  &deleted) >= 0) {
-			finfo = get_finfo_for_dev(path, &finfoa);
+			finfo = get_finfo_for_dev(tcp->pid, tcp->u_arg[0], path, &finfoa);
 			finfo->deleted = deleted;
 			printfd_with_finfo(tcp, tcp->u_arg[0], finfo);
 		} else

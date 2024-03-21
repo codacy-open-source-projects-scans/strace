@@ -1,7 +1,7 @@
 /*
  * Check decoding of SO_PEERPIDFD socket option.
  *
- * Copyright (c) 2023 Dmitry V. Levin <ldv@strace.io>
+ * Copyright (c) 2023-2024 Dmitry V. Levin <ldv@strace.io>
  * All rights reserved.
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
@@ -32,12 +32,10 @@ get_peerpidfd(int fd, void *val, socklen_t *len)
 static void
 print_pidfd(int *p)
 {
-	static const char pidfd_suffix[] = "<anon_inode:[pidfd]>";
-
 	if (rc < 0)
 		printf("%p", p);
 	else
-		printf("[%d%s]", *p, pidfd_suffix);
+		printf("[%d<%s>]", *p, get_fd_path(*p));
 }
 
 static void

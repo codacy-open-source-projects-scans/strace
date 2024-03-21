@@ -1,7 +1,7 @@
 /*
  * Check decoding of SCM_PIDFD control messages.
  *
- * Copyright (c) 2023 Dmitry V. Levin <ldv@strace.io>
+ * Copyright (c) 2023-2024 Dmitry V. Levin <ldv@strace.io>
  * All rights reserved.
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
@@ -33,7 +33,7 @@ print_pidfd(const struct cmsghdr *c)
 				    expected_len, data_len);
 
 	memcpy(&pidfd, cmsg_data, sizeof(pidfd));
-	printf("%d<anon_inode:[pidfd]>", pidfd);
+	printf("%d<%s>", pidfd, get_fd_path(pidfd));
 }
 
 int

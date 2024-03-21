@@ -271,9 +271,9 @@ usage(void)
 {
 #ifdef ENABLE_STACKTRACE
 # ifdef USE_LIBDW
-# define K_OPT "kk"
+#  define K_OPT "kk"
 # else
-# define K_OPT "k"
+#  define K_OPT "k"
 # endif
 #else
 # define K_OPT ""
@@ -398,15 +398,15 @@ Output format:\n\
 "
 #ifdef ENABLE_STACKTRACE
 "\
-  -k, --stack-traces[=symbol]\n\
+  -k, --stack-trace[=symbol]\n\
                  obtain stack trace between each syscall\n\
 "
-#ifdef USE_LIBDW
+# ifdef USE_LIBDW
 "\
-  -kk, --stack-traces=source\n\
+  -kk, --stack-trace=source\n\
                  obtain stack trace and source info between each syscall\n\
 "
-#endif
+# endif
 "\
   --stack-trace-frame-limit=limit\n\
                  obtain no more than this amount of frames\n\
@@ -2365,6 +2365,7 @@ init(int argc, char *argv[])
 		{ "instruction-pointer", no_argument,      0, 'i' },
 		{ "interruptible",	required_argument, 0, 'I' },
 		{ "kill-on-exit",	no_argument,	   0, GETOPT_KILL_ON_EXIT },
+		{ "stack-trace" ,	optional_argument, 0, GETOPT_STACK },
 		{ "stack-traces" ,	optional_argument, 0, GETOPT_STACK },
 		{ "stack-trace-frame-limit", required_argument, 0, GETOPT_STACK_TRACE_FRAME_LIMIT },
 		{ "syscall-limit",	required_argument, 0, GETOPT_SYSCALL_LIMIT },
@@ -2514,7 +2515,7 @@ init(int argc, char *argv[])
 # else
 				error_msg_and_die("Stack traces with "
 						  "source line information (-kk/"
-						  "--stack-traces=source option) "
+						  "--stack-trace=source option) "
 						  "are not supported by this "
 						  "build of strace");
 # endif	/* USE_LIBDW */
@@ -2523,7 +2524,7 @@ init(int argc, char *argv[])
 				error_msg_and_die("Too many -k options");
 			}
 #else
-			error_msg_and_die("Stack traces (-k/--stack-traces "
+			error_msg_and_die("Stack traces (-k/--stack-trace "
 					  "option) are not supported by this "
 					  "build of strace");
 #endif /* ENABLE_STACKTRACE */
@@ -2538,14 +2539,14 @@ init(int argc, char *argv[])
 # else
 				error_msg_and_die("Stack traces with "
 						  "source line information "
-						  "(-kk/--stack-traces=source option) "
+						  "(-kk/--stack-trace=source option) "
 						  "are not supported by this "
 						  "build of strace");
 # endif /* USE_LIBDW */
 			} else
 				error_opt_arg(c, lopt, optarg);
 #else
-			error_msg_and_die("Stack traces (-k/--stack-traces "
+			error_msg_and_die("Stack traces (-k/--stack-trace "
 					  "option) are not supported by this "
 					  "build of strace");
 #endif /* ENABLE_STACKTRACE */
@@ -2895,7 +2896,7 @@ init(int argc, char *argv[])
 			error_msg("-i/--instruction-pointer has no effect "
 				  "with -c/--summary-only");
 		if (stack_trace_mode)
-			error_msg("-k/--stack-traces has no effect "
+			error_msg("-k/--stack-trace has no effect "
 				  "with -c/--summary-only");
 		if (nflag)
 			error_msg("-n/--syscall-number has no effect "
@@ -2958,7 +2959,7 @@ init(int argc, char *argv[])
 			    stack_trace_frame_limit);
 	} else if (stack_trace_frame_limit != 0) {
 		error_msg("--stack-trace-frame-limit has no effect "
-			  "without -k/--stack-traces");
+			  "without -k/--stack-trace");
 	}
 #endif
 
