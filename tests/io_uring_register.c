@@ -153,7 +153,7 @@ main(void)
 			.iov_len = sizeof(path_null)
 		}
 	};
-	const struct iovec *arg_iov = tail_memdup(iov, sizeof(iov));
+	const struct iovec *const arg_iov = tail_memdup(iov, sizeof(iov));
 
 	skip_if_unavailable("/proc/self/fd/");
 
@@ -168,11 +168,17 @@ main(void)
 
 	int fds[] = { fd_full, fd_null, -1, -2, -3 };
 	const char *paths[ARRAY_SIZE(fds)] = { path_full, path_null };
-	const int *arg_fds = tail_memdup(fds, sizeof(fds));
+	const int *const arg_fds = tail_memdup(fds, sizeof(fds));
 
 
 	/* Invalid op */
-	static const unsigned int invalid_ops[] = { 0xbadc0dedU, 24 };
+	static const unsigned int invalid_ops[] = { 0x7fffffffU, 29 };
+	static const struct {
+		unsigned int val;
+		const char *str;
+	} op_flags[] = {
+		{ ARG_STR(IORING_REGISTER_USE_REGISTERED_RING) },
+	};
 
 	for (size_t i = 0; i < ARRAY_SIZE(invalid_ops); i++) {
 		sys_io_uring_register(fd_null, invalid_ops[i], path_null,
@@ -181,6 +187,18 @@ main(void)
 		       NRAW(" /* IORING_REGISTER_??? */") ", %p, %u) = %s\n",
 		       fd_null, path_null, invalid_ops[i], path_null,
 		       0xdeadbeef, errstr);
+
+		for (size_t j = 0; j < ARRAY_SIZE(op_flags); ++j) {
+			sys_io_uring_register(fd_null, invalid_ops[i] |
+						       op_flags[j].val,
+					      path_null, 0xdeadbeef);
+			printf("io_uring_register(%u, %#x"
+			       NRAW(" /* IORING_REGISTER_??? */") "|" XLAT_FMT
+			       ", %p, %u) = %s\n",
+			       fd_null, invalid_ops[i],
+			       XLAT_SEL(op_flags[j].val, op_flags[j].str),
+			       path_null, 0xdeadbeef, errstr);
+		}
 	}
 
 
@@ -205,6 +223,18 @@ main(void)
 		       fd_null, path_null,
 		       XLAT_SEL(no_arg_ops[i].op, no_arg_ops[i].str),
 		       path_null, 0xdeadbeef, errstr);
+
+		for (size_t j = 0; j < ARRAY_SIZE(op_flags); ++j) {
+			sys_io_uring_register(fd_null, no_arg_ops[i].op |
+						       op_flags[j].val,
+					      path_null, 0xdeadbeef);
+			printf("io_uring_register(%u, " XLAT_FMT "|" XLAT_FMT
+			       ", %p, %u) = %s\n",
+			       fd_null,
+			       XLAT_SEL(no_arg_ops[i].op, no_arg_ops[i].str),
+			       XLAT_SEL(op_flags[j].val, op_flags[j].str),
+			       path_null, 0xdeadbeef, errstr);
+		}
 	}
 
 
@@ -275,7 +305,7 @@ main(void)
 	       fd_null, path_null, fd_full, path_full, fd_null, path_null,
 	       (unsigned int) ARRAY_SIZE(fds), errstr);
 
-	struct io_uring_probe *probe = tail_alloc(sizeof(*probe) +
+	struct io_uring_probe *const probe = tail_alloc(sizeof(*probe) +
 		       (DEFAULT_STRLEN + 1) * sizeof(struct io_uring_probe_op));
 
 
@@ -343,12 +373,12 @@ main(void)
 	probe->ops[0].flags = 0;
 	probe->ops[0].resv2 = 0xbeefface;
 
-	probe->ops[1].op = 53;
+	probe->ops[1].op = 55;
 	probe->ops[1].resv = 0;
 	probe->ops[1].flags = IO_URING_OP_SUPPORTED;
 	probe->ops[1].resv2 = 0xdeadc0de;
 
-	probe->ops[2].op = 54;
+	probe->ops[2].op = 56;
 	probe->ops[2].resv = 0xaf;
 	probe->ops[2].flags = 0xbeef;
 	probe->ops[2].resv2 = 0;
@@ -363,32 +393,32 @@ main(void)
 	       ", ops_len=%hhu, resv2=[0, %#x, 0], ops=["
 	       "{op=" XLAT_FMT_U ", resv=0xde, flags=0, resv2=0xbeefface}, "
 	       "{op=" XLAT_FMT_U ", flags=" XLAT_FMT ", resv2=0xdeadc0de}, "
-	       "{op=54" NRAW(" /* IORING_OP_??? */") ", resv=0xaf, flags="
+	       "{op=56" NRAW(" /* IORING_OP_??? */") ", resv=0xaf, flags="
 	       XLAT_FMT "}, {op=254" NRAW(" /* IORING_OP_??? */")
 	       ", flags=0xc0de" NRAW(" /* IO_URING_OP_??? */") "}]}"
 #if RETVAL_INJECTED
 	       " => {last_op=" XLAT_FMT_U ", ops_len=%hhu, resv2=[0, %#x, 0], "
 	       "ops=[{op=" XLAT_FMT_U ", resv=0xde, flags=0, resv2=0xbeefface}"
 	       ", {op=" XLAT_FMT_U ", flags=" XLAT_FMT ", resv2=0xdeadc0de}"
-	       ", {op=54" NRAW(" /* IORING_OP_??? */") ", resv=0xaf, flags="
+	       ", {op=56" NRAW(" /* IORING_OP_??? */") ", resv=0xaf, flags="
 	       XLAT_FMT "}, {op=254" NRAW(" /* IORING_OP_??? */")
 	       ", flags=0xc0de" NRAW(" /* IO_URING_OP_??? */") "}, ...]}"
 #endif
 	       ", 4) = %s\n",
 	       fd_null, path_null, XLAT_ARGS(IORING_REGISTER_PROBE),
 	       XLAT_ARGS(IORING_OP_EPOLL_CTL), probe->ops_len, probe->resv2[1],
-	       XLAT_ARGS(IORING_OP_NOP), XLAT_ARGS(IORING_OP_FUTEX_WAITV),
+	       XLAT_ARGS(IORING_OP_NOP), XLAT_ARGS(IORING_OP_FTRUNCATE),
 	       XLAT_ARGS(IO_URING_OP_SUPPORTED),
 	       XLAT_ARGS(IO_URING_OP_SUPPORTED|0xbeee),
 #if RETVAL_INJECTED
 	       XLAT_ARGS(IORING_OP_EPOLL_CTL), probe->ops_len, probe->resv2[1],
-	       XLAT_ARGS(IORING_OP_NOP), XLAT_ARGS(IORING_OP_FUTEX_WAITV),
+	       XLAT_ARGS(IORING_OP_NOP), XLAT_ARGS(IORING_OP_FTRUNCATE),
 	       XLAT_ARGS(IO_URING_OP_SUPPORTED),
 	       XLAT_ARGS(IO_URING_OP_SUPPORTED|0xbeee),
 #endif
 	       errstr);
 
-	probe->last_op = 54;
+	probe->last_op = 56;
 	probe->resv2[1] = 0;
 	fill_memory_ex(probe->ops, sizeof(probe->ops[0]) * (DEFAULT_STRLEN + 1),
 		    0x40, 0x80);
@@ -397,7 +427,7 @@ main(void)
 	printf("io_uring_register(%u<%s>, " XLAT_FMT,
 	       fd_null, path_null, XLAT_ARGS(IORING_REGISTER_PROBE));
 	for (size_t c = 0; c < 1 + RETVAL_INJECTED; c++) {
-		printf("%s{last_op=54" NRAW(" /* IORING_OP_??? */")
+		printf("%s{last_op=56" NRAW(" /* IORING_OP_??? */")
 		       ", ops_len=%hhu, ops=[",
 		       c ? " => " : ", ", probe->ops_len);
 		for (size_t i = 0; i < DEFAULT_STRLEN; i++) {
@@ -459,18 +489,18 @@ main(void)
 		{ ARG_STR(IORING_RESTRICTION_REGISTER_OP), true,
 		  "register_op=", ARG_STR(IORING_REGISTER_BUFFERS), true },
 		{ ARG_STR(IORING_RESTRICTION_REGISTER_OP), true,
-		  "register_op=", ARG_STR(IORING_UNREGISTER_PBUF_RING),
+		  "register_op=", ARG_STR(IORING_UNREGISTER_NAPI),
 		  true },
 		{ ARG_STR(IORING_RESTRICTION_REGISTER_OP), true,
-		  "register_op=", 24, " /* IORING_REGISTER_??? */", false },
+		  "register_op=", 29, " /* IORING_REGISTER_??? */", false },
 		{ ARG_STR(IORING_RESTRICTION_REGISTER_OP), true,
 		  "register_op=", 255, " /* IORING_REGISTER_??? */", false },
 		{ ARG_STR(IORING_RESTRICTION_SQE_OP), true,
 		  "sqe_op=", ARG_STR(IORING_OP_NOP), true },
 		{ ARG_STR(IORING_RESTRICTION_SQE_OP), true,
-		  "sqe_op=", ARG_STR(IORING_OP_FUTEX_WAITV), true },
+		  "sqe_op=", ARG_STR(IORING_OP_FTRUNCATE), true },
 		{ ARG_STR(IORING_RESTRICTION_SQE_OP), true,
-		  "sqe_op=", 54, " /* IORING_OP_??? */", false },
+		  "sqe_op=", 56, " /* IORING_OP_??? */", false },
 		{ ARG_STR(IORING_RESTRICTION_SQE_OP), true,
 		  "sqe_op=", 255, " /* IORING_OP_??? */", false },
 		{ ARG_STR(IORING_RESTRICTION_SQE_FLAGS_ALLOWED), true,
@@ -498,11 +528,10 @@ main(void)
 		{ 4, " /* IORING_RESTRICTION_??? */", false, "", 239 },
 		{ 137, " /* IORING_RESTRICTION_??? */", false, "", 0 },
 	};
-	struct io_uring_restriction *restrictions =
-			tail_alloc(sizeof(*restrictions)
-				   * ARRAY_SIZE(restrictions_data));
-	char *restrictions_end = (char *) (restrictions
-					   + ARRAY_SIZE(restrictions_data));
+	TAIL_ALLOC_OBJECT_CONST_ARR(struct io_uring_restriction, restrictions,
+				    ARRAY_SIZE(restrictions_data));
+	char *const restrictions_end =
+		(char *) (restrictions + ARRAY_SIZE(restrictions_data));
 
 	sys_io_uring_register(fd_null, IORING_REGISTER_RESTRICTIONS, NULL,
 			      0xfacefeed);
@@ -660,11 +689,11 @@ main(void)
 	};
 	static const uint64_t tags[] = { 0x1337, 1, 0xdead, 0xfacefeed,
 					 0xbadc0deddadfacedULL, 0 };
-	const uint64_t *arg_tags = tail_memdup(tags, sizeof(tags));
+	const uint64_t *const arg_tags = tail_memdup(tags, sizeof(tags));
 
-	struct io_uring_rsrc_register *bogus_rsrc_reg = tail_alloc(24);
-	struct io_uring_rsrc_register *rsrc_reg = tail_alloc(sizeof(*rsrc_reg));
-	struct io_uring_rsrc_register *big_rsrc_reg =
+	struct io_uring_rsrc_register *const bogus_rsrc_reg = tail_alloc(24);
+	TAIL_ALLOC_OBJECT_CONST_PTR(struct io_uring_rsrc_register, rsrc_reg);
+	struct io_uring_rsrc_register *const big_rsrc_reg =
 		tail_alloc(sizeof(*big_rsrc_reg) + 8);
 
 	fill_memory(big_rsrc_reg, sizeof(*big_rsrc_reg) + 8);
@@ -765,9 +794,9 @@ main(void)
 		{ 16, "IORING_REGISTER_BUFFERS_UPDATE" },
 	};
 
-	struct io_uring_rsrc_update2 *bogus_rsrc_upd = tail_alloc(24);
-	struct io_uring_rsrc_update2 *rsrc_upd = tail_alloc(sizeof(*rsrc_upd));
-	struct io_uring_rsrc_update2 *big_rsrc_upd =
+	struct io_uring_rsrc_update2 *const bogus_rsrc_upd = tail_alloc(24);
+	TAIL_ALLOC_OBJECT_CONST_PTR(struct io_uring_rsrc_update2, rsrc_upd);
+	struct io_uring_rsrc_update2 *const big_rsrc_upd =
 		tail_alloc(sizeof(*big_rsrc_upd) + 8);
 
 	fill_memory(big_rsrc_upd, sizeof(*big_rsrc_upd) + 8);
@@ -868,7 +897,7 @@ main(void)
 		(unsigned long) 0xbadc0deddadfacedULL,
 		(unsigned long) 0xfacefeeddeadbeefULL,
 	};
-	const unsigned long *arg_aff = tail_memdup(aff, sizeof(aff));
+	const unsigned long *const arg_aff = tail_memdup(aff, sizeof(aff));
 	const unsigned long *arg_aff_end = arg_aff + ARRAY_SIZE(aff);
 
 	sys_io_uring_register(fd_null, 17, NULL, 0xfacefeed);
@@ -931,7 +960,7 @@ main(void)
 
 	/* IORING_REGISTER_IOWQ_MAX_WORKERS */
 	unsigned int maxw[] = { 0, 1, 0xbedfaced };
-	const unsigned int *arg_maxw = tail_memdup(maxw, sizeof(maxw));
+	const unsigned int *const arg_maxw = tail_memdup(maxw, sizeof(maxw));
 	const unsigned int *arg_maxw_end = arg_maxw + ARRAY_SIZE(maxw);
 
 	sys_io_uring_register(fd_null, 19, NULL, 0xfacefeed);
@@ -992,8 +1021,8 @@ main(void)
 	static const size_t ringfd_count = DEFAULT_STRLEN + 1;
 	static const uint32_t ringfd_off[] =
 		{ -1U, 0, 1, 2, 161803398, 3141592653, -2U };
-	TAIL_ALLOC_OBJECT_VAR_ARR(struct io_uring_rsrc_update, ringfds,
-				  ringfd_count);
+	TAIL_ALLOC_OBJECT_CONST_ARR(struct io_uring_rsrc_update, ringfds,
+				    ringfd_count);
 
 	fill_memory(ringfds, sizeof(*ringfds) * ringfd_count);
 	for (size_t i = 0; i < ringfd_count; i++) {
@@ -1082,7 +1111,7 @@ main(void)
 		{ 22, "IORING_REGISTER_PBUF_RING" },
 		{ 23, "IORING_UNREGISTER_PBUF_RING" },
 	};
-	TAIL_ALLOC_OBJECT_VAR_PTR(struct io_uring_buf_reg, buf_reg);
+	TAIL_ALLOC_OBJECT_CONST_PTR(struct io_uring_buf_reg, buf_reg);
 
 	for (size_t i = 0; i < ARRAY_SIZE(buf_reg_ops); i++) {
 		sys_io_uring_register(fd_null, buf_reg_ops[i].op, 0,
@@ -1112,6 +1141,14 @@ main(void)
 
 			sys_io_uring_register(fd_null, buf_reg_ops[i].op,
 					      buf_reg, 0x42);
+			printf("io_uring_register(%u<%s>, " XLAT_FMT ", %p, 66)"
+			       " = %s\n",
+			       fd_null, path_null,
+			       XLAT_SEL(buf_reg_ops[i].op, buf_reg_ops[i].str),
+			       buf_reg, errstr);
+
+			sys_io_uring_register(fd_null, buf_reg_ops[i].op,
+					      buf_reg, 1);
 			printf("io_uring_register(%u<%s>, " XLAT_FMT
 			       ", {ring_addr=",
 			       fd_null, path_null,
@@ -1130,7 +1167,294 @@ main(void)
 				       j &  64 ? "0xdecaffedbeefdead" : "0",
 				       j & 128 ? "0xbadc0dedfacefeed" : "0");
 			}
-			printf("}, 66) = %s\n", errstr);
+			printf("}, 1) = %s\n", errstr);
+		}
+	}
+
+	/* IORING_REGISTER_SYNC_CANCEL */
+	static const struct {
+		unsigned int op;
+		const char *str;
+	} sync_cancel_reg_ops[] = {
+		{ 24, "IORING_REGISTER_SYNC_CANCEL" },
+	};
+	TAIL_ALLOC_OBJECT_CONST_PTR(struct io_uring_sync_cancel_reg,
+				    sync_cancel_reg);
+
+	for (size_t i = 0; i < ARRAY_SIZE(sync_cancel_reg_ops); i++) {
+		sys_io_uring_register(fd_null, sync_cancel_reg_ops[i].op, 0,
+				      0xdeadbeef);
+		printf("io_uring_register(%u<%s>, " XLAT_FMT ", NULL, %u)"
+		       " = %s\n",
+		       fd_null, path_null,
+		       XLAT_SEL(sync_cancel_reg_ops[i].op,
+			        sync_cancel_reg_ops[i].str),
+		       0xdeadbeef, errstr);
+
+		sys_io_uring_register(fd_null, sync_cancel_reg_ops[i].op,
+				      sync_cancel_reg + 1, 0);
+		printf("io_uring_register(%u<%s>, " XLAT_FMT ", %p, 0) = %s\n",
+		       fd_null, path_null,
+		       XLAT_SEL(sync_cancel_reg_ops[i].op, sync_cancel_reg_ops[i].str),
+		       sync_cancel_reg + 1, errstr);
+
+		for (size_t j = 0; j < 0x100; j++) {
+			memset(sync_cancel_reg, 0, sizeof(*sync_cancel_reg));
+			sync_cancel_reg->addr =
+				j & 0x1 ? (uintptr_t) sync_cancel_reg : 0;
+			sync_cancel_reg->fd = j & 0x2 ? fd_null : -1;
+			sync_cancel_reg->flags = j & 0x4 ? 0x3f : 0xffffffc0U;
+			sync_cancel_reg->timeout.tv_sec =
+				j & 0x8 ? 0xdeface1 : -1;
+			sync_cancel_reg->timeout.tv_nsec =
+				j & 0x10 ? 0xdeface2 : -1;
+			sync_cancel_reg->opcode =
+				j & 0x20 ? IORING_OP_LAST - 1
+					 : IORING_OP_LAST;
+			if (j & 0x40)
+				sync_cancel_reg->pad[6] = 0xfe;
+			if (j & 0x80)
+				sync_cancel_reg->pad2[2] = 0xbadc0de1dadface2ULL;
+
+			sys_io_uring_register(fd_null, sync_cancel_reg_ops[i].op,
+					      sync_cancel_reg, 0x42);
+			printf("io_uring_register(%u<%s>, " XLAT_FMT ", %p, 66)"
+			       " = %s\n",
+			       fd_null, path_null,
+			       XLAT_SEL(sync_cancel_reg_ops[i].op,
+				        sync_cancel_reg_ops[i].str),
+			       sync_cancel_reg, errstr);
+
+			sys_io_uring_register(fd_null, sync_cancel_reg_ops[i].op,
+					      sync_cancel_reg, 1);
+			printf("io_uring_register(%u<%s>, " XLAT_FMT
+			       ", {",
+			       fd_null, path_null,
+			       XLAT_SEL(sync_cancel_reg_ops[i].op,
+				        sync_cancel_reg_ops[i].str));
+			if (j & 0x1)
+				printf("addr=%p", sync_cancel_reg);
+			else
+				printf("addr=NULL");
+			if (j & 0x2)
+				printf(", fd=%u<%s>", fd_null, path_null);
+			else
+				printf(", fd=-1");
+			if (j & 0x4)
+				printf(", flags=" XLAT_FMT,
+				       XLAT_ARGS(IORING_ASYNC_CANCEL_ALL|IORING_ASYNC_CANCEL_FD|IORING_ASYNC_CANCEL_ANY|IORING_ASYNC_CANCEL_FD_FIXED|IORING_ASYNC_CANCEL_USERDATA|IORING_ASYNC_CANCEL_OP));
+			else
+				printf(", flags=0xffffffc0"
+				       NRAW(" /* IORING_ASYNC_CANCEL_??? */"));
+			printf(", timeout={tv_sec=%jd, tv_nsec=%jd}",
+			       (intmax_t) sync_cancel_reg->timeout.tv_sec,
+			       (intmax_t) sync_cancel_reg->timeout.tv_nsec);
+			if (j & 0x20)
+				printf(", opcode=" XLAT_FMT,
+				       XLAT_ARGS(IORING_OP_FTRUNCATE));
+			else
+				printf(", opcode=%#x"
+				       NRAW(" /* IORING_OP_??? */"),
+				       sync_cancel_reg->opcode);
+			if (j & 0x40)
+				printf(", pad=[0, 0, 0, 0, 0, 0, 0xfe]");
+			if (j & 0x80)
+				printf(", pad2=[0, 0, 0xbadc0de1dadface2]");
+			printf("}, 1) = %s\n", errstr);
+		}
+	}
+
+	/* IORING_REGISTER_FILE_ALLOC_RANGE */
+	static const struct {
+		unsigned int op;
+		const char *str;
+	} file_index_range_ops[] = {
+		{ 25, "IORING_REGISTER_FILE_ALLOC_RANGE" },
+	};
+	TAIL_ALLOC_OBJECT_CONST_PTR(struct io_uring_file_index_range,
+				    file_index_range);
+
+	for (size_t i = 0; i < ARRAY_SIZE(file_index_range_ops); i++) {
+		sys_io_uring_register(fd_null, file_index_range_ops[i].op, 0,
+				      0xdeadbeef);
+		printf("io_uring_register(%u<%s>, " XLAT_FMT ", NULL, %u)"
+		       " = %s\n",
+		       fd_null, path_null,
+		       XLAT_SEL(file_index_range_ops[i].op,
+			        file_index_range_ops[i].str),
+		       0xdeadbeef, errstr);
+
+		sys_io_uring_register(fd_null, file_index_range_ops[i].op,
+				      file_index_range + 1, 0);
+		printf("io_uring_register(%u<%s>, " XLAT_FMT ", %p, 0) = %s\n",
+		       fd_null, path_null,
+		       XLAT_SEL(file_index_range_ops[i].op, file_index_range_ops[i].str),
+		       file_index_range + 1, errstr);
+
+		for (size_t j = 0; j < (1U << 3); j++) {
+			memset(file_index_range, 0, sizeof(*file_index_range));
+			file_index_range->off = j & 1 ? 0xfacefeedU : 0;
+			file_index_range->len = j & 2 ? 0xcafef00dU : 0;
+			file_index_range->resv = j & 4 ? 0xbadc0de1dadface2ULL : 0;
+
+			sys_io_uring_register(fd_null, file_index_range_ops[i].op,
+					      file_index_range, 0x42);
+			printf("io_uring_register(%u<%s>, " XLAT_FMT ", %p, 66)"
+			       " = %s\n",
+			       fd_null, path_null,
+			       XLAT_SEL(file_index_range_ops[i].op,
+				        file_index_range_ops[i].str),
+			       file_index_range, errstr);
+
+			sys_io_uring_register(fd_null, file_index_range_ops[i].op,
+					      file_index_range, 1);
+			printf("io_uring_register(%u<%s>, " XLAT_FMT
+			       ", {off=%u, len=%u",
+			       fd_null, path_null,
+			       XLAT_SEL(file_index_range_ops[i].op,
+				        file_index_range_ops[i].str),
+			       file_index_range->off, file_index_range->len);
+			if (j & 4)
+				printf(", resv=0xbadc0de1dadface2");
+			printf("}, 1) = %s\n", errstr);
+		}
+	}
+
+	/* IORING_REGISTER_PBUF_STATUS */
+	static const struct {
+		unsigned int op;
+		const char *str;
+	} buf_status_ops[] = {
+		{ 26, "IORING_REGISTER_PBUF_STATUS" },
+	};
+	TAIL_ALLOC_OBJECT_CONST_PTR(struct io_uring_buf_status, buf_status);
+
+	for (size_t i = 0; i < ARRAY_SIZE(buf_status_ops); i++) {
+		sys_io_uring_register(fd_null, buf_status_ops[i].op, 0,
+				      0xdeadbeef);
+		printf("io_uring_register(%u<%s>, " XLAT_FMT ", NULL, %u)"
+		       " = %s\n",
+		       fd_null, path_null,
+		       XLAT_SEL(buf_status_ops[i].op,
+			        buf_status_ops[i].str),
+		       0xdeadbeef, errstr);
+
+		sys_io_uring_register(fd_null, buf_status_ops[i].op,
+				      buf_status + 1, 0);
+		printf("io_uring_register(%u<%s>, " XLAT_FMT ", %p, 0) = %s\n",
+		       fd_null, path_null,
+		       XLAT_SEL(buf_status_ops[i].op, buf_status_ops[i].str),
+		       buf_status + 1, errstr);
+
+		for (size_t j = 0; j < (1U << 3); j++) {
+			memset(buf_status, 0, sizeof(*buf_status));
+			buf_status->buf_group = j & 1 ? 0xfacefeedU : 0;
+			buf_status->head = j & 2 ? 0xcafef00dU : 0;
+			buf_status->resv[7] = j & 4 ? 0xbadc0dedU : 0;
+
+			sys_io_uring_register(fd_null, buf_status_ops[i].op,
+					      buf_status, 0x42);
+			printf("io_uring_register(%u<%s>, " XLAT_FMT ", %p, 66)"
+			       " = %s\n",
+			       fd_null, path_null,
+			       XLAT_SEL(buf_status_ops[i].op,
+				        buf_status_ops[i].str),
+			       buf_status, errstr);
+
+			sys_io_uring_register(fd_null, buf_status_ops[i].op,
+					      buf_status, 1);
+			printf("io_uring_register(%u<%s>, " XLAT_FMT ", "
+#if RETVAL_INJECTED
+			       "{buf_group=%#x, head=%#x",
+#else
+			       "%p",
+#endif
+			       fd_null, path_null,
+			       XLAT_SEL(buf_status_ops[i].op,
+				        buf_status_ops[i].str),
+#if RETVAL_INJECTED
+			       buf_status->buf_group, buf_status->head
+#else
+			       buf_status
+#endif
+			       );
+#if RETVAL_INJECTED
+			if (j & 4)
+				printf(", resv=[0, 0, 0, 0, 0, 0, 0, 0xbadc0ded]");
+			printf("}");
+#endif
+			printf(", 1) = %s\n", errstr);
+		}
+	}
+
+	/* IORING_REGISTER_NAPI, IORING_UNREGISTER_NAPI */
+	static const struct {
+		unsigned int op;
+		const char *str;
+	} napi_ops[] = {
+		{ 27, "IORING_REGISTER_NAPI" },
+		{ 28, "IORING_UNREGISTER_NAPI" },
+	};
+	TAIL_ALLOC_OBJECT_CONST_PTR(struct io_uring_napi, napi);
+
+	for (size_t i = 0; i < ARRAY_SIZE(napi_ops); i++) {
+		sys_io_uring_register(fd_null, napi_ops[i].op, 0, 0xdeadbeef);
+		printf("io_uring_register(%u<%s>, " XLAT_FMT ", NULL, %u)"
+		       " = %s\n",
+		       fd_null, path_null,
+		       XLAT_SEL(napi_ops[i].op,
+			        napi_ops[i].str),
+		       0xdeadbeef, errstr);
+
+		sys_io_uring_register(fd_null, napi_ops[i].op, napi + 1, 0);
+		printf("io_uring_register(%u<%s>, " XLAT_FMT ", %p, 0) = %s\n",
+		       fd_null, path_null,
+		       XLAT_SEL(napi_ops[i].op, napi_ops[i].str),
+		       napi + 1, errstr);
+
+		for (size_t j = 0; j < (1U << 4); j++) {
+			memset(napi, 0, sizeof(*napi));
+			napi->busy_poll_to = j & 1 ? 0xfacefeedU : 0;
+			napi->prefer_busy_poll = j & 2 ? 0xfe : 0;
+			napi->pad[2] = j & 4 ? 0x10 : 0;
+			napi->resv = j & 8 ? 0xbadc0dedU : 0;
+
+			sys_io_uring_register(fd_null, napi_ops[i].op, napi,
+					      0x42);
+			printf("io_uring_register(%u<%s>, " XLAT_FMT ", %p, 66)"
+			       " = %s\n",
+			       fd_null, path_null,
+			       XLAT_SEL(napi_ops[i].op,
+				        napi_ops[i].str),
+			       napi, errstr);
+
+			sys_io_uring_register(fd_null, napi_ops[i].op, napi, 1);
+			printf("io_uring_register(%u<%s>, " XLAT_FMT ", ",
+			       fd_null, path_null,
+			       XLAT_SEL(napi_ops[i].op,
+				        napi_ops[i].str));
+			if (i == 0 || RETVAL_INJECTED) {
+				printf("{busy_poll_to=%#x, prefer_busy_poll=%#x",
+				       napi->busy_poll_to,
+				       napi->prefer_busy_poll);
+				if (j & 4)
+					printf(", pad=[0, 0, 0x10]");
+				if (j & 8)
+					printf(", resv=0xbadc0ded");
+				printf("}");
+			} else
+				printf("%p", napi);
+			if (i == 0 && RETVAL_INJECTED) {
+				printf(" => {busy_poll_to=%#x, prefer_busy_poll=%#x",
+				       napi->busy_poll_to,
+				       napi->prefer_busy_poll);
+				if (j & 4)
+					printf(", pad=[0, 0, 0x10]");
+				if (j & 8)
+					printf(", resv=0xbadc0ded");
+				printf("}");
+			}
+			printf(", 1) = %s\n", errstr);
 		}
 	}
 

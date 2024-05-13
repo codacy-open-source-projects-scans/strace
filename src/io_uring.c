@@ -12,6 +12,7 @@
 #define UAPI_LINUX_IO_URING_H_SKIP_LINUX_TIME_TYPES_H
 #include <linux/io_uring.h>
 
+#include "xlat/uring_async_cancel_flags.h"
 #include "xlat/uring_enter_flags.h"
 #include "xlat/uring_files_update_fds.h"
 #include "xlat/uring_iowq_acct.h"
@@ -21,6 +22,7 @@
 #include "xlat/uring_setup_flags.h"
 #include "xlat/uring_sqe_flags.h"
 #include "xlat/uring_register_opcodes.h"
+#include "xlat/uring_register_opcode_flags.h"
 #include "xlat/uring_register_rsrc_flags.h"
 #include "xlat/uring_restriction_opcodes.h"
 
@@ -559,12 +561,18 @@ print_io_uring_ringfds_unregister(struct tcb *tcp, const kernel_ulong_t arg,
 }
 
 static void
-print_io_uring_buf_reg(struct tcb *tcp, const kernel_ulong_t addr)
+print_io_uring_buf_reg(struct tcb *tcp, const kernel_ulong_t addr,
+		       const unsigned int nargs)
 {
 	struct io_uring_buf_reg arg;
 	CHECK_TYPE_SIZE(arg, 40);
 	CHECK_TYPE_SIZE(arg.flags, sizeof(uint16_t));
 	CHECK_TYPE_SIZE(arg.resv, sizeof(uint64_t) * 3);
+
+	if (nargs != 1) {
+		printaddr(addr);
+		return;
+	}
 
 	if (umove_or_printaddr(tcp, addr, &arg))
 		return;
@@ -589,23 +597,218 @@ print_io_uring_buf_reg(struct tcb *tcp, const kernel_ulong_t addr)
 	tprint_struct_end();
 }
 
+static void
+print_io_uring_sync_cancel_reg(struct tcb *tcp, const kernel_ulong_t addr,
+			       const unsigned int nargs)
+{
+	struct io_uring_sync_cancel_reg arg;
+
+	if (nargs != 1) {
+		printaddr(addr);
+		return;
+	}
+
+	if (umove_or_printaddr(tcp, addr, &arg))
+		return;
+
+	tprint_struct_begin();
+	PRINT_FIELD_ADDR64(arg, addr);
+
+	tprint_struct_next();
+	PRINT_FIELD_FD(arg, fd, tcp);
+
+	tprint_struct_next();
+	PRINT_FIELD_FLAGS(arg, flags, uring_async_cancel_flags,
+			  "IORING_ASYNC_CANCEL_???");
+
+	tprint_struct_next();
+	tprints_field_name("timeout");
+	tprint_struct_begin();
+        PRINT_FIELD_D(arg.timeout, tv_sec);
+        tprint_struct_next();
+        PRINT_FIELD_D(arg.timeout, tv_nsec);
+        tprint_struct_end();
+
+	tprint_struct_next();
+	PRINT_FIELD_XVAL(arg, opcode, uring_ops, "IORING_OP_???");
+
+	if (!IS_ARRAY_ZERO(arg.pad)) {
+		tprint_struct_next();
+		PRINT_FIELD_ARRAY(arg, pad, tcp, print_xint_array_member);
+	}
+
+	if (!IS_ARRAY_ZERO(arg.pad2)) {
+		tprint_struct_next();
+		PRINT_FIELD_ARRAY(arg, pad2, tcp, print_xint_array_member);
+	}
+
+	tprint_struct_end();
+}
+
+static void
+print_io_uring_file_index_range(struct tcb *tcp, const kernel_ulong_t addr,
+				const unsigned int nargs)
+{
+	struct io_uring_file_index_range arg;
+
+	if (nargs != 1) {
+		printaddr(addr);
+		return;
+	}
+
+	if (umove_or_printaddr(tcp, addr, &arg))
+		return;
+
+	tprint_struct_begin();
+	PRINT_FIELD_U(arg, off);
+
+	tprint_struct_next();
+	PRINT_FIELD_U(arg, len);
+
+	if (arg.resv) {
+		tprint_struct_next();
+		PRINT_FIELD_X(arg, resv);
+	}
+
+	tprint_struct_end();
+}
+
+static int
+print_io_uring_buf_status(struct tcb *tcp, const kernel_ulong_t addr,
+			  const unsigned int nargs)
+{
+	struct io_uring_buf_status arg;
+
+	if (nargs != 1) {
+		printaddr(addr);
+		return RVAL_DECODED;
+	}
+
+	if (entering(tcp))
+		return 0;
+
+	if (umove_or_printaddr(tcp, addr, &arg))
+		return RVAL_DECODED;
+
+	tprint_struct_begin();
+	PRINT_FIELD_X(arg, buf_group);
+
+	tprint_struct_next();
+	PRINT_FIELD_X(arg, head);
+
+	if (!IS_ARRAY_ZERO(arg.resv)) {
+		tprint_struct_next();
+		PRINT_FIELD_ARRAY(arg, resv, tcp, print_xint_array_member);
+	}
+
+	tprint_struct_end();
+
+	return RVAL_DECODED;
+}
+
+static int
+print_io_uring_napi(struct tcb *tcp, const kernel_ulong_t addr)
+{
+	struct io_uring_napi arg;
+
+	if (umove_or_printaddr(tcp, addr, &arg))
+		return RVAL_DECODED;
+
+	tprint_struct_begin();
+	PRINT_FIELD_X(arg, busy_poll_to);
+
+	tprint_struct_next();
+	PRINT_FIELD_X(arg, prefer_busy_poll);
+
+	if (!IS_ARRAY_ZERO(arg.pad)) {
+		tprint_struct_next();
+		PRINT_FIELD_ARRAY(arg, pad, tcp, print_xint_array_member);
+	}
+
+	if (arg.resv) {
+		tprint_struct_next();
+		PRINT_FIELD_X(arg, resv);
+	}
+
+	tprint_struct_end();
+
+	return 0;
+}
+
+static int
+print_ioring_register_napi(struct tcb *tcp, const kernel_ulong_t addr,
+			   const unsigned int nargs)
+{
+	if (exiting(tcp)) {
+		if (syserror(tcp))
+			return 0;
+		tprint_value_changed();
+	}
+
+	if (nargs != 1) {
+		printaddr(addr);
+		return RVAL_DECODED;
+	}
+
+	return print_io_uring_napi(tcp, addr);
+}
+
+static int
+print_ioring_unregister_napi(struct tcb *tcp, const kernel_ulong_t addr,
+			     const unsigned int nargs)
+{
+	if (nargs != 1) {
+		printaddr(addr);
+		return RVAL_DECODED;
+	}
+
+	if (entering(tcp))
+		return 0;
+
+	print_io_uring_napi(tcp, addr);
+
+	return RVAL_DECODED;
+}
+
+static void
+print_io_uring_register_opcode(struct tcb *tcp, const unsigned int opcode,
+			       const unsigned int flags)
+{
+	if (flags)
+		tprint_flags_begin();
+
+	printxval(uring_register_opcodes, opcode, "IORING_REGISTER_???");
+
+	if (flags) {
+		tprint_flags_or();
+		printflags_in(uring_register_opcode_flags, flags, NULL);
+		tprint_flags_end();
+	}
+
+}
+
 SYS_FUNC(io_uring_register)
 {
 	const int fd = tcp->u_arg[0];
-	const unsigned int opcode = tcp->u_arg[1];
+	unsigned int opcode = tcp->u_arg[1];
 	const kernel_ulong_t arg = tcp->u_arg[2];
 	const unsigned int nargs = tcp->u_arg[3];
+	const unsigned int opcode_flags =
+		opcode & IORING_REGISTER_USE_REGISTERED_RING;
+	opcode &= ~IORING_REGISTER_USE_REGISTERED_RING;
 	int rc = RVAL_DECODED;
 	int buf;
 
 	if (entering(tcp)) {
 		/* fd */
-		printfd(tcp, fd);
+		if (opcode_flags)
+			PRINT_VAL_U(fd);
+		else
+			printfd(tcp, fd);
 		tprint_arg_next();
 
 		/* opcode */
-		printxval(uring_register_opcodes, opcode,
-			  "IORING_REGISTER_???");
+		print_io_uring_register_opcode(tcp, opcode, opcode_flags);
 		tprint_arg_next();
 	}
 
@@ -653,7 +856,22 @@ SYS_FUNC(io_uring_register)
 		break;
 	case IORING_REGISTER_PBUF_RING:
 	case IORING_UNREGISTER_PBUF_RING:
-		print_io_uring_buf_reg(tcp, arg);
+		print_io_uring_buf_reg(tcp, arg, nargs);
+		break;
+	case IORING_REGISTER_SYNC_CANCEL:
+		print_io_uring_sync_cancel_reg(tcp, arg, nargs);
+		break;
+	case IORING_REGISTER_FILE_ALLOC_RANGE:
+		print_io_uring_file_index_range(tcp, arg, nargs);
+		break;
+	case IORING_REGISTER_PBUF_STATUS:
+		rc = print_io_uring_buf_status(tcp, arg, nargs);
+		break;
+	case IORING_REGISTER_NAPI:
+		rc = print_ioring_register_napi(tcp, arg, nargs);
+		break;
+	case IORING_UNREGISTER_NAPI:
+		rc = print_ioring_unregister_napi(tcp, arg, nargs);
 		break;
 	case IORING_UNREGISTER_BUFFERS:
 	case IORING_UNREGISTER_FILES:
