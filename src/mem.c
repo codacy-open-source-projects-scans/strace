@@ -279,8 +279,8 @@ SYS_FUNC(mremap)
 	/* flags */
 	printflags64(mremap_flags, tcp->u_arg[3], "MREMAP_???");
 
-	if ((tcp->u_arg[3] & (MREMAP_MAYMOVE | MREMAP_FIXED)) ==
-	    (MREMAP_MAYMOVE | MREMAP_FIXED)) {
+	if (tcp->u_arg[3] & (MREMAP_FIXED | MREMAP_DONTUNMAP) &&
+	    tcp->u_arg[3] & MREMAP_MAYMOVE) {
 		/* new_address */
 		tprint_arg_next();
 		printaddr(tcp->u_arg[4]);
@@ -488,6 +488,22 @@ SYS_FUNC(remap_file_pages)
 
 	/* flags */
 	print_mmap_flags(flags);
+
+	return RVAL_DECODED;
+}
+
+SYS_FUNC(mseal)
+{
+	/* addr */
+	printaddr(tcp->u_arg[0]);
+	tprint_arg_next();
+
+	/* length */
+	PRINT_VAL_U(tcp->u_arg[1]);
+	tprint_arg_next();
+
+	/* flags, reserved for future use */
+	PRINT_VAL_X(tcp->u_arg[2]);
 
 	return RVAL_DECODED;
 }
