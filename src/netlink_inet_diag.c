@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2016 Fabien Siron <fabien.siron@epita.fr>
  * Copyright (c) 2017 JingPiao Chen <chenjingpiao@gmail.com>
- * Copyright (c) 2017-2022 The strace developers.
+ * Copyright (c) 2017-2024 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -425,11 +425,8 @@ print_sockaddr_array_member(struct tcb *const tcp, void *const elem_buf,
 	return true;
 }
 
-static bool
-decode_nla_sockaddrs(struct tcb *const tcp,
-		     const kernel_ulong_t addr,
-		     const unsigned int len,
-		     const void *const opaque_data)
+static
+DECL_NLA(sockaddrs)
 {
 	struct sockaddr_storage sas;
 	const size_t nmemb = len / sizeof(sas);

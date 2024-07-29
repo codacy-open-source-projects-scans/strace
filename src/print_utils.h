@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2019-2021 Eugene Syromyatnikov <evgsyr@gmail.com>.
- * Copyright (c) 2022-2023 The strace developers.
+ * Copyright (c) 2019-2024 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -12,8 +12,13 @@
 # include <inttypes.h>
 
 /* Hexadecimal output utils */
-
-static const char hex_chars[16] = "0123456789abcdef";
+static const char hex_chars[16] = {
+	/* Did not use "0123456789abcdef" as an initializer directly as
+	 * gcc-15 warns about the truncation:
+	 *   https://gcc.gnu.org/PR115185 */
+	'0', '1', '2', '3', '4', '5', '6', '7',
+	'8', '9', 'a', 'b', 'c', 'd', 'e', 'f',
+};
 
 /**
  * Character array representing hexadecimal encoding of a character value.

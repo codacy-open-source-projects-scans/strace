@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2016 Fabien Siron <fabien.siron@epita.fr>
  * Copyright (c) 2017 JingPiao Chen <chenjingpiao@gmail.com>
- * Copyright (c) 2016-2021 The strace developers.
+ * Copyright (c) 2016-2024 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -24,11 +24,7 @@
 #include "xlat/rtnl_route_attrs.h"
 #include "xlat/rtnl_rta_metrics_attrs.h"
 
-bool
-decode_nla_rt_class(struct tcb *const tcp,
-		    const kernel_ulong_t addr,
-		    const unsigned int len,
-		    const void *const opaque_data)
+DECL_NLA(rt_class)
 {
 	uint32_t num;
 
@@ -39,11 +35,7 @@ decode_nla_rt_class(struct tcb *const tcp,
 	return true;
 }
 
-bool
-decode_nla_rt_proto(struct tcb *const tcp,
-		    const kernel_ulong_t addr,
-		    const unsigned int len,
-		    const void *const opaque_data)
+DECL_NLA(rt_proto)
 {
 	uint8_t num;
 
@@ -188,11 +180,7 @@ decode_rtvia(struct tcb *const tcp,
 	return true;
 }
 
-bool
-decode_nla_lwt_encap_type(struct tcb *const tcp,
-			  const kernel_ulong_t addr,
-			  const unsigned int len,
-			  const void *const opaque_data)
+DECL_NLA(lwt_encap_type)
 {
 	uint16_t type;
 
