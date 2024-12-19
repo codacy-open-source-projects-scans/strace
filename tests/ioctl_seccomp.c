@@ -2,7 +2,7 @@
  * Check decoding of SECCOMP_IOCTL_* commands of ioctl syscall.
  *
  * Copyright (c) 2021 Eugene Syromyatnikov <evgsyr@gmail.com>.
- * Copyright (c) 2021-2023 The strace developers.
+ * Copyright (c) 2021-2024 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
@@ -79,10 +79,7 @@ sys_ioctl(kernel_long_t fd, kernel_ulong_t cmd, kernel_ulong_t arg)
 int
 main(int argc, char **argv)
 {
-	static const struct {
-		uint32_t val;
-		const char *str;
-	} dirs[] = {
+	static const struct strval32 dirs[] = {
 		{ ARG_STR(_IOC_NONE) },
 		{ ARG_STR(_IOC_READ) },
 		{ ARG_STR(_IOC_WRITE) },

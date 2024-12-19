@@ -1,7 +1,7 @@
 /*
  * Check decoding of landlock_restrict_self syscall.
  *
- * Copyright (c) 2021 Eugene Syromyatnikov <evgsyr@gmail.com>
+ * Copyright (c) 2021-2024 Eugene Syromyatnikov <evgsyr@gmail.com>
  * All rights reserved.
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
@@ -52,18 +52,12 @@ main(void)
 	SKIP_IF_PROC_IS_UNAVAILABLE;
 
 	/* Valid attr ptr */
-	static const struct {
-		uint64_t val;
-		const char *str;
-	} ruleset_fd_vals[] = {
+	static const struct strval64 ruleset_fd_vals[] = {
 		{ ARG_STR(-1) },
 		{ ARG_STR(9409) },
 		{ RULESET_FD, RULESET_FD_STR },
 	};
-	static const struct {
-		int val;
-		const char *str;
-	} flags_vals[] = {
+	static const struct strival32 flags_vals[] = {
 		{ ARG_STR(0) },
 		{ ARG_STR(0x1) },
 		{ ARG_STR(0xffffffff) },

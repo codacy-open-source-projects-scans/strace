@@ -31,21 +31,6 @@
 # define LONG_STR_PREFIX ""
 #endif /* ULONG_MAX > UINT_MAX */
 
-struct s32_val_str {
-	int32_t val;
-	const char *str;
-};
-
-struct u32_val_str {
-	uint32_t val;
-	const char *str;
-};
-
-struct u64_val_str {
-	uint64_t val;
-	const char *str;
-};
-
 /* In order to avoid endianness-specific hackery. */
 struct pea_flags {
 	uint64_t disabled			:1,
@@ -373,9 +358,13 @@ print_event_attr(struct perf_event_attr *attr_ptr, size_t size,
 		goto end;
 	}
 
+	PRINT_FLAG(aux_start_paused);
+	PRINT_FLAG(aux_pause);
+	PRINT_FLAG(aux_resume);
+
 	val = attr->__reserved_3;
 	if (val)
-		printf(" /* bytes 116..119: %#" PRIx32 " */", (uint32_t) val);
+		printf(", __reserved_3=%#" PRIx64 " /* Bits 931..959 */", val);
 
 	if (size <= 120) {
 		cutoff = 120;
@@ -457,7 +446,7 @@ main(void)
 	static const size_t attr_v7_size = PERF_ATTR_SIZE_VER7;
 	static const size_t attr_big_size = PERF_ATTR_SIZE_VER7 + 32;
 
-	static const struct u64_val_str attr_types[] = {
+	static const struct strval64 attr_types[] = {
 		{ ARG_STR(PERF_TYPE_HARDWARE) },
 		{ ARG_STR(PERF_TYPE_SOFTWARE) },
 		{ ARG_STR(PERF_TYPE_TRACEPOINT) },
@@ -467,7 +456,7 @@ main(void)
 		{ ARG_STR(0x6) " /* PERF_TYPE_??? */" },
 		{ ARG_STR(0xdeadc0de) " /* PERF_TYPE_??? */" },
 	};
-	static const struct u64_val_str
+	static const struct strval64
 	    attr_configs[ARRAY_SIZE(attr_types)][3] = {
 		/* PERF_TYPE_HARDWARE */ {
 			{ 9, "PERF_COUNT_HW_REF_CPU_CYCLES" },
@@ -520,7 +509,7 @@ main(void)
 			{ ARG_ULL_STR(0xdec0dedddec0dede) },
 		},
 	};
-	static const struct u64_val_str sample_types[] = {
+	static const struct strval64 sample_types[] = {
 		{ ARG_STR(0) },
 		{ 0x800, "PERF_SAMPLE_BRANCH_STACK" },
 		{ ARG_ULL_STR(0xdeadc0deda000000) " /* PERF_SAMPLE_??? */" },
@@ -539,7 +528,7 @@ main(void)
 			"PERF_SAMPLE_WEIGHT_STRUCT|"
 			"0xfffffffffe000000" },
 	};
-	static const struct u64_val_str read_formats[] = {
+	static const struct strval64 read_formats[] = {
 		{ ARG_STR(0) },
 		{ ARG_STR(PERF_FORMAT_TOTAL_TIME_ENABLED) },
 		{ 0x1f, "PERF_FORMAT_TOTAL_TIME_ENABLED|"
@@ -561,7 +550,7 @@ main(void)
 		"requested to have 0 skid",
 		"must have 0 skid",
 	};
-	static const struct u32_val_str bp_types[] = {
+	static const struct strval32 bp_types[] = {
 		{ 0, "HW_BREAKPOINT_EMPTY" },
 		{ 1, "HW_BREAKPOINT_R" },
 		{ 3, "HW_BREAKPOINT_RW" },
@@ -569,7 +558,7 @@ main(void)
 		{ 8, "0x8 /* HW_BREAKPOINT_??? */" },
 		{ ARG_STR(0xface1e55) " /* HW_BREAKPOINT_??? */" },
 	};
-	static const struct u64_val_str branch_sample_types[] = {
+	static const struct strval64 branch_sample_types[] = {
 		{ ARG_STR(0) },
 		{ 0x80, "PERF_SAMPLE_BRANCH_ABORT_TX" },
 		{ 0xfffff, BRANCH_TYPE_ALL },
@@ -578,7 +567,7 @@ main(void)
 		{ 0xffffffffffffffffULL,
 			BRANCH_TYPE_ALL "|0xfffffffffff00000" }
 	};
-	static const struct s32_val_str clockids[] = {
+	static const struct strival32 clockids[] = {
 		{ 11, "CLOCK_TAI" },
 		{ ARG_STR(0xc) " /* CLOCK_??? */" },
 		{ ARG_STR(0xbeeffeed) " /* CLOCK_??? */" },

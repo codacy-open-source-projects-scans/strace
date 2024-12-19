@@ -279,6 +279,14 @@ ioctl_counter-Xraw
 ioctl_counter-Xverbose
 ioctl_dm
 ioctl_dm-v
+ioctl_epoll
+ioctl_epoll-Xabbrev
+ioctl_epoll-Xraw
+ioctl_epoll-Xverbose
+ioctl_epoll-success
+ioctl_epoll-success-Xabbrev
+ioctl_epoll-success-Xraw
+ioctl_epoll-success-Xverbose
 ioctl_evdev
 ioctl_evdev-Xabbrev
 ioctl_evdev-Xraw
@@ -376,6 +384,9 @@ ioctl_mtd
 ioctl_mtd-success
 ioctl_nbd
 ioctl_nsfs
+ioctl_nsfs-ns_get_pid
+ioctl_nsfs-ns_get_pid--pidns-translation
+ioctl_nsfs-ns_mnt_get
 ioctl_perf
 ioctl_perf-success
 ioctl_ptp

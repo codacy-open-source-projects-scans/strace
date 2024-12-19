@@ -172,11 +172,8 @@ main(void)
 
 
 	/* Invalid op */
-	static const unsigned int invalid_ops[] = { 0x7fffffffU, 29 };
-	static const struct {
-		unsigned int val;
-		const char *str;
-	} op_flags[] = {
+	static const unsigned int invalid_ops[] = { 0x7fffffffU, 31 };
+	static const struct strval32 op_flags[] = {
 		{ ARG_STR(IORING_REGISTER_USE_REGISTERED_RING) },
 	};
 
@@ -489,10 +486,10 @@ main(void)
 		{ ARG_STR(IORING_RESTRICTION_REGISTER_OP), true,
 		  "register_op=", ARG_STR(IORING_REGISTER_BUFFERS), true },
 		{ ARG_STR(IORING_RESTRICTION_REGISTER_OP), true,
-		  "register_op=", ARG_STR(IORING_UNREGISTER_NAPI),
+		  "register_op=", ARG_STR(IORING_REGISTER_CLONE_BUFFERS),
 		  true },
 		{ ARG_STR(IORING_RESTRICTION_REGISTER_OP), true,
-		  "register_op=", 29, " /* IORING_REGISTER_??? */", false },
+		  "register_op=", 31, " /* IORING_REGISTER_??? */", false },
 		{ ARG_STR(IORING_RESTRICTION_REGISTER_OP), true,
 		  "register_op=", 255, " /* IORING_REGISTER_??? */", false },
 		{ ARG_STR(IORING_RESTRICTION_SQE_OP), true,
@@ -1388,57 +1385,75 @@ main(void)
 	}
 
 	/* IORING_REGISTER_NAPI, IORING_UNREGISTER_NAPI */
-	static const struct {
-		unsigned int op;
-		const char *str;
-	} napi_ops[] = {
-		{ 27, "IORING_REGISTER_NAPI" },
-		{ 28, "IORING_UNREGISTER_NAPI" },
+	static const struct strval32 napi_ops[] = {
+		{ ARG_STR(IORING_REGISTER_NAPI) },
+		{ ARG_STR(IORING_UNREGISTER_NAPI) },
+	};
+	static const struct strval32 napi_opcodes[] = {
+		{ ARG_XLAT_KNOWN(0, "IO_URING_NAPI_REGISTER_OP") },
+		{ ARG_XLAT_KNOWN(0x1, "IO_URING_NAPI_STATIC_ADD_ID") },
+		{ ARG_XLAT_KNOWN(0x2, "IO_URING_NAPI_STATIC_DEL_ID") },
+		{ ARG_XLAT_UNKNOWN(0xff, "IO_URING_NAPI_???") }
+	};
+	static const struct strval32 napi_tracking_strategies[] = {
+		{ ARG_XLAT_KNOWN(0, "IO_URING_NAPI_TRACKING_DYNAMIC") },
+		{ ARG_XLAT_KNOWN(0x1, "IO_URING_NAPI_TRACKING_STATIC") },
+		{ ARG_XLAT_KNOWN(0xff, "IO_URING_NAPI_TRACKING_INACTIVE") },
+		{ ARG_XLAT_UNKNOWN(0xfacefeed, "IO_URING_NAPI_TRACKING_???") }
 	};
 	TAIL_ALLOC_OBJECT_CONST_PTR(struct io_uring_napi, napi);
 
 	for (size_t i = 0; i < ARRAY_SIZE(napi_ops); i++) {
-		sys_io_uring_register(fd_null, napi_ops[i].op, 0, 0xdeadbeef);
+		sys_io_uring_register(fd_null, napi_ops[i].val, 0, 0xdeadbeef);
 		printf("io_uring_register(%u<%s>, " XLAT_FMT ", NULL, %u)"
 		       " = %s\n",
 		       fd_null, path_null,
-		       XLAT_SEL(napi_ops[i].op,
+		       XLAT_SEL(napi_ops[i].val,
 			        napi_ops[i].str),
 		       0xdeadbeef, errstr);
 
-		sys_io_uring_register(fd_null, napi_ops[i].op, napi + 1, 0);
+		sys_io_uring_register(fd_null, napi_ops[i].val, napi + 1, 0);
 		printf("io_uring_register(%u<%s>, " XLAT_FMT ", %p, 0) = %s\n",
 		       fd_null, path_null,
-		       XLAT_SEL(napi_ops[i].op, napi_ops[i].str),
+		       XLAT_SEL(napi_ops[i].val, napi_ops[i].str),
 		       napi + 1, errstr);
 
 		for (size_t j = 0; j < (1U << 4); j++) {
+			const unsigned int tracking_idx = (j >> 2) & 3;
 			memset(napi, 0, sizeof(*napi));
 			napi->busy_poll_to = j & 1 ? 0xfacefeedU : 0;
 			napi->prefer_busy_poll = j & 2 ? 0xfe : 0;
-			napi->pad[2] = j & 4 ? 0x10 : 0;
+			napi->opcode = napi_opcodes[j & 3].val;
+			napi->pad[1] = j & 4 ? 0x10 : 0;
+			napi->op_param = napi_tracking_strategies[tracking_idx].val;
 			napi->resv = j & 8 ? 0xbadc0dedU : 0;
 
-			sys_io_uring_register(fd_null, napi_ops[i].op, napi,
+			sys_io_uring_register(fd_null, napi_ops[i].val, napi,
 					      0x42);
 			printf("io_uring_register(%u<%s>, " XLAT_FMT ", %p, 66)"
 			       " = %s\n",
 			       fd_null, path_null,
-			       XLAT_SEL(napi_ops[i].op,
+			       XLAT_SEL(napi_ops[i].val,
 				        napi_ops[i].str),
 			       napi, errstr);
 
-			sys_io_uring_register(fd_null, napi_ops[i].op, napi, 1);
+			sys_io_uring_register(fd_null, napi_ops[i].val, napi, 1);
 			printf("io_uring_register(%u<%s>, " XLAT_FMT ", ",
 			       fd_null, path_null,
-			       XLAT_SEL(napi_ops[i].op,
+			       XLAT_SEL(napi_ops[i].val,
 				        napi_ops[i].str));
 			if (i == 0 || RETVAL_INJECTED) {
 				printf("{busy_poll_to=%#x, prefer_busy_poll=%#x",
 				       napi->busy_poll_to,
 				       napi->prefer_busy_poll);
+				printf(", opcode=%s", napi_opcodes[j & 3].str);
 				if (j & 4)
-					printf(", pad=[0, 0, 0x10]");
+					printf(", pad=[0, 0x10]");
+				if (napi->opcode == 0)
+					printf(", op_param=%s",
+					       napi_tracking_strategies[tracking_idx].str);
+				else
+					printf(", op_param=%#x", napi->op_param);
 				if (j & 8)
 					printf(", resv=0xbadc0ded");
 				printf("}");
@@ -1448,14 +1463,163 @@ main(void)
 				printf(" => {busy_poll_to=%#x, prefer_busy_poll=%#x",
 				       napi->busy_poll_to,
 				       napi->prefer_busy_poll);
+				printf(", opcode=%s", napi_opcodes[j & 3].str);
 				if (j & 4)
-					printf(", pad=[0, 0, 0x10]");
+					printf(", pad=[0, 0x10]");
+				if (napi->opcode == 0)
+					printf(", op_param=%s",
+					       napi_tracking_strategies[tracking_idx].str);
+				else
+					printf(", op_param=%#x", napi->op_param);
 				if (j & 8)
 					printf(", resv=0xbadc0ded");
 				printf("}");
 			}
 			printf(", 1) = %s\n", errstr);
 		}
+	}
+
+	/* IORING_REGISTER_CLOCK */
+	static const struct strval32 clock_ops =
+		{ ARG_STR(IORING_REGISTER_CLOCK) };
+
+	sys_io_uring_register(fd_null, clock_ops.val, 0, 1);
+	printf("io_uring_register(%u<%s>, " XLAT_FMT ", NULL, 1) = %s\n",
+	       fd_null, path_null,
+	       XLAT_SEL(clock_ops.val, clock_ops.str),
+	       errstr);
+
+	TAIL_ALLOC_OBJECT_CONST_PTR(struct io_uring_clock_register,
+				    clock_register);
+
+	sys_io_uring_register(fd_null, clock_ops.val, clock_register, 0x42);
+	printf("io_uring_register(%u<%s>, " XLAT_FMT ", %p, 66) = %s\n",
+	       fd_null, path_null,
+	       XLAT_SEL(clock_ops.val, clock_ops.str),
+	       clock_register, errstr);
+
+	sys_io_uring_register(fd_null, clock_ops.val, clock_register + 1, 0);
+	printf("io_uring_register(%u<%s>, " XLAT_FMT ", %p, 0) = %s\n",
+	       fd_null, path_null,
+	       XLAT_SEL(clock_ops.val, clock_ops.str),
+	       clock_register + 1, errstr);
+
+	sys_io_uring_register(fd_null, clock_ops.val,
+			      (char *) clock_register + 1, 0);
+	printf("io_uring_register(%u<%s>, " XLAT_FMT ", %p, 0) = %s\n",
+	       fd_null, path_null,
+	       XLAT_SEL(clock_ops.val, clock_ops.str),
+	       (char *) clock_register + 1, errstr);
+
+	static const struct strval32 clockids[] = {
+		{ ARG_XLAT_KNOWN(0, "CLOCK_REALTIME") },
+		{ ARG_XLAT_KNOWN(0x1, "CLOCK_MONOTONIC") },
+		{ ARG_XLAT_KNOWN(0x2, "CLOCK_PROCESS_CPUTIME_ID") },
+		{ ARG_XLAT_KNOWN(0x3, "CLOCK_THREAD_CPUTIME_ID") },
+		{ ARG_XLAT_KNOWN(0x4, "CLOCK_MONOTONIC_RAW") },
+		{ ARG_XLAT_KNOWN(0x5, "CLOCK_REALTIME_COARSE") },
+		{ ARG_XLAT_KNOWN(0x6, "CLOCK_MONOTONIC_COARSE") },
+		{ ARG_XLAT_KNOWN(0x7, "CLOCK_BOOTTIME") },
+		{ ARG_XLAT_KNOWN(0x8, "CLOCK_REALTIME_ALARM") },
+		{ ARG_XLAT_KNOWN(0x9, "CLOCK_BOOTTIME_ALARM") },
+		{ ARG_XLAT_KNOWN(0xa, "CLOCK_SGI_CYCLE") },
+		{ ARG_XLAT_KNOWN(0xb, "CLOCK_TAI") },
+		{ ARG_XLAT_UNKNOWN(0xc, "CLOCK_???") },
+	};
+
+	for (size_t i = 0; i < ARRAY_SIZE(clockids); ++i) {
+		memset(clock_register, 0, sizeof(*clock_register));
+		clock_register->clockid = clockids[i].val;
+		clock_register->__resv[0] = i & 1 ? 0xdefaced1 : 0;
+		clock_register->__resv[1] = i & 2 ? 0xdefaced2 : 0;
+		clock_register->__resv[2] = i & 4 ? 0xdefaced3 : 0;
+		sys_io_uring_register(fd_null, clock_ops.val, clock_register, 0);
+		printf("io_uring_register(%u<%s>, " XLAT_FMT
+		        ", {clockid=%s",
+		       fd_null, path_null,
+		       XLAT_SEL(clock_ops.val, clock_ops.str),
+		       clockids[i].str);
+		if (i & 7)
+			printf(", __resv=[%#x, %#x, %#x]",
+			       clock_register->__resv[0],
+			       clock_register->__resv[1],
+			       clock_register->__resv[2]);
+		printf("}, 0) = %s\n", errstr);
+	}
+
+	/* IORING_REGISTER_CLONE_BUFFERS */
+	static const struct strval32 clone_buffers_ops =
+		{ ARG_STR(IORING_REGISTER_CLONE_BUFFERS) };
+
+	sys_io_uring_register(fd_null, clone_buffers_ops.val, 0, 2);
+	printf("io_uring_register(%u<%s>, " XLAT_FMT ", NULL, 2) = %s\n",
+	       fd_null, path_null,
+	       XLAT_SEL(clone_buffers_ops.val, clone_buffers_ops.str),
+	       errstr);
+
+	TAIL_ALLOC_OBJECT_CONST_PTR(struct io_uring_clone_buffers,
+				    clone_buffers);
+
+	sys_io_uring_register(fd_null, clone_buffers_ops.val,
+			      clone_buffers, 0x42);
+	printf("io_uring_register(%u<%s>, " XLAT_FMT ", %p, 66) = %s\n",
+	       fd_null, path_null,
+	       XLAT_SEL(clone_buffers_ops.val, clone_buffers_ops.str),
+	       clone_buffers, errstr);
+
+	sys_io_uring_register(fd_null, clone_buffers_ops.val,
+			      clone_buffers + 1, 1);
+	printf("io_uring_register(%u<%s>, " XLAT_FMT ", %p, 1) = %s\n",
+	       fd_null, path_null,
+	       XLAT_SEL(clone_buffers_ops.val, clone_buffers_ops.str),
+	       clone_buffers + 1, errstr);
+
+	sys_io_uring_register(fd_null, clone_buffers_ops.val,
+			      (char *) clone_buffers + 1, 1);
+	printf("io_uring_register(%u<%s>, " XLAT_FMT ", %p, 1) = %s\n",
+	       fd_null, path_null,
+	       XLAT_SEL(clone_buffers_ops.val, clone_buffers_ops.str),
+	       (char *) clone_buffers + 1, errstr);
+
+	static const struct strval32 clone_buffers_flags[] = {
+		{ ARG_STR(0) },
+		{ ARG_XLAT_KNOWN(0x1, "IORING_REGISTER_SRC_REGISTERED") },
+		{ ARG_XLAT_UNKNOWN(0x2, "IORING_REGISTER_???") },
+		{ ARG_XLAT_UNKNOWN(0xfffffffe, "IORING_REGISTER_???") },
+		{ ARG_XLAT_KNOWN(0xffffffff,
+				 "IORING_REGISTER_SRC_REGISTERED|0xfffffffe") },
+	};
+
+	for (size_t i = 0; i < ARRAY_SIZE(clone_buffers_flags); ++i) {
+		const size_t pad_len = ARRAY_SIZE(clone_buffers->pad);
+		memset(clone_buffers, 0, sizeof(*clone_buffers));
+		clone_buffers->src_fd = fd_full;
+		clone_buffers->flags = clone_buffers_flags[i].val;
+		clone_buffers->src_off = 0xfacefed1 + i;
+		clone_buffers->dst_off = 0xfacefed2 + i;
+		clone_buffers->nr = 0xfacefed3 + i;
+		clone_buffers->pad[0] = i & 1 ? 0xdefaced1 : 0;
+		clone_buffers->pad[pad_len - 1] = i & 2 ? 0xdefaced2 : 0;
+		sys_io_uring_register(fd_null, clone_buffers_ops.val,
+				      clone_buffers, 1);
+		printf("io_uring_register(%u<%s>, " XLAT_FMT
+		        ", {src_fd=%u<%s>, flags=%s"
+			", src_off=%u, dst_off=%u, nr=%u",
+		       fd_null, path_null,
+		       XLAT_SEL(clone_buffers_ops.val, clone_buffers_ops.str),
+		       fd_full, path_full,
+		       clone_buffers_flags[i].str,
+		       clone_buffers->src_off,
+		       clone_buffers->dst_off,
+		       clone_buffers->nr);
+			if (i & 3) {
+				printf(", pad=[");
+				for (size_t j = 0; j < pad_len; ++j)
+					printf("%s%#x", j ? ", " : "",
+					       clone_buffers->pad[j]);
+				printf("]");
+			}
+		printf("}, 1) = %s\n", errstr);
 	}
 
 	puts("+++ exited with 0 +++");

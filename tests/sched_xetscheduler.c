@@ -1,7 +1,7 @@
 /*
  * Check decoding of sched_getscheduler and sched_setscheduler syscalls.
  *
- * Copyright (c) 2016-2021 The strace developers.
+ * Copyright (c) 2016-2024 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
@@ -51,6 +51,11 @@ main(void)
 #ifdef SCHED_DEADLINE
 		case SCHED_DEADLINE:
 			scheduler = "SCHED_DEADLINE";
+			break;
+#endif
+#ifdef SCHED_EXT
+		case SCHED_EXT:
+			scheduler = "SCHED_EXT";
 			break;
 #endif
 		default:

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2017 JingPiao Chen <chenjingpiao@gmail.com>
- * Copyright (c) 2017-2021 The strace developers.
+ * Copyright (c) 2017-2024 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
@@ -38,10 +38,7 @@ main(void)
 	static char pattern[4096];
 	fill_memory_ex(pattern, sizeof(pattern), 'a', 'z' - 'a' + 1);
 
-	static const struct {
-		uint8_t val;
-		const char *str;
-	} inv_attrs[] = {
+	static const struct strval8 inv_attrs[] = {
 		{ ARG_STR(IFLA_PROTO_DOWN_REASON_UNSPEC) },
 		{ ARG_STR(0x3)  " /* IFLA_PROTO_DOWN_REASON_??? */" },
 		{ ARG_STR(0xfe) " /* IFLA_PROTO_DOWN_REASON_??? */" },
@@ -60,10 +57,7 @@ main(void)
 					      );
 	}
 
-	static const struct {
-		uint32_t val;
-		const char *str;
-	} attrs[] = {
+	static const struct strval32 attrs[] = {
 		{ ARG_STR(IFLA_PROTO_DOWN_REASON_MASK) },
 		{ ARG_STR(IFLA_PROTO_DOWN_REASON_VALUE) },
 	};

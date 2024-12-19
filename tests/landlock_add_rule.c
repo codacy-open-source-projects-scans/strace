@@ -98,10 +98,7 @@ main(void)
 	       (char *) attr_port + 4, errstr);
 
 	/* Valid attr ptr */
-	static const struct {
-		uint64_t val;
-		const char *str;
-	} fs_vals[] = {
+	static const struct strval64 fs_vals[] = {
 		{ ARG_STR(LANDLOCK_ACCESS_FS_EXECUTE) },
 		{ ARG_ULL_STR(LANDLOCK_ACCESS_FS_EXECUTE|LANDLOCK_ACCESS_FS_READ_FILE|LANDLOCK_ACCESS_FS_READ_DIR|LANDLOCK_ACCESS_FS_REMOVE_FILE|LANDLOCK_ACCESS_FS_MAKE_CHAR|LANDLOCK_ACCESS_FS_MAKE_DIR|LANDLOCK_ACCESS_FS_MAKE_SOCK|LANDLOCK_ACCESS_FS_MAKE_FIFO|LANDLOCK_ACCESS_FS_MAKE_BLOCK|LANDLOCK_ACCESS_FS_MAKE_SYM|LANDLOCK_ACCESS_FS_REFER|LANDLOCK_ACCESS_FS_TRUNCATE|LANDLOCK_ACCESS_FS_IOCTL_DEV|0xdebeefeddeca0000) },
 		{ ARG_ULL_STR(0xdebeefeddeca0000)
@@ -113,10 +110,7 @@ main(void)
 		{ ARG_ULL_STR(0xfffffffffffffffc)
 			" /* LANDLOCK_ACCESS_NET_??? */" },
 	};
-	static const struct {
-		int val;
-		const char *str;
-	} parent_fd_vals[] = {
+	static const struct strival32 parent_fd_vals[] = {
 		{ ARG_STR(-1) },
 		{ ARG_STR(11630) },
 		{ PARENT_FD, PARENT_FD_STR },

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2017 JingPiao Chen <chenjingpiao@gmail.com>
- * Copyright (c) 2017-2022 The strace developers.
+ * Copyright (c) 2017-2024 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
@@ -498,10 +498,7 @@ main(void)
 	}
 
 	/* IFLA_EVENT */
-	static const struct {
-		uint32_t val;
-		const char *str;
-	} ifla_events[] = {
+	static const struct strval32 ifla_events[] = {
 		{ 0, "IFLA_EVENT_NONE" },
 		{ 6, "IFLA_EVENT_BONDING_OPTIONS" },
 		{ ARG_STR(0x7) " /* IFLA_EVENT_??? */" },
@@ -528,10 +525,7 @@ main(void)
 
 	/* IFLA_ALT_IFNAME, IFLA_PARENT_DEV_NAME, IFLA_PARENT_DEV_BUS_NAME */
 	static const char str[] = "OH HAI THAR\r\n\t\377\0\v\x7e";
-	static const struct {
-		uint32_t val;
-		const char *str;
-	} attrs[] = {
+	static const struct strval32 attrs[] = {
 		{ ARG_STR(IFLA_ALT_IFNAME) },
 		{ ARG_STR(IFLA_PARENT_DEV_NAME) },
 		{ ARG_STR(IFLA_PARENT_DEV_BUS_NAME) },

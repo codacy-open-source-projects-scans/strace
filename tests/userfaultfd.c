@@ -2,7 +2,7 @@
  * Check decoding of userfaultfd syscall.
  *
  * Copyright (c) 2015-2018 Dmitry V. Levin <ldv@strace.io>
- * Copyright (c) 2015-2021 The strace developers.
+ * Copyright (c) 2015-2024 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
@@ -33,10 +33,7 @@ k_userfaultfd(const unsigned int flags)
 int
 main(void)
 {
-	struct {
-		unsigned int val;
-		const char *str;
-	} flags[] = {
+	static const struct strval32 flags[] = {
 		{ ARG_STR(0) },
 		{ ARG_STR(O_NONBLOCK) },
 		{ ARG_STR(O_CLOEXEC) },

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2017 JingPiao Chen <chenjingpiao@gmail.com>
- * Copyright (c) 2017-2021 The strace developers.
+ * Copyright (c) 2017-2024 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
@@ -44,10 +44,7 @@ main(void)
 				  IFLA_XDP_FD, pattern, num,
 				  printf("%d", num));
 
-	static const struct {
-		uint8_t val;
-		const char *str;
-	} attach_types[] = {
+	static const struct strval8 attach_types[] = {
 		{ ARG_STR(XDP_ATTACHED_NONE) },
 		{ ARG_STR(XDP_ATTACHED_MULTI) },
 		{ ARG_STR(0x5)  " /* XDP_ATTACHED_??? */" },
@@ -68,10 +65,7 @@ main(void)
 				  IFLA_XDP_FLAGS, pattern, flags,
 				  printf("XDP_FLAGS_UPDATE_IF_NOEXIST"));
 
-	static const struct {
-		uint32_t val;
-		const char *str;
-	} attrs[] = {
+	static const struct strval32 attrs[] = {
 		{ ARG_STR(IFLA_XDP_PROG_ID) },
 		{ ARG_STR(IFLA_XDP_DRV_PROG_ID) },
 		{ ARG_STR(IFLA_XDP_SKB_PROG_ID) },

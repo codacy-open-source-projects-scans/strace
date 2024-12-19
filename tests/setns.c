@@ -2,7 +2,7 @@
  * Check decoding of setns syscall.
  *
  * Copyright (c) 2016 Eugene Syromyatnikov <evgsyr@gmail.com>
- * Copyright (c) 2016-2022 The strace developers.
+ * Copyright (c) 2016-2024 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
@@ -34,10 +34,7 @@ main(void)
 {
 	static const int bogus_fd = 0xdeadc0de;
 
-	static struct {
-		unsigned int val;
-		const char *str;
-	} nstypes[] = {
+	static const struct strval32 nstypes[] = {
 		{ 0, "0" },
 		{ 0x00000080U, "CLONE_NEWTIME" },
 		{ 0x00020000U, "CLONE_NEWNS" },

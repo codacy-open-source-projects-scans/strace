@@ -75,7 +75,7 @@ clone_ptrace-q +clone_ptrace.test -q
 clone_ptrace-qq +clone_ptrace.test -qq
 close_range	-a21 7>>/dev/full
 copy_file_range
-creat	-a20
+creat	-a16
 delete_module	-a23
 dev--decode-fds-all	-a30 -e trace=openat,fsync -P "/dev/full" -P "/dev/zero" -P "/dev/sda" -e decode-fds=all
 dev--decode-fds-dev	-a30 -e trace=openat,fsync -P "/dev/full" -P "/dev/zero" -P "/dev/sda" -e decode-fds=dev
@@ -108,9 +108,9 @@ epoll_create	-a17
 epoll_create1	-a28
 epoll_ctl
 epoll_pwait
-epoll_pwait2
-epoll_pwait2-P	--trace=epoll_pwait2 -P /dev/full
-epoll_pwait2-y	--trace=epoll_pwait2 -y
+epoll_pwait2	9>>/dev/full
+epoll_pwait2-P	--trace=epoll_pwait2 -P /dev/full 9>>/dev/full
+epoll_pwait2-y	--trace=epoll_pwait2 -y 9>>/dev/full
 epoll_wait	-a26
 erestartsys	-a34 -e signal=none -e trace=recvfrom
 eventfd-yy -a15 --trace=eventfd2,fchdir -yy -qq
@@ -301,6 +301,14 @@ ioctl_counter-Xraw	+ioctl.test -a18 -Xraw
 ioctl_counter-Xverbose	+ioctl.test -a52 -Xverbose
 ioctl_dm	+ioctl.test -s9
 ioctl_dm-v	+ioctl.test -v -s9
+ioctl_epoll		+ioctl.test -a30
+ioctl_epoll-Xabbrev	+ioctl.test -a30 -Xabbrev
+ioctl_epoll-Xraw		+ioctl.test -a28 -Xraw
+ioctl_epoll-Xverbose	+ioctl.test -a47 -Xverbose
+ioctl_epoll-success		+ioctl-success.sh -a30
+ioctl_epoll-success-Xabbrev	+ioctl-success.sh -a30 -Xabbrev
+ioctl_epoll-success-Xraw		+ioctl-success.sh -a28 -Xraw
+ioctl_epoll-success-Xverbose	+ioctl-success.sh -a47 -Xverbose
 ioctl_evdev	+ioctl.test -a26
 ioctl_evdev-Xabbrev	+ioctl.test -a26 -Xabbrev
 ioctl_evdev-Xraw	+ioctl.test -a28 -Xraw
@@ -397,6 +405,9 @@ ioctl_mtd	+ioctl.test
 ioctl_mtd-success	+ioctl-success.sh -a26
 ioctl_nbd	+ioctl.test -y
 ioctl_nsfs	+ioctl.test -esignal=none
+ioctl_nsfs-ns_get_pid	+ioctl.test -a33
+ioctl_nsfs-ns_get_pid--pidns-translation	test_pidns -etrace=ioctl -a25 "QUIRK:START-OF-TEST-OUTPUT:ioctl(-1, NS_GET_USERNS)"
+ioctl_nsfs-ns_mnt_get	+ioctl.test
 ioctl_perf	+ioctl.test
 ioctl_perf-success +ioctl-success.sh -a35
 ioctl_ptp			+ioctl.test -a29
@@ -531,7 +542,7 @@ lookup_dcookie	-a27
 lsm_get_self_attr	-a49 -s2
 lsm_get_self_attr-success	--inject=lsm_get_self_attr:retval=96 -a49 -s2 --trace=lsm_get_self_attr
 lsm_list_modules	-a32
-lsm_list_modules-success	--inject=lsm_list_modules:retval=17 -a32 --trace=lsm_list_modules
+lsm_list_modules-success	--inject=lsm_list_modules:retval=18 -a32 --trace=lsm_list_modules
 lsm_set_self_attr	-a46
 lstat	-a31 --no-abbrev --trace-path=stat.sample --trace-path=/dev/full
 lstat64	-a32 --no-abbrev --trace-path=stat.sample --trace-path=/dev/full
@@ -560,8 +571,8 @@ memfd_secret-success-y -einject=memfd_secret:retval=7 -a16 -etrace=memfd_secret 
 migrate_pages	-a33
 migrate_pages--pidns-translation	test_pidns -a33 -e trace=migrate_pages
 mincore	-a22
-mkdir	-a20
-mkdirat	-a28
+mkdir	-a16
+mkdirat	-a22
 mknod	-a18
 mknodat	-a35
 mlock	-a20 -e trace=mlock,munlock

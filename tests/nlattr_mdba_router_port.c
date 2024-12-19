@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2017 JingPiao Chen <chenjingpiao@gmail.com>
- * Copyright (c) 2017-2021 The strace developers.
+ * Copyright (c) 2017-2024 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
@@ -87,10 +87,7 @@ main(void)
 			   nla.nla_len));
 
 	/* timers */
-	static const struct {
-		uint32_t val;
-		const char *str;
-	} pattrs[] = {
+	static const struct strval32 pattrs[] = {
 		{ ARG_STR(MDBA_ROUTER_PATTR_TIMER) },
 		{ ARG_STR(MDBA_ROUTER_PATTR_INET_TIMER) },
 		{ ARG_STR(MDBA_ROUTER_PATTR_INET6_TIMER) },

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2016 Katerina Koukiou <k.koukiou@gmail.com>
- * Copyright (c) 2016-2021 The strace developers.
+ * Copyright (c) 2016-2024 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
@@ -50,10 +50,7 @@ main(void)
 	create_and_enter_subdir("openat_subdir");
 
 	char *my_secontext = SECONTEXT_PID_MY();
-	struct {
-		unsigned int val;
-		const char *str;
-	} modes[] = {
+	static const struct strval32 modes[] = {
 		{ ARG_STR(O_RDONLY) },
 		{ ARG_STR(O_WRONLY) },
 		{ ARG_STR(O_RDWR) },

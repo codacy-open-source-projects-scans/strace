@@ -2,7 +2,7 @@
  * Check decoding of NS_* commands of ioctl syscall.
  *
  * Copyright (c) 2017 Nikolay Marchuk <marchuk.nikolay.a@gmail.com>
- * Copyright (c) 2017-2023 The strace developers.
+ * Copyright (c) 2017-2024 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
@@ -11,6 +11,7 @@
 #include "tests.h"
 
 #include <fcntl.h>
+#include <inttypes.h>
 #include <sched.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -34,6 +35,25 @@ test_no_namespace(void)
 	printf("ioctl(-1, NS_GET_NSTYPE)" RVAL_EBADF);
 	ioctl(-1, NS_GET_OWNER_UID, NULL);
 	printf("ioctl(-1, NS_GET_OWNER_UID, NULL)" RVAL_EBADF);
+	ioctl(-1, NS_GET_MNTNS_ID, NULL);
+	printf("ioctl(-1, NS_GET_MNTNS_ID, NULL)" RVAL_EBADF);
+
+	static const char mnt_path[] = "/proc/self/ns/mnt";
+	int mnt_fd = open(mnt_path, O_RDONLY);
+	if (mnt_fd < 0) {
+		perror(mnt_path);
+	} else {
+		TAIL_ALLOC_OBJECT_CONST_PTR(uint64_t, mntns_id);
+		int rc = ioctl(mnt_fd, NS_GET_MNTNS_ID, mntns_id);
+		if (rc < 0) {
+			printf("ioctl(%d, NS_GET_MNTNS_ID, %p) = %s\n",
+			       mnt_fd, mntns_id, sprintrc(rc));
+		} else {
+			printf("ioctl(%d, NS_GET_MNTNS_ID, [%#" PRIx64 "])"
+			       " = %d\n", mnt_fd, *mntns_id, rc);
+		}
+		close(mnt_fd);
+	}
 }
 
 static void

@@ -1,7 +1,7 @@
 /*
  * Check decoding of memfd_secret syscall.
  *
- * Copyright (c) 2021 Eugene Syromyatnikov <evgsyr@gmail.com>
+ * Copyright (c) 2021-2024 Eugene Syromyatnikov <evgsyr@gmail.com>
  * All rights reserved.
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
@@ -64,10 +64,7 @@ main(void)
 {
 	SKIP_IF_PROC_IS_UNAVAILABLE;
 
-	static const struct {
-		int val;
-		const char *str;
-	} flags_vals[] = {
+	static const struct strval32 flags_vals[] = {
 		{ ARG_STR(0) },
 		{ ARG_STR(O_CLOEXEC) },
 		/* O_CLOEXEC is either 0x80000, 0x200000, or 0x400000 */

@@ -22,8 +22,8 @@ READELF		= @READELF@
 
 bundled_CPPFLAGS =
 if USE_BUNDLED_HEADERS
-bundled_CPPFLAGS += -I$(top_srcdir)/bundled/$(OS)/arch/$(KARCH)/include/uapi \
-		    -I$(top_srcdir)/bundled/$(OS)/include/uapi
+bundled_CPPFLAGS += -isystem $(top_srcdir)/bundled/$(OS)/arch/$(KARCH)/include/uapi \
+		    -isystem $(top_srcdir)/bundled/$(OS)/include/uapi
 endif
 
 AM_CFLAGS = $(WARN_CFLAGS)
@@ -96,6 +96,7 @@ libstrace_a_SOURCES =	\
 	dyxlat.c	\
 	empty.h		\
 	epoll.c		\
+	epoll_ioctl.c	\
 	error_prints.c	\
 	error_prints.h	\
 	evdev.c		\
@@ -332,7 +333,6 @@ libstrace_a_SOURCES =	\
 	rtnl_tc_action.c \
 	s390.c		\
 	sched.c		\
-	sched_attr.h	\
 	scsi.c		\
 	seccomp.c	\
 	seccomp_ioctl.c	\

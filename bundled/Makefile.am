@@ -37,6 +37,7 @@ EXTRA_DIST = \
 	linux/include/uapi/linux/dqblk_xfs.h \
 	linux/include/uapi/linux/ethtool.h \
 	linux/include/uapi/linux/ethtool_netlink.h \
+	linux/include/uapi/linux/eventpoll.h \
 	linux/include/uapi/linux/falloc.h \
 	linux/include/uapi/linux/fcntl.h \
 	linux/include/uapi/linux/fib_rules.h \
@@ -114,6 +115,7 @@ EXTRA_DIST = \
 	linux/include/uapi/linux/quota.h \
 	linux/include/uapi/linux/rtnetlink.h \
 	linux/include/uapi/linux/sched.h \
+	linux/include/uapi/linux/sched/types.h \
 	linux/include/uapi/linux/seccomp.h \
 	linux/include/uapi/linux/securebits.h \
 	linux/include/uapi/linux/seg6_genl.h \

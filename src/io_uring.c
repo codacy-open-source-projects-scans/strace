@@ -13,6 +13,7 @@
 #include <linux/io_uring.h>
 
 #include "xlat/uring_async_cancel_flags.h"
+#include "xlat/uring_clone_buffers_flags.h"
 #include "xlat/uring_enter_flags.h"
 #include "xlat/uring_files_update_fds.h"
 #include "xlat/uring_iowq_acct.h"
@@ -25,6 +26,8 @@
 #include "xlat/uring_register_opcode_flags.h"
 #include "xlat/uring_register_rsrc_flags.h"
 #include "xlat/uring_restriction_opcodes.h"
+#include "xlat/uring_napi_ops.h"
+#include "xlat/uring_napi_tracking_strategies.h"
 
 static void
 print_io_sqring_offsets(const struct io_sqring_offsets *const p)
@@ -720,10 +723,20 @@ print_io_uring_napi(struct tcb *tcp, const kernel_ulong_t addr)
 	tprint_struct_next();
 	PRINT_FIELD_X(arg, prefer_busy_poll);
 
+	tprint_struct_next();
+	PRINT_FIELD_XVAL(arg, opcode, uring_napi_ops, "IO_URING_NAPI_???");
+
 	if (!IS_ARRAY_ZERO(arg.pad)) {
 		tprint_struct_next();
 		PRINT_FIELD_ARRAY(arg, pad, tcp, print_xint_array_member);
 	}
+
+	tprint_struct_next();
+	if (arg.opcode == IO_URING_NAPI_REGISTER_OP)
+		PRINT_FIELD_XVAL(arg, op_param, uring_napi_tracking_strategies,
+				 "IO_URING_NAPI_TRACKING_???");
+	else
+		PRINT_FIELD_X(arg, op_param);
 
 	if (arg.resv) {
 		tprint_struct_next();
@@ -766,6 +779,85 @@ print_ioring_unregister_napi(struct tcb *tcp, const kernel_ulong_t addr,
 		return 0;
 
 	print_io_uring_napi(tcp, addr);
+
+	return RVAL_DECODED;
+}
+
+static void
+print_io_uring_clock_register(struct tcb *tcp, const kernel_ulong_t addr)
+{
+	struct io_uring_clock_register arg;
+	CHECK_TYPE_SIZE(arg, 16);
+	CHECK_TYPE_SIZE(arg.__resv, 3 * sizeof(uint32_t));
+
+	if (umove_or_printaddr(tcp, addr, &arg))
+		return;
+
+	tprint_struct_begin();
+	PRINT_FIELD_XVAL(arg, clockid, clocknames, "CLOCK_???");
+
+	if (!IS_ARRAY_ZERO(arg.__resv)) {
+		tprint_struct_next();
+		PRINT_FIELD_ARRAY(arg, __resv, tcp, print_xint_array_member);
+	}
+
+	tprint_struct_end();
+}
+
+static int
+print_ioring_register_clock(struct tcb *tcp, const kernel_ulong_t addr,
+			    const unsigned int nargs)
+{
+	if (nargs == 0)
+		print_io_uring_clock_register(tcp, addr);
+	else
+		printaddr(addr);
+
+	return RVAL_DECODED;
+}
+
+static void
+print_io_uring_clone_buffers(struct tcb *tcp, const kernel_ulong_t addr)
+{
+	struct io_uring_clone_buffers arg;
+	CHECK_TYPE_SIZE(arg, 32);
+	CHECK_TYPE_SIZE(arg.pad, 3 * sizeof(uint32_t));
+
+	if (umove_or_printaddr(tcp, addr, &arg))
+		return;
+
+	tprint_struct_begin();
+	PRINT_FIELD_FD(arg, src_fd, tcp);
+
+	tprint_struct_next();
+	PRINT_FIELD_FLAGS(arg, flags, uring_clone_buffers_flags,
+			  "IORING_REGISTER_???");
+
+	tprint_struct_next();
+	PRINT_FIELD_U(arg, src_off);
+
+	tprint_struct_next();
+	PRINT_FIELD_U(arg, dst_off);
+
+	tprint_struct_next();
+	PRINT_FIELD_U(arg, nr);
+
+	if (!IS_ARRAY_ZERO(arg.pad)) {
+		tprint_struct_next();
+		PRINT_FIELD_ARRAY(arg, pad, tcp, print_xint_array_member);
+	}
+
+	tprint_struct_end();
+}
+
+static int
+print_ioring_register_clone_buffers(struct tcb *tcp, const kernel_ulong_t addr,
+				    const unsigned int nargs)
+{
+	if (nargs == 1)
+		print_io_uring_clone_buffers(tcp, addr);
+	else
+		printaddr(addr);
 
 	return RVAL_DECODED;
 }
@@ -872,6 +964,12 @@ SYS_FUNC(io_uring_register)
 		break;
 	case IORING_UNREGISTER_NAPI:
 		rc = print_ioring_unregister_napi(tcp, arg, nargs);
+		break;
+	case IORING_REGISTER_CLOCK:
+		rc = print_ioring_register_clock(tcp, arg, nargs);
+		break;
+	case IORING_REGISTER_CLONE_BUFFERS:
+		rc = print_ioring_register_clone_buffers(tcp, arg, nargs);
 		break;
 	case IORING_UNREGISTER_BUFFERS:
 	case IORING_UNREGISTER_FILES:
