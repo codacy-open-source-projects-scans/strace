@@ -1,0 +1,7 @@
+#unconditional
+#value_indexed
+#From include/uapi/asm-generic/fcntl.h
+O_RDONLY
+O_WRONLY
+O_RDWR
+O_ACCMODE

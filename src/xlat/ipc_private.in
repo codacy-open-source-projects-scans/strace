@@ -1,0 +1,2 @@
+#From include/uapi/linux/ipc.h
+IPC_PRIVATE 0

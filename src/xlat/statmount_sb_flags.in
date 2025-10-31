@@ -1,0 +1,6 @@
+#unconditional
+#From include/uapi/linux/mount.h
+MS_RDONLY
+MS_SYNCHRONOUS
+MS_DIRSYNC
+MS_LAZYTIME

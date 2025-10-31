@@ -1,0 +1,9 @@
+#unconditional
+#From include/uapi/linux/fcntl.h
+DN_ACCESS
+DN_MODIFY
+DN_CREATE
+DN_DELETE
+DN_RENAME
+DN_ATTRIB
+DN_MULTISHOT

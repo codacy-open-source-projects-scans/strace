@@ -1,0 +1,6 @@
+#From include/uapi/linux/fs.h
+SEEK_SET
+SEEK_CUR
+SEEK_END
+SEEK_DATA
+SEEK_HOLE
