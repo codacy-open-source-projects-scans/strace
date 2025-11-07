@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2016 Fabien Siron <fabien.siron@epita.fr>
  * Copyright (c) 2017 JingPiao Chen <chenjingpiao@gmail.com>
- * Copyright (c) 2016-2021 The strace developers.
+ * Copyright (c) 2016-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -26,6 +26,7 @@ static const nla_decoder_t netconfmsg_nla_decoders[] = {
 	[NETCONFA_IGNORE_ROUTES_WITH_LINKDOWN]	= decode_nla_s32,
 	[NETCONFA_INPUT]			= decode_nla_s32,
 	[NETCONFA_BC_FORWARDING]		= decode_nla_s32,
+	[NETCONFA_FORCE_FORWARDING]		= decode_nla_s32,
 };
 
 DECL_NETLINK_ROUTE_DECODER(decode_netconfmsg)

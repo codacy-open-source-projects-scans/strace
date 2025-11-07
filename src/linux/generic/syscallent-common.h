@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2024 The strace developers.
+ * Copyright (c) 2019-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -47,3 +47,10 @@
 [BASE_NR + 460] = { 4,	0,		SEN(lsm_set_self_attr),		"lsm_set_self_attr"	},
 [BASE_NR + 461] = { 3,	0,		SEN(lsm_list_modules),		"lsm_list_modules"	},
 [BASE_NR + 462] = { 3,	TM,		SEN(mseal),			"mseal"		},
+[BASE_NR + 463] = { 6,	TD|TF,		SEN(setxattrat),		"setxattrat"	},
+[BASE_NR + 464] = { 6,	TD|TF,		SEN(getxattrat),		"getxattrat"	},
+[BASE_NR + 465] = { 5,	TD|TF,		SEN(listxattrat),		"listxattrat"	},
+[BASE_NR + 466] = { 4,	TD|TF,		SEN(removexattrat),		"removexattrat"	},
+[BASE_NR + 467] = { 5,	TD|TF,		SEN(open_tree_attr),		"open_tree_attr"},
+[BASE_NR + 468] = { 5,	TD|TF,		SEN(file_getattr),		"file_getattr"	},
+[BASE_NR + 469] = { 5,	TD|TF,		SEN(file_setattr),		"file_setattr"	},

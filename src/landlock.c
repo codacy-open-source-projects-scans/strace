@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021 Eugene Syromyatnikov <evgsyr@gmail.com>
- * Copyright (c) 2021-2024 The strace developers.
+ * Copyright (c) 2021-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -39,21 +39,21 @@ print_landlock_ruleset_attr(struct tcb *tcp, const kernel_ulong_t addr,
 			  "LANDLOCK_ACCESS_FS_???");
 
 	if (size > offsetof(typeof(attr), handled_access_net)) {
-		tprint_arg_next();
+		tprint_struct_next();
 		PRINT_FIELD_FLAGS(attr, handled_access_net,
 				  landlock_ruleset_access_net,
 				  "LANDLOCK_ACCESS_NET_???");
 	}
 
 	if (size > offsetof(typeof(attr), scoped)) {
-		tprint_arg_next();
+		tprint_struct_next();
 		PRINT_FIELD_FLAGS(attr, scoped,
 				  landlock_scope_flags,
 				  "LANDLOCK_SCOPE_???");
 	}
 
 	if (size > max_attr_size) {
-		tprint_arg_next();
+		tprint_struct_next();
 		tprint_more_data_follows();
 	}
 
@@ -65,17 +65,20 @@ SYS_FUNC(landlock_create_ruleset)
 	kernel_ulong_t attr = tcp->u_arg[0];
 	kernel_ulong_t size = tcp->u_arg[1];
 	unsigned int flags = tcp->u_arg[2];
-	int fd_flag = flags & LANDLOCK_CREATE_RULESET_VERSION ? 0 : RVAL_FD;
+	const unsigned int landlock_nofd_flags =
+		LANDLOCK_CREATE_RULESET_VERSION | LANDLOCK_CREATE_RULESET_ERRATA;
+	unsigned int fd_flag = flags & landlock_nofd_flags ? 0 : RVAL_FD;
 
 	/* attr */
+	tprints_arg_name("attr");
 	print_landlock_ruleset_attr(tcp, attr, size);
-	tprint_arg_next();
 
 	/* size */
+	tprints_arg_next_name("size");
 	PRINT_VAL_U(size);
-	tprint_arg_next();
 
 	/* flags */
+	tprints_arg_next_name("flags");
 	printflags(landlock_create_ruleset_flags, flags,
 		   "LANDLOCK_CREATE_RULESET_???");
 
@@ -119,14 +122,15 @@ SYS_FUNC(landlock_add_rule)
 	unsigned int rule_type = tcp->u_arg[1];
 
 	/* ruleset_fd */
+	tprints_arg_name("ruleset_fd");
 	printfd(tcp, tcp->u_arg[0]);
-	tprint_arg_next();
 
 	/* rule_type */
+	tprints_arg_next_name("rule_type");
 	printxval(landlock_rule_types, rule_type, "LANDLOCK_RULE_???");
-	tprint_arg_next();
 
 	/* rule_attr */
+	tprints_arg_next_name("rule_attr");
 	switch (rule_type) {
 	case LANDLOCK_RULE_PATH_BENEATH:
 		print_landlock_path_beneath_attr(tcp, tcp->u_arg[2]);
@@ -139,9 +143,9 @@ SYS_FUNC(landlock_add_rule)
 	default:
 		printaddr(tcp->u_arg[2]);
 	}
-	tprint_arg_next();
 
 	/* flags */
+	tprints_arg_next_name("flags");
 	PRINT_VAL_X((unsigned int) tcp->u_arg[3]);
 
 	return RVAL_DECODED;
@@ -150,10 +154,11 @@ SYS_FUNC(landlock_add_rule)
 SYS_FUNC(landlock_restrict_self)
 {
 	/* ruleset_fd */
+	tprints_arg_name("ruleset_fd");
 	printfd(tcp, tcp->u_arg[0]);
-	tprint_arg_next();
 
 	/* flags */
+	tprints_arg_next_name("flags");
 	PRINT_VAL_X((unsigned int) tcp->u_arg[1]);
 
 	return RVAL_DECODED;

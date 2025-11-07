@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022 Sean Young <sean@mess.org>
+ * Copyright (c) 2022-2025 The strace developers.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
@@ -41,11 +42,11 @@ lirc_ioctl(struct tcb *const tcp, const unsigned int code,
 	}
 
 	if (entering(tcp)) {
-		tprint_arg_next();
 		if (_IOC_DIR(code) == _IOC_READ)
 			return 0;
 	}
 
+	tprints_arg_next_name("argp");
 	if (umove_or_printaddr(tcp, arg, &value))
 		return RVAL_IOCTL_DECODED;
 

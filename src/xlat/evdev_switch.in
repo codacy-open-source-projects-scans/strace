@@ -1,5 +1,6 @@
 #unconditional
 #value_indexed
+#From include/uapi/linux/input-event-codes.h
 SW_LID
 SW_TABLET_MODE
 SW_HEADPHONE_INSERT
@@ -16,3 +17,5 @@ SW_ROTATE_LOCK
 SW_LINEIN_INSERT
 SW_MUTE_DEVICE
 SW_PEN_INSERTED
+SW_MACHINE_COVER
+SW_USB_INSERT

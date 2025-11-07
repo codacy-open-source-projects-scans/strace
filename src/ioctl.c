@@ -3,7 +3,7 @@
  * Copyright (c) 1993 Branko Lankester <branko@hacktic.nl>
  * Copyright (c) 1993, 1994, 1995, 1996 Rick Sladkey <jrs@world.std.com>
  * Copyright (c) 1996-2001 Wichert Akkerman <wichert@cistron.nl>
- * Copyright (c) 1999-2024 The strace developers.
+ * Copyright (c) 1999-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -83,15 +83,16 @@ ioctl_print_code(const unsigned int code)
 		      abbrev ? XLAT_STYLE_DEFAULT : XLAT_STYLE_ABBREV,
 		      ioctl_dirs, NULL);
 	tprint_flags_end();
-	tprint_arg_next();
 
+	tprint_arg_next();
 	PRINT_VAL_X(_IOC_TYPE(code));
-	tprint_arg_next();
 
+	tprint_arg_next();
 	PRINT_VAL_X(_IOC_NR(code));
-	tprint_arg_next();
 
+	tprint_arg_next();
 	PRINT_VAL_X(_IOC_SIZE(code));
+
 	tprint_arg_end();
 }
 
@@ -331,7 +332,7 @@ ioctl_decode_unknown_type(struct tcb *const tcp, const unsigned int code,
 
 	if (abbrev(tcp) || (_IOC_SIZE(code) == 0) || (arg == 0)) {
 		/* Let the generic handler print arg value.  */
-		return 0;
+		return RVAL_DECODED;
 	}
 
 	switch (_IOC_DIR(code)) {
@@ -350,7 +351,7 @@ ioctl_decode_unknown_type(struct tcb *const tcp, const unsigned int code,
 	}
 
 	if (entering(tcp)) {
-		tprint_arg_next();
+		tprints_arg_next_name("argp");
 		if (print_before)
 			ret = printstr_ex(tcp, arg, _IOC_SIZE(code),
 			                  QUOTE_FORCE_HEX);
@@ -413,6 +414,8 @@ ioctl_decode(struct tcb *tcp, const struct finfo *finfo)
 		return hdio_ioctl(tcp, code, arg);
 	case 0x12:
 		return block_ioctl(tcp, code, arg);
+	case 0x15:
+		return fs_0x15_ioctl(tcp, code, arg);
 	case '!': /* 0x21 */
 		return seccomp_ioctl(tcp, code, arg);
 	case '"': /* 0x22 */
@@ -510,6 +513,8 @@ SYS_FUNC(ioctl)
 		struct finfo *finfo = NULL;
 		char path[PATH_MAX + 1];
 		bool deleted;
+
+		tprints_arg_name("fd");
 		if (ioctl_command_overlaps(tcp->u_arg[1]) &&
 		    getfdpath_pid(tcp->pid, tcp->u_arg[0], path, sizeof(path),
 				  &deleted) >= 0) {
@@ -519,8 +524,7 @@ SYS_FUNC(ioctl)
 		} else
 			printfd(tcp, tcp->u_arg[0]);
 
-		tprint_arg_next();
-
+		tprints_arg_next_name("op");
 		if (xlat_verbosity != XLAT_STYLE_ABBREV)
 			PRINT_VAL_X((unsigned int) tcp->u_arg[1]);
 		if (xlat_verbosity == XLAT_STYLE_VERBOSE)
@@ -554,7 +558,7 @@ SYS_FUNC(ioctl)
 		ret &= ~RVAL_IOCTL_DECODED;
 		ret |= RVAL_DECODED;
 	} else if (ret & RVAL_DECODED) {
-		tprint_arg_next();
+		tprints_arg_next_name("argp");
 		PRINT_VAL_X(tcp->u_arg[2]);
 	}
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2022 The strace developers.
+ * Copyright (c) 2020-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -32,7 +32,7 @@ parse_secontext(char *secontext, char **result)
 	char *end_pos = NULL;
 
 	if (!is_number_in_set(SECONTEXT_FULL, secontext_set)) {
-		/* We're looking for the type wihch is the third field */
+		/* We're looking for the type which is the third field */
 		enum { SECONTEXT_TYPE = 2 };
 		char *start_pos = secontext;
 

@@ -4,7 +4,7 @@
 # Copyright (c) 2006-2016 Dmitry V. Levin <ldv@strace.io>
 # Copyright (c) 2008-2015 Mike Frysinger <vapier@gentoo.org>
 # Copyright (c) 2015 Elvira Khabirova <lineprinter0@gmail.com>
-# Copyright (c) 2002-2024 The strace developers.
+# Copyright (c) 2002-2025 The strace developers.
 # All rights reserved.
 #
 # SPDX-License-Identifier: LGPL-2.1-or-later
@@ -46,9 +46,14 @@ strace_LDFLAGS =
 strace_LDADD = libstrace.a $(clock_LIBS) $(timer_LIBS)
 strace_SOURCES = strace.c
 
-noinst_PROGRAMS = disable_ptrace_get_syscall_info disable_ptrace_getregset
+noinst_PROGRAMS = \
+	disable_ptrace_get_syscall_info	\
+	disable_ptrace_getregset	\
+	disable_ptrace_set_syscall_info	\
+	#
 disable_ptrace_get_syscall_info_LDADD = $(strace_LDADD)
 disable_ptrace_getregset_LDADD = $(strace_LDADD)
+disable_ptrace_set_syscall_info_LDADD = $(strace_LDADD)
 
 noinst_LIBRARIES = libstrace.a
 libstrace_a_CPPFLAGS = $(strace_CPPFLAGS)
@@ -57,6 +62,7 @@ libstrace_a_SOURCES =	\
 	access.c	\
 	affinity.c	\
 	aio.c		\
+	alarm.c		\
 	alpha.c		\
 	arch_defs.h	\
 	basic_filters.c	\
@@ -103,6 +109,7 @@ libstrace_a_SOURCES =	\
 	evdev_mpers.c	\
 	eventfd.c	\
 	execve.c	\
+	exit.c		\
 	exitkill.c	\
 	exitkill.h	\
 	fadvise.c	\
@@ -121,12 +128,14 @@ libstrace_a_SOURCES =	\
 	fetch_struct_stat64.c \
 	fetch_struct_statfs.c \
 	fetch_struct_xfs_quotastat.c \
+	file_attr.c	\
 	file_handle.c	\
 	filter.h	\
 	filter_qualify.c \
 	filter_seccomp.c \
 	filter_seccomp.h \
 	flock.c		\
+	fs_0x15_ioctl.c	\
 	fs_0x94_ioctl.c	\
 	fs_f_ioctl.c	\
 	fs_x_ioctl.c	\
@@ -158,6 +167,7 @@ libstrace_a_SOURCES =	\
 	io_uring.c	\
 	ioctl.c		\
 	ioperm.c	\
+	iopl.c		\
 	ioprio.c	\
 	iovec.h		\
 	ipc.c \
@@ -242,6 +252,7 @@ libstrace_a_SOURCES =	\
 	netlink_sock_diag.c \
 	netlink_sock_diag.h \
 	netlink_unix_diag.c \
+	nice.c		\
 	nlattr.c	\
 	nlattr.h	\
 	nsfs.c          \
@@ -251,7 +262,6 @@ libstrace_a_SOURCES =	\
 	number_set.h	\
 	oldstat.c	\
 	open.c		\
-	open_tree.c	\
 	or1k_atomic.c	\
 	pathtrace.c	\
 	perf.c		\
@@ -337,6 +347,7 @@ libstrace_a_SOURCES =	\
 	seccomp.c	\
 	seccomp_ioctl.c	\
 	sendfile.c	\
+	set_tid_address.c \
 	sg_io_v3.c	\
 	sg_io_v4.c	\
 	shutdown.c	\

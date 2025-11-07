@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2016 Dmitry V. Levin <ldv@strace.io>
- * Copyright (c) 2016-2024 The strace developers.
+ * Copyright (c) 2016-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
@@ -57,6 +57,7 @@
 
 #  define XLAT_FMT "%#x"
 #  define XLAT_FMT_D "%d"
+#  define XLAT_FMT_JD "%jd"
 #  define XLAT_FMT_U "%u"
 #  define XLAT_FMT_L "%#lx"
 #  define XLAT_FMT_LL "%#llx"
@@ -81,6 +82,7 @@
 
 #  define XLAT_FMT "%#x /* %s */"
 #  define XLAT_FMT_D "%d /* %s */"
+#  define XLAT_FMT_JD "%jd /* %s */"
 #  define XLAT_FMT_U "%u /* %s */"
 #  define XLAT_FMT_L "%#lx /* %s */"
 #  define XLAT_FMT_LL "%#llx /* %s */"
@@ -105,6 +107,7 @@
 
 #  define XLAT_FMT "%s"
 #  define XLAT_FMT_D "%s"
+#  define XLAT_FMT_JD "%s"
 #  define XLAT_FMT_U "%s"
 #  define XLAT_FMT_L "%s"
 #  define XLAT_FMT_LL "%s"

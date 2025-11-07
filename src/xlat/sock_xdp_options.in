@@ -1,4 +1,5 @@
 #value_indexed
+#From include/uapi/linux/if_xdp.h
 XDP_MMAP_OFFSETS		1
 XDP_RX_RING			2
 XDP_TX_RING			3
@@ -7,3 +8,4 @@ XDP_UMEM_FILL_RING		5
 XDP_UMEM_COMPLETION_RING	6
 XDP_STATISTICS			7
 XDP_OPTIONS			8
+XDP_MAX_TX_SKB_BUDGET		9

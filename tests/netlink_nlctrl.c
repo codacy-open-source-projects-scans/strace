@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2024 The strace developers.
+ * Copyright (c) 2017-2025 The strace developers.
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
@@ -664,8 +664,8 @@ test_nla_ops_family(const int fd)
 
 	static const struct strval32 ethtool_cmds[] = {
 		{ ARG_STR(ETHTOOL_MSG_STRSET_GET) },
-		{ ARG_STR(ETHTOOL_MSG_PHY_GET) },
-		{ ETHTOOL_MSG_PHY_GET + 1, "ETHTOOL_MSG_???" },
+		{ ARG_STR(ETHTOOL_MSG_RSS_DELETE_ACT) },
+		{ ETHTOOL_MSG_RSS_DELETE_ACT + 1, "ETHTOOL_MSG_???" },
 	};
 	TEST_NLA_OPS_FAMILY(ETHTOOL_GENL_NAME, ethtool_cmds);
 
@@ -685,15 +685,15 @@ test_nla_ops_family(const int fd)
 
 	static const struct strval32 netdev_cmds[] = {
 		{ ARG_STR(NETDEV_CMD_DEV_GET) },
-		{ ARG_STR(NETDEV_CMD_QSTATS_GET) },
-		{ NETDEV_CMD_QSTATS_GET + 1, "NETDEV_CMD_???" },
+		{ ARG_STR(NETDEV_CMD_BIND_TX) },
+		{ NETDEV_CMD_BIND_TX + 1, "NETDEV_CMD_???" },
 	};
 	TEST_NLA_OPS_FAMILY(NETDEV_FAMILY_NAME, netdev_cmds);
 
 	static const struct strval32 nl80211_cmds[] = {
 		{ ARG_STR(NL80211_CMD_GET_WIPHY) },
-		{ ARG_STR(NL80211_CMD_SET_TID_TO_LINK_MAPPING) },
-		{ NL80211_CMD_SET_TID_TO_LINK_MAPPING + 1, "NL80211_CMD_???" },
+		{ ARG_STR(NL80211_CMD_EPCS_CFG) },
+		{ NL80211_CMD_EPCS_CFG + 1, "NL80211_CMD_???" },
 	};
 	TEST_NLA_OPS_FAMILY(NL80211_GENL_NAME, nl80211_cmds);
 
@@ -720,8 +720,8 @@ test_nla_ops_family(const int fd)
 
 	static const struct strval32 thermal_cmds[] = {
 		{ ARG_STR(THERMAL_GENL_CMD_TZ_GET_ID) },
-		{ ARG_STR(THERMAL_GENL_CMD_CDEV_GET) },
-		{ THERMAL_GENL_CMD_CDEV_GET + 1, "THERMAL_GENL_CMD_???" },
+		{ ARG_STR(THERMAL_GENL_CMD_THRESHOLD_FLUSH) },
+		{ THERMAL_GENL_CMD_THRESHOLD_FLUSH + 1, "THERMAL_GENL_CMD_???" },
 	};
 	TEST_NLA_OPS_FAMILY(THERMAL_GENL_FAMILY_NAME, thermal_cmds);
 }

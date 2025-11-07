@@ -2,7 +2,7 @@
 #
 # Check decoding of clone flags.
 #
-# Copyright (c) 2019-2020 The strace developers.
+# Copyright (c) 2019-2025 The strace developers.
 # All rights reserved.
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
@@ -21,4 +21,4 @@ CHILD_STACK_REPORTED="$(sed -n 's/^clone[^(]*(child_stack=\(0x[[:xdigit:]]\+\),.
 export CHILD_STACK_EXPECTED CHILD_STACK_REPORTED
 
 # Use child stack addresses to check decoding.
-run_strace_match_diff -a35 --silence=exits,personality -y -e signal=none -e trace=$syscall
+run_strace_match_diff -a35 --silence=exits,personality -y -e signal=none -e trace=$syscall -e namespace=new

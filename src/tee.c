@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2022 The strace developers.
+ * Copyright (c) 2020-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -7,18 +7,6 @@
 
 #include "defs.h"
 #include <linux/tee.h>
-
-/* Not in UAPI.  */
-struct tee_ioctl_shm_register_fd_data {
-	int64_t fd;
-	uint64_t size;
-	uint32_t flags;
-	uint8_t _pad1[4];
-	int32_t id;
-	uint8_t _pad2[4];
-} ATTRIBUTE_ALIGNED(8);
-
-#define TEE_IOC_SHM_REGISTER_FD _IOWR(0xa4, 8, struct tee_ioctl_shm_register_fd_data)
 
 #include "xlat/tee_ioctl_gen_caps.h"
 #include "xlat/tee_ioctl_impl_ids.h"
@@ -161,11 +149,10 @@ tee_version(struct tcb *const tcp, const kernel_ulong_t arg)
 {
 	struct tee_ioctl_version_data version;
 
-	if (entering(tcp)) {
-		tprint_arg_next();
+	if (entering(tcp))
 		return 0;
-	}
 
+	tprints_arg_next_name("argp");
 	if (umove_or_printaddr(tcp, arg, &version))
 		return RVAL_IOCTL_DECODED;
 
@@ -198,7 +185,7 @@ tee_open_session(struct tcb *const tcp, const kernel_ulong_t arg)
 	gid_t gid;
 
 	if (entering(tcp)) {
-		tprint_arg_next();
+		tprints_arg_next_name("argp");
 
 		if ((rval = TEE_FETCH_BUF_DATA(buf_data, open_session, &params)))
 			return rval;
@@ -284,7 +271,7 @@ tee_invoke(struct tcb *const tcp, const kernel_ulong_t arg)
 	uint64_t params;
 
 	if (entering(tcp)) {
-		tprint_arg_next();
+		tprints_arg_next_name("argp");
 		if ((rval = TEE_FETCH_BUF_DATA(buf_data, invoke, &params)))
 			return rval;
 
@@ -332,7 +319,7 @@ tee_cancel(struct tcb *const tcp, const kernel_ulong_t arg)
 {
 	struct tee_ioctl_cancel_arg cancel;
 
-	tprint_arg_next();
+	tprints_arg_next_name("argp");
 	if (umove_or_printaddr(tcp, arg, &cancel))
 		return RVAL_IOCTL_DECODED;
 
@@ -350,7 +337,7 @@ tee_close_session(struct tcb *const tcp, const kernel_ulong_t arg)
 {
 	struct tee_ioctl_close_session_arg close_session;
 
-	tprint_arg_next();
+	tprints_arg_next_name("argp");
 	if (umove_or_printaddr(tcp, arg, &close_session))
 		return RVAL_IOCTL_DECODED;
 
@@ -370,7 +357,7 @@ tee_suppl_recv(struct tcb *const tcp, const kernel_ulong_t arg)
 	uint64_t params;
 
 	if (entering(tcp)) {
-		tprint_arg_next();
+		tprints_arg_next_name("argp");
 		if ((rval = TEE_FETCH_BUF_DATA(buf_data, supp_recv, &params)))
 			return rval;
 
@@ -416,7 +403,7 @@ tee_suppl_send(struct tcb *const tcp, const kernel_ulong_t arg)
 	uint64_t params;
 
 	if (entering(tcp)) {
-		tprint_arg_next();
+		tprints_arg_next_name("argp");
 		if ((rval = TEE_FETCH_BUF_DATA(buf_data, supp_send, &params)))
 			return rval;
 
@@ -456,7 +443,7 @@ tee_shm_alloc(struct tcb *const tcp, const kernel_ulong_t arg)
 	struct tee_ioctl_shm_alloc_data shm_alloc;
 
 	if (entering(tcp)) {
-		tprint_arg_next();
+		tprints_arg_next_name("argp");
 		if (umove_or_printaddr(tcp, arg, &shm_alloc))
 			return RVAL_IOCTL_DECODED;
 
@@ -495,7 +482,7 @@ tee_shm_register_fd(struct tcb *const tcp, const kernel_ulong_t arg)
 	struct tee_ioctl_shm_register_fd_data shm_register_fd;
 
 	if (entering(tcp)) {
-		tprint_arg_next();
+		tprints_arg_next_name("argp");
 		if (umove_or_printaddr(tcp, arg, &shm_register_fd))
 			return RVAL_IOCTL_DECODED;
 
@@ -531,7 +518,7 @@ tee_shm_register(struct tcb *const tcp, const kernel_ulong_t arg)
 	struct tee_ioctl_shm_register_data shm_register;
 
 	if (entering(tcp)) {
-		tprint_arg_next();
+		tprints_arg_next_name("argp");
 		if (umove_or_printaddr(tcp, arg, &shm_register))
 			return RVAL_IOCTL_DECODED;
 

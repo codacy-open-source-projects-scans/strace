@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2023 Dmitry V. Levin <ldv@strace.io>
+ * Copyright (c) 2023-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -16,9 +17,10 @@ SYS_FUNC(cachestat)
 	const unsigned int flags = tcp->u_arg[3];
 
 	if (entering(tcp)) {
+		tprints_arg_name("fd");
 		printfd(tcp, fd);
-		tprint_arg_next();
 
+		tprints_arg_next_name("cstat_range");
 		struct cachestat_range crange;
 		if (!umove_or_printaddr(tcp, range_addr, &crange)) {
 			tprint_struct_begin();
@@ -27,8 +29,8 @@ SYS_FUNC(cachestat)
 			PRINT_FIELD_U(crange, len);
 			tprint_struct_end();
 		}
-		tprint_arg_next();
 	} else {
+		tprints_arg_next_name("cstat");
 		struct cachestat cstat;
 		if (!umove_or_printaddr(tcp, stat_addr, &cstat)) {
 			tprint_struct_begin();
@@ -43,8 +45,8 @@ SYS_FUNC(cachestat)
 			PRINT_FIELD_U(cstat, nr_recently_evicted);
 			tprint_struct_end();
 		}
-		tprint_arg_next();
 
+		tprints_arg_next_name("flags");
 		PRINT_VAL_X(flags);
 	}
 

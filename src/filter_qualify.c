@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2016 Dmitry V. Levin <ldv@strace.io>
- * Copyright (c) 2016-2024 The strace developers.
+ * Copyright (c) 2016-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -25,12 +25,12 @@ struct number_set *decode_fd_set;
 struct number_set *decode_pid_set;
 struct number_set *trace_set;
 struct number_set *trace_fd_set;
+struct number_set *inject_set;
 
 bool quiet_set_updated = false;
 bool decode_fd_set_updated = false;
 
 static struct number_set *abbrev_set;
-static struct number_set *inject_set;
 static struct number_set *raw_set;
 static struct number_set *verbose_set;
 
@@ -617,19 +617,39 @@ qualify_inject(const char *const str)
 void
 qualify_kvm(const char *const str)
 {
-	if (strcmp(str, "vcpu") == 0) {
+	if (strncmp(str, "vcpu", 4) == 0) {
 #ifdef HAVE_LINUX_KVM_H
-		if (os_release >= KERNEL_VERSION(4, 16, 0))
-			kvm_run_structure_decoder_init();
-		else
-			error_msg("-e kvm=vcpu option needs"
-				  " Linux 4.16.0 or higher");
+		enum decode_kvm_run_structure_modes mode;
+		if (os_release >= KERNEL_VERSION(4, 16, 0)) {
+			if (str[4] == '\0')
+				mode = DECODE_KVM_RUN_STRUCTURE_EXIT_REASON;
+			else if (str[4] == '+' && str[5] == '\0')
+				mode = DECODE_KVM_RUN_STRUCTURE_MORE;
+			else
+				goto wrong_kvm_qualifier;
+			kvm_run_structure_decoder_init(mode);
+		} else
+			error_msg("-e kvm=%s option needs"
+				  " Linux 4.16.0 or higher", str);
 #else
-		error_msg("-e kvm=vcpu option is not implemented"
-			  " for this architecture");
+		if (str[4] == '\0' || (str[4] == '+' && str[5] == '\0'))
+			error_msg("-e kvm=%s option is not implemented"
+				  " for this architecture", str);
+		goto wrong_kvm_qualifier;
 #endif
 	} else {
+	wrong_kvm_qualifier:
 		error_msg_and_die("invalid -e kvm= argument: '%s'", str);
+	}
+}
+
+void
+qualify_namespace(const char *const str)
+{
+	if (strcmp(str, "new") == 0) {
+		namespace_auxstr_init();
+	} else {
+		error_msg_and_die("invalid -e namespace= argument: '%s'", str);
 	}
 }
 
@@ -699,6 +719,7 @@ static const struct qual_options {
 	{ "decode-pid",	qualify_decode_pid },
 	{ "decode-pids", qualify_decode_pid },
 	{ "secontext",  qualify_secontext },
+	{ "namespace",  qualify_namespace },
 };
 
 void

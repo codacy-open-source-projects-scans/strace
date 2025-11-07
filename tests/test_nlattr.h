@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2022 The strace developers.
+ * Copyright (c) 2017-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
@@ -446,6 +446,7 @@ DEF_NLATTR_INTEGER_CHECK_(u16, uint16_t, "%hu")
 DEF_NLATTR_INTEGER_CHECK_(u32, uint32_t, "%u")
 DEF_NLATTR_INTEGER_CHECK_(u64, uint64_t, "%" PRIu64)
 
+DEF_NLATTR_INTEGER_CHECK_(x8, uint8_t, "%#hhx")
 DEF_NLATTR_INTEGER_CHECK_(x16, uint16_t, "%#hx")
 DEF_NLATTR_INTEGER_CHECK_(x32, uint32_t, "%#x")
 

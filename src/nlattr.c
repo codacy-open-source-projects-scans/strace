@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2016 Fabien Siron <fabien.siron@epita.fr>
  * Copyright (c) 2017 JingPiao Chen <chenjingpiao@gmail.com>
- * Copyright (c) 2016-2024 The strace developers.
+ * Copyright (c) 2016-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -406,6 +406,21 @@ DECL_NLA(be16)
 	else if (!umove_or_printaddr(tcp, addr, &num)) {
 		tprints_arg_begin("htons");
 		PRINT_VAL_U(ntohs(num));
+		tprint_arg_end();
+	}
+
+	return true;
+}
+
+DECL_NLA(be32)
+{
+	unsigned int num;
+
+	if (len < sizeof(num))
+		return false;
+	else if (!umove_or_printaddr(tcp, addr, &num)) {
+		tprints_arg_begin("htonl");
+		PRINT_VAL_U(ntohl(num));
 		tprint_arg_end();
 	}
 

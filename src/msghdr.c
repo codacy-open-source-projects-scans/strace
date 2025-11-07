@@ -4,7 +4,7 @@
  * Copyright (c) 1993, 1994, 1995, 1996 Rick Sladkey <jrs@world.std.com>
  * Copyright (c) 1996-2000 Wichert Akkerman <wichert@cistron.nl>
  * Copyright (c) 2005-2016 Dmitry V. Levin <ldv@strace.io>
- * Copyright (c) 2016-2023 The strace developers.
+ * Copyright (c) 2016-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -503,14 +503,15 @@ dumpiov_in_msghdr(struct tcb *const tcp, const kernel_ulong_t addr,
 SYS_FUNC(sendmsg)
 {
 	/* sockfd */
+	tprints_arg_name("sockfd");
 	printfd(tcp, tcp->u_arg[0]);
-	tprint_arg_next();
 
 	/* msg */
+	tprints_arg_next_name("msg");
 	decode_msghdr(tcp, 0, tcp->u_arg[1], -1);
-	tprint_arg_next();
 
 	/* flags */
+	tprints_arg_next_name("flags");
 	printflags(msg_flags, tcp->u_arg[2], "MSG_???");
 
 	return RVAL_DECODED;
@@ -522,19 +523,21 @@ SYS_FUNC(recvmsg)
 
 	if (entering(tcp)) {
 		/* sockfd */
+		tprints_arg_name("sockfd");
 		printfd(tcp, tcp->u_arg[0]);
-		tprint_arg_next();
 
 		if (fetch_msghdr_namelen(tcp, tcp->u_arg[1], &msg_namelen)) {
 			set_tcb_priv_ulong(tcp, msg_namelen);
 			return 0;
 		}
 		/* msg */
+		tprints_arg_next_name("msg");
 		printaddr(tcp->u_arg[1]);
 	} else {
 		msg_namelen = get_tcb_priv_ulong(tcp);
 
 		/* msg */
+		tprints_arg_next_name("msg");
 		if (syserror(tcp)) {
 			tprint_struct_begin();
 			tprints_field_name("msg_namelen");
@@ -545,9 +548,9 @@ SYS_FUNC(recvmsg)
 				      tcp->u_rval);
 		}
 	}
-	tprint_arg_next();
 
 	/* flags */
+	tprints_arg_next_name("flags");
 	printflags(msg_flags, tcp->u_arg[2], "MSG_???");
 
 	return RVAL_DECODED;

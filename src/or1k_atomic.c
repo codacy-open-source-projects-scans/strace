@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2013 Christian Svensson <blue@cmd.nu>
  * Copyright (c) 2014-2015 Dmitry V. Levin <ldv@strace.io>
- * Copyright (c) 2014-2021 The strace developers.
+ * Copyright (c) 2014-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -26,11 +26,12 @@
 SYS_FUNC(or1k_atomic)
 {
 	/* type */
+	tprints_arg_name("type");
 	printxval64(atomic_ops, tcp->u_arg[0], "???");
 
 	switch (tcp->u_arg[0]) {
 	case OR1K_ATOMIC_DECPOS:
-		tprint_arg_next();
+		tprints_arg_next_name("v1");
 		PRINT_VAL_X(tcp->u_arg[1]);
 		break;
 
@@ -41,18 +42,18 @@ SYS_FUNC(or1k_atomic)
 	case OR1K_ATOMIC_OR:
 	case OR1K_ATOMIC_UMAX:
 	case OR1K_ATOMIC_UMIN:
-		tprint_arg_next();
+		tprints_arg_next_name("v1");
 		PRINT_VAL_X(tcp->u_arg[1]);
-		tprint_arg_next();
+		tprints_arg_next_name("v2");
 		PRINT_VAL_X(tcp->u_arg[2]);
 		break;
 
 	case OR1K_ATOMIC_CMPXCHG:
-		tprint_arg_next();
+		tprints_arg_next_name("v1");
 		PRINT_VAL_X(tcp->u_arg[1]);
-		tprint_arg_next();
+		tprints_arg_next_name("v2");
 		PRINT_VAL_X(tcp->u_arg[2]);
-		tprint_arg_next();
+		tprints_arg_next_name("v3");
 		PRINT_VAL_X(tcp->u_arg[3]);
 		break;
 

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2015 Dmitry V. Levin <ldv@strace.io>
- * Copyright (c) 2014-2022 The strace developers.
+ * Copyright (c) 2014-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -17,6 +17,7 @@ SYS_FUNC(personality)
 
 	if (entering(tcp)) {
 		pers = tcp->u_arg[0];
+		tprints_arg_name("persona");
 		if (0xffffffff == pers) {
 			PRINT_VAL_X(0xffffffff);
 		} else {

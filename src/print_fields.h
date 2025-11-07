@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2016-2017 Dmitry V. Levin <ldv@strace.io>
- * Copyright (c) 2017-2023 The strace developers.
+ * Copyright (c) 2017-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -108,6 +108,12 @@ tprint_array_index_end(void)
 }
 
 static inline void
+tprints_arg_begin(const char *name)
+{
+	STRACE_PRINTF("%s(", name);
+}
+
+static inline void
 tprint_arg_next(void)
 {
 	STRACE_PRINTS(", ");
@@ -117,6 +123,35 @@ static inline void
 tprint_arg_end(void)
 {
 	STRACE_PRINTS(")");
+}
+
+static inline void
+tprints_arg_name_unconditionally(const char *name)
+{
+	STRACE_PRINTF("%s=", name);
+}
+
+static inline void
+tprints_arg_next_name_unconditionally(const char *name)
+{
+	tprint_arg_next();
+	tprints_arg_name_unconditionally(name);
+}
+
+static inline void
+tprints_arg_name(const char *name)
+{
+# ifdef IN_STRACE
+	if (Nflag)
+		tprints_arg_name_unconditionally(name);
+# endif
+}
+
+static inline void
+tprints_arg_next_name(const char *name)
+{
+	tprint_arg_next();
+	tprints_arg_name(name);
 }
 
 static inline void
@@ -269,23 +304,6 @@ static inline void
 tprints_field_name(const char *name)
 {
 	STRACE_PRINTF("%s=", name);
-}
-
-static inline void
-tprints_arg_name_begin(const char *name)
-{
-	STRACE_PRINTF("%s=", name);
-}
-
-static inline void
-tprint_arg_name_end(void)
-{
-}
-
-static inline void
-tprints_arg_begin(const char *name)
-{
-	STRACE_PRINTF("%s(", name);
 }
 
 static inline void
@@ -713,7 +731,9 @@ tprint_sysret_end(void)
 	do {								\
 		tprints_field_name(#field_);				\
 		const char *nr_prefix_ = NULL;				\
-		const char *name = syscall_name_arch((where_).field_,	\
+		const unsigned long long ull_nr =			\
+			zero_extend_signed_to_ull((where_).field_);	\
+		const char *name = syscall_name_arch(ull_nr,		\
 					(audit_arch_), &nr_prefix_);	\
 		if (xlat_verbose(xlat_verbosity) != XLAT_STYLE_ABBREV	\
 		    || !nr_prefix_)					\

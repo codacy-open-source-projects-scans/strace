@@ -2,7 +2,7 @@
  * Check decoding of io_uring_setup syscall.
  *
  * Copyright (c) 2019 Dmitry V. Levin <ldv@strace.io>
- * Copyright (c) 2019-2023 The strace developers.
+ * Copyright (c) 2019-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
@@ -76,10 +76,10 @@ main(void)
 	       "|IORING_SETUP_SQE128|IORING_SETUP_CQE32"
 	       "|IORING_SETUP_SINGLE_ISSUER|IORING_SETUP_DEFER_TASKRUN"
 	       "|IORING_SETUP_NO_MMAP|IORING_SETUP_REGISTERED_FD_ONLY"
-	       "|IORING_SETUP_NO_SQARRAY"
+	       "|IORING_SETUP_NO_SQARRAY|IORING_SETUP_HYBRID_IOPOLL"
 	       "|%#x"
 	       ", sq_thread_cpu=%#x, sq_thread_idle=%u, wq_fd=%d, resv=[",
-	       1, -1U - 0x1ffff, params->sq_thread_cpu, params->sq_thread_idle,
+	       1, -1U - 0x3ffff, params->sq_thread_cpu, params->sq_thread_idle,
 	       params->wq_fd);
 	for (unsigned int i = 0; i < ARRAY_SIZE(params->resv); ++i)
 		printf("%s%#x", i != 0 ? ", " : "", params->resv[i]);

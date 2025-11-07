@@ -2,7 +2,7 @@
  * Check decoding of threads when a non-leader thread invokes execve.
  *
  * Copyright (c) 2016 Dmitry V. Levin <ldv@strace.io>
- * Copyright (c) 2016-2023 The strace developers.
+ * Copyright (c) 2016-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
@@ -227,7 +227,7 @@ main(int ac, char **av)
 			break;
 		case ACTION_nanosleep:
 			printf("%s nanosleep({tv_sec=%u, tv_nsec=0}"
-			       ",  <unfinished ...>\n",
+			       " <unfinished ...>\n",
 			       leader_str, (unsigned int) ots.tv_sec);
 			close(fds[1]);
 			(void) syscall(__NR_nanosleep,

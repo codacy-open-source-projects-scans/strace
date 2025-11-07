@@ -1,7 +1,7 @@
 /*
  * Device number printing routine.
  *
- * Copyright (c) 2016-2021 The strace developers.
+ * Copyright (c) 2016-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -26,10 +26,9 @@ print_dev_t(const unsigned long long dev)
 	const unsigned int dev_minor = minor(dev);
 
 	tprints_arg_begin("makedev");
-
 	PRINT_VAL_X(dev_major);
-	tprint_arg_next();
 
+	tprint_arg_next();
 	PRINT_VAL_X(dev_minor);
 	tprint_arg_end();
 

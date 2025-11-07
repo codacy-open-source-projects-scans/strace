@@ -1,6 +1,6 @@
 # Input for gen_tests.sh
 #
-# Copyright (c) 2017-2024 The strace developers.
+# Copyright (c) 2017-2025 The strace developers.
 # All rights reserved.
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
@@ -66,6 +66,7 @@ clone3-success-Xabbrev	-einject=clone3:retval=42 -etrace=clone3 -a16 -Xabbrev
 clone3-success-Xraw	-einject=clone3:retval=42 -etrace=clone3 -a16 -Xraw
 clone3-success-Xverbose	-einject=clone3:retval=42 -etrace=clone3 -a16 -Xverbose
 clone_parent +clone_ptrace.test
+clone3-report-ns-id	--trace=clone3 -a35 --namespace=new
 clone_parent--quiet-exit +clone_ptrace.test --quiet=exit,personality
 clone_parent-q +clone_ptrace.test -q
 clone_parent-qq +clone_ptrace.test -qq
@@ -150,7 +151,7 @@ fanotify_mark--secontext_mismatch	-a32 --secontext=mismatch -e trace=fanotify_ma
 fanotify_mark-Xabbrev	-a32 -Xabbrev -e trace=fanotify_mark
 fanotify_mark-Xraw	-a32 -Xraw -e trace=fanotify_mark
 fanotify_mark-Xverbose	-a32 -Xverbose -e trace=fanotify_mark
-fchdir	-a11
+fchdir	-a14 -N
 fchmod	-a15
 fchmod--secontext	-a15 --secontext -e trace=fchmod
 fchmod--secontext_full	-a15 --secontext=full -e trace=fchmod
@@ -183,15 +184,30 @@ fcntl--pidns-translation	test_pidns -a8 -e trace=fcntl
 fcntl64	-a8
 fcntl64--pidns-translation	test_pidns -a8 -e trace=fcntl64
 fdatasync	-a14
+file_getattr	-a33
+file_getattr-P	-a33 --trace=file_getattr -P /dev/full
+file_getattr-success	-a33 --inject=file_getattr:retval=42 --trace=file_getattr
+file_getattr-success-Xabbrev	-a33 --inject=file_getattr:retval=42 --trace=file_getattr -Xabbrev
+file_getattr-success-Xraw	-a33 --inject=file_getattr:retval=42 --trace=file_getattr -Xraw
+file_getattr-success-Xverbose	-a33 --inject=file_getattr:retval=42 --trace=file_getattr -Xverbose
+file_getattr-y	-a34 --trace=file_getattr -y
+file_getattr-yy	-a34 --trace=file_getattr -yy
 file_handle	-e trace=name_to_handle_at,open_by_handle_at
 file_handle--secontext	--secontext -e trace=name_to_handle_at,open_by_handle_at
 file_handle--secontext_full	--secontext=full -e trace=name_to_handle_at,open_by_handle_at
 file_handle--secontext_full_mismatch	--secontext=full,mismatch -e trace=name_to_handle_at,open_by_handle_at
 file_handle--secontext_mismatch	--secontext=mismatch -e trace=name_to_handle_at,open_by_handle_at
+file_setattr	-a33
+file_setattr-P	-a33 --trace=file_setattr -P /dev/full
+file_setattr-Xabbrev	-a33 --trace=file_setattr -Xabbrev
+file_setattr-Xraw	-a33 --trace=file_setattr -Xraw
+file_setattr-Xverbose	-a33 --trace=file_setattr -Xverbose
+file_setattr-y	-a34 --trace=file_setattr -y
+file_setattr-yy	-a34 --trace=file_setattr -yy
 filter_seccomp	. "${srcdir=.}/filter_seccomp.sh"; test_prog_set --seccomp-bpf -f
 filter_seccomp-flag	../$NAME
 finit_module	-a25
-flock	-a19
+flock	-a25 --arg-names
 fork-f	-a26 -qq -f -e signal=none -e trace=chdir
 fsconfig	-s300 -y
 fsconfig-P	-s300 -y -P /dev/full -e trace=fsconfig
@@ -273,6 +289,10 @@ gettid	-a9
 getuid-creds	+getuid.test
 getuid32	+getuid.test
 getuid32-creds	+getuid.test
+getxattrat
+getxattrat-P	--trace=getxattrat -P /dev/full
+getxattrat-y	--trace=getxattrat -y
+getxattrat-yy	--trace=getxattrat -yy
 getxgid	-a10
 getxpid	-a10
 getxuid	-a10
@@ -348,6 +368,14 @@ ioctl_fs_x-success	+ioctl-success.sh -a18
 ioctl_fs_x-success-Xabbrev	+ioctl-success.sh -a18 -Xabbrev
 ioctl_fs_x-success-Xraw	+ioctl-success.sh -a21 -Xraw
 ioctl_fs_x-success-Xverbose	+ioctl-success.sh -a35 -Xverbose
+ioctl_fs_0x15	+ioctl.test -a34
+ioctl_fs_0x15-Xabbrev	+ioctl.test -a34 -Xabbrev
+ioctl_fs_0x15-Xraw	+ioctl.test -a21 -Xraw
+ioctl_fs_0x15-Xverbose	+ioctl.test -Xverbose
+ioctl_fs_0x15-success	+ioctl-success.sh -a34
+ioctl_fs_0x15-success-Xabbrev	+ioctl-success.sh -a34 -Xabbrev
+ioctl_fs_0x15-success-Xraw	+ioctl-success.sh -a21 -Xraw
+ioctl_fs_0x15-success-Xverbose	+ioctl-success.sh -Xverbose
 ioctl_gpio	+ioctl.test
 ioctl_gpio-Xabbrev	+ioctl.test -Xabbrev
 ioctl_gpio-Xraw	+ioctl.test -Xraw
@@ -396,6 +424,7 @@ ioctl_kd-success-s1024-Xverbose	+ioctl-success.sh -a20 -s1024 -Xverbose
 ioctl_kvm_run	+ioctl.test -a36 -y
 ioctl_kvm_run-v	+ioctl.test -v -a36 -y
 ioctl_kvm_run_auxstr_vcpu	+ioctl.test -a36 -y -e kvm=vcpu
+ioctl_kvm_run_auxstr_vcpu_more	+ioctl.test -a36 -y -e kvm=vcpu+
 ioctl_lirc	+ioctl-success.sh -a30
 ioctl_lirc-success	+ioctl-success.sh -a30
 ioctl_loop	+ioctl.test
@@ -538,6 +567,10 @@ linkat--secontext_full_mismatch	--secontext=full,mismatch -e trace=linkat
 linkat--secontext_mismatch	--secontext=mismatch -e trace=linkat
 listmount	-a26
 listmount-success --inject=listmount:retval=42 -a26 --trace=listmount
+listxattrat	-a34
+listxattrat-P	-a34 --trace=listxattrat -P /dev/full
+listxattrat-y	-a34 --trace=listxattrat -y
+listxattrat-yy	-a34 --trace=listxattrat -yy
 lookup_dcookie	-a27
 lsm_get_self_attr	-a49 -s2
 lsm_get_self_attr-success	--inject=lsm_get_self_attr:retval=96 -a49 -s2 --trace=lsm_get_self_attr
@@ -731,6 +764,8 @@ open--secontext_full_mismatch	-a30 -P open.sample --secontext=full,mismatch --tr
 open--secontext_mismatch		-a30 -P open.sample --secontext=mismatch --trace=open
 open_tree -a30 -y
 open_tree-P -a30 --decode-fds -P /dev/full -e trace=open_tree
+open_tree_attr -y 9>>/dev/full
+open_tree_attr-P --decode-fds --trace-path=/dev/full -e trace=open_tree_attr 9>>/dev/full
 openat	-a36 -P $NAME.sample
 openat--secontext	-a36 -P openat.sample -P $PWD/openat.sample --secontext -e trace=openat
 openat--secontext_full	-a36 -P openat.sample -P $PWD/openat.sample --secontext=full -e trace=openat
@@ -924,6 +959,10 @@ ptrace-y		-a23 -s64 -y -e signal=none -e trace=ptrace
 ptrace-y-Xabbrev	-a23 -s64 -y -e signal=none -e trace=ptrace -Xabbrev
 ptrace-y-Xraw		-a10 -s64 -y -e signal=none -e trace=ptrace -Xraw
 ptrace-y-Xverbose	-a23 -s64 -y -e signal=none -e trace=ptrace -Xverbose
+ptrace_set_syscall_info			--trace=ptrace
+ptrace_set_syscall_info-Xabbrev		--trace=ptrace -Xabbrev
+ptrace_set_syscall_info-Xraw		-a28 --trace=ptrace -Xraw
+ptrace_set_syscall_info-Xverbose	--trace=ptrace -Xverbose
 ptrace_syscall_info	-a35 -e signal=none -e trace=ptrace
 ptrace_syscall_info-Xabbrev	-a35 -e signal=none -e trace=ptrace -Xabbrev
 ptrace_syscall_info-Xraw	-a26 -e signal=none -e trace=ptrace -Xraw
@@ -959,6 +998,10 @@ remap_file_pages
 remap_file_pages-Xabbrev	-Xabbrev -e trace=remap_file_pages
 remap_file_pages-Xraw	-Xraw -e trace=remap_file_pages
 remap_file_pages-Xverbose	-Xverbose -e trace=remap_file_pages
+removexattrat
+removexattrat-P	--trace=removexattrat -P /dev/full
+removexattrat-y	--trace=removexattrat -y
+removexattrat-yy	--trace=removexattrat -yy
 rename	-a35
 renameat
 renameat2
@@ -1030,6 +1073,7 @@ setgroups	-s2 -a17
 setgroups32	-s2 -a19
 sethostname	-a22
 setns	-a21
+setns-report-ns-id	-a11	-e trace=setns -e namespace=new -e signal=none
 setregid	-a15
 setregid32	-a17
 setresgid	-a19
@@ -1044,6 +1088,10 @@ setrlimit-Xraw	-a19 -e trace=setrlimit -Xraw
 setrlimit-Xverbose	-a36 -e trace=setrlimit -Xverbose
 setuid	-a10
 setuid32	-a12
+setxattrat
+setxattrat-P	--trace=setxattrat -P /dev/full
+setxattrat-y	--trace=setxattrat -y
+setxattrat-yy	--trace=setxattrat -yy
 shmxt	-a11 -e trace='/(osf_)?shmat,shmdt'
 shutdown	-a24
 sigaction	-a31
@@ -1086,6 +1134,22 @@ sockopt-sol_socket-success-Xabbrev	-einject=getsockopt,setsockopt:retval=42 -etr
 sockopt-sol_socket-success-Xraw		-einject=getsockopt,setsockopt:retval=42 -etrace=getsockopt,setsockopt -Xraw -a32
 sockopt-sol_socket-success-Xverbose	-einject=getsockopt,setsockopt:retval=42 -etrace=getsockopt,setsockopt -Xverbose
 sockopt-timestamp	-e trace=recvmsg
+sol_tipc-group_join -etrace=getsockopt,setsockopt
+sol_tipc-group_join-Xabbrev	-etrace=getsockopt,setsockopt -Xabbrev
+sol_tipc-group_join-Xraw	-etrace=getsockopt,setsockopt -Xraw -a32
+sol_tipc-group_join-Xverbose	-etrace=getsockopt,setsockopt -Xverbose
+sol_tipc-group_join-success	-einject=getsockopt,setsockopt:retval=42 -etrace=getsockopt,setsockopt
+sol_tipc-group_join-success-Xabbrev	-einject=getsockopt,setsockopt:retval=42 -etrace=getsockopt,setsockopt -Xabbrev
+sol_tipc-group_join-success-Xraw	-einject=getsockopt,setsockopt:retval=42 -etrace=getsockopt,setsockopt -Xraw -a32
+sol_tipc-group_join-success-Xverbose	-einject=getsockopt,setsockopt:retval=42 -etrace=getsockopt,setsockopt -Xverbose
+sol_tipc-importance	-e trace=getsockopt,setsockopt
+sol_tipc-importance-Xabbrev	-etrace=getsockopt,setsockopt -Xabbrev
+sol_tipc-importance-Xraw	-etrace=getsockopt,setsockopt -Xraw -a32
+sol_tipc-importance-Xverbose	-etrace=getsockopt,setsockopt -Xverbose
+sol_tipc-importance-success	-einject=getsockopt,setsockopt:retval=42 -etrace=getsockopt,setsockopt
+sol_tipc-importance-success-Xabbrev	-einject=getsockopt,setsockopt:retval=42 -etrace=getsockopt,setsockopt -Xabbrev
+sol_tipc-importance-success-Xraw	-einject=getsockopt,setsockopt:retval=42 -etrace=getsockopt,setsockopt -Xraw -a32
+sol_tipc-importance-success-Xverbose	-einject=getsockopt,setsockopt:retval=42 -etrace=getsockopt,setsockopt -Xverbose
 splice
 stat	-a30 --no-abbrev --trace-path=stat.sample --trace-path=/dev/full
 stat64	-a32 --no-abbrev --trace-path=stat.sample --trace-path=/dev/full
@@ -1219,6 +1283,7 @@ umovestr_cached_adjacent	+umovestr_cached.test 3
 unlink	-a24
 unlinkat	-a35
 unshare	-a11
+unshare-report-ns-id	-a11	-e trace=unshare -e namespace=new
 userfaultfd	-a15
 ustat	-a33
 utime	-a16

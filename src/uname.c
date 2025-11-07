@@ -4,7 +4,7 @@
  * Copyright (c) 1993-1996 Rick Sladkey <jrs@world.std.com>
  * Copyright (c) 1996-1999 Wichert Akkerman <wichert@cistron.nl>
  * Copyright (c) 2012-2015 Dmitry V. Levin <ldv@strace.io>
- * Copyright (c) 2014-2021 The strace developers.
+ * Copyright (c) 2014-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -20,6 +20,7 @@ SYS_FUNC(uname)
 	if (entering(tcp))
 		return 0;
 
+	tprints_arg_name("buf");
 	if (!umove_or_printaddr(tcp, tcp->u_arg[0], &uname)) {
 		tprint_struct_begin();
 		PRINT_FIELD_CSTRING(uname, sysname);

@@ -5,7 +5,7 @@
 # Copyright (c) 2006-2016 Dmitry V. Levin <ldv@strace.io>
 # Copyright (c) 2008-2015 Mike Frysinger <vapier@gentoo.org>
 # Copyright (c) 2015 Elvira Khabirova <lineprinter0@gmail.com>
-# Copyright (c) 2002-2024 The strace developers.
+# Copyright (c) 2002-2025 The strace developers.
 # All rights reserved.
 #
 # SPDX-License-Identifier: LGPL-2.1-or-later
@@ -28,6 +28,7 @@ AC_CONFIG_SRCDIR([src/strace.c])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_HEADERS([src/config.h])
 AM_INIT_AUTOMAKE([foreign nostdinc dist-xz silent-rules parallel-tests subdir-objects 1.13])
+AM_EXTRA_RECURSIVE_TARGETS([check-prerequisites])
 AM_MAINTAINER_MODE
 AC_CANONICAL_HOST
 
@@ -413,11 +414,8 @@ AC_CHECK_MEMBERS([struct stat.st_mtime_nsec, struct stat64.st_mtime_nsec],,,
 AC_CHECK_TYPES(m4_normalize([
 	struct pt_all_user_regs,
 	struct ia64_fpreg,
-	struct ptrace_peeksiginfo_args,
-	struct __ptrace_syscall_info
+	struct ptrace_peeksiginfo_args
 ]),,, [#include <sys/ptrace.h>])
-
-AC_CHECK_TYPES([struct ptrace_syscall_info],,, [#include <linux/ptrace.h>])
 
 # For kernels that do not have v3.10-rc1~201^2~11
 AC_CHECK_TYPES([s390_compat_regs],,, [#include <asm/ptrace.h>])
@@ -553,6 +551,11 @@ AC_CHECK_TYPES(m4_normalize([
 	struct kvm_regs,
 	struct kvm_sregs,
 	struct kvm_userspace_memory_region
+]),,, [#include <linux/kvm.h>])
+
+AC_CHECK_MEMBERS(m4_normalize([
+	struct kvm_run.immediate_exit,
+	struct kvm_run.flags
 ]),,, [#include <linux/kvm.h>])
 
 AC_CHECK_TYPES(m4_normalize([

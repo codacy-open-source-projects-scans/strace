@@ -6,7 +6,7 @@
  * Copyright (c) 1999 IBM Deutschland Entwicklung GmbH, IBM Corporation
  *                     Linux for s390 port by D.J. Barrow
  *                    <barrow_dj@mail.yahoo.com,djbarrow@de.ibm.com>
- * Copyright (c) 1999-2024 The strace developers.
+ * Copyright (c) 1999-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -962,7 +962,7 @@ printeventfd(pid_t pid_of_fd, int fd, const char *path)
 		}
 	};
 
-	scan_fdinfo_lines(pid_of_fd, fd, fdinfo_lines, ARRAY_SIZE(fdinfo_lines));
+	scan_fdinfo_lines(pid_of_fd, fd, ARRSZ_PAIR(fdinfo_lines));
 
 	if (efd_counter) {
 		tprint_associated_info_begin();
@@ -1995,33 +1995,12 @@ printargs(struct tcb *tcp)
 {
 	const unsigned int n = n_args(tcp);
 	for (unsigned int i = 0; i < n; ++i) {
-		if (i)
-			tprint_arg_next();
+		const char name[] = { 'a', 'r', 'g', "123456789"[i], '\0' };
+		if (i == 0)
+			tprints_arg_name(name);
+		else
+			tprints_arg_next_name(name);
 		PRINT_VAL_X(tcp->u_arg[i]);
-	}
-	return RVAL_DECODED;
-}
-
-int
-printargs_u(struct tcb *tcp)
-{
-	const unsigned int n = n_args(tcp);
-	for (unsigned int i = 0; i < n; ++i) {
-		if (i)
-			tprint_arg_next();
-		PRINT_VAL_U((unsigned int) tcp->u_arg[i]);
-	}
-	return RVAL_DECODED;
-}
-
-int
-printargs_d(struct tcb *tcp)
-{
-	const unsigned int n = n_args(tcp);
-	for (unsigned int i = 0; i < n; ++i) {
-		if (i)
-			tprint_arg_next();
-		PRINT_VAL_D((int) tcp->u_arg[i]);
 	}
 	return RVAL_DECODED;
 }

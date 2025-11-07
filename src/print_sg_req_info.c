@@ -2,6 +2,7 @@
  * Decode struct sg_req_info.
  *
  * Copyright (c) 2017-2021 Dmitry V. Levin <ldv@strace.io>
+ * Copyright (c) 2021-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -31,7 +32,7 @@ MPERS_PRINTER_DECL(int, decode_sg_req_info,
 	if (entering(tcp))
 		return 0;
 
-	tprint_arg_next();
+	tprints_arg_next_name("argp");
 	if (!umove_or_printaddr(tcp, arg, &info)) {
 		tprint_struct_begin();
 		PRINT_FIELD_D(info, req_state);

@@ -2,7 +2,7 @@
  * Support for decoding of personality-dependent VT ioctl commands.
  *
  * Copyright (c) 2019-2021 Eugene Syromyatnikov <evgsyr@gmail.com>
- * Copyright (c) 2019-2024 The strace developers.
+ * Copyright (c) 2019-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -58,7 +58,7 @@ kd_unimap(struct tcb *const tcp, const kernel_ulong_t arg, const bool get)
 	uint16_t cnt;
 
 	if (entering(tcp))
-		tprint_arg_next();
+		tprints_arg_next_name("argp");
 
 	if (umove_or_printaddr_ignore_syserror(tcp, arg, &val)) {
 		if (exiting(tcp))
@@ -124,7 +124,7 @@ kd_fontx(struct tcb *const tcp, const kernel_ulong_t arg, const bool get)
 	struct_consolefontdesc val;
 
 	if (entering(tcp)) {
-		tprint_arg_next();
+		tprints_arg_next_name("argp");
 
 		if (umove_or_printaddr(tcp, arg, &val))
 			return RVAL_IOCTL_DECODED;
@@ -228,7 +228,7 @@ kd_font_op(struct tcb *const tcp, const kernel_ulong_t arg)
 	struct_console_font_op val;
 
 	if (entering(tcp)) {
-		tprint_arg_next();
+		tprints_arg_next_name("argp");
 
 		if (umove_or_printaddr(tcp, arg, &val))
 			return RVAL_IOCTL_DECODED;

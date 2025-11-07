@@ -2,7 +2,7 @@
  * Check decoding of fallocate syscall.
  *
  * Copyright (c) 2016 Eugene Syromyatnikov <evgsyr@gmail.com>
- * Copyright (c) 2016-2021 The strace developers.
+ * Copyright (c) 2016-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
@@ -18,7 +18,7 @@
 # include <fcntl.h>
 # include <stdio.h>
 
-# ifndef FALLOC_FL_UNSHARE_RANGE
+# ifndef FALLOC_FL_WRITE_ZEROES
 /* Avoid conflicts between <fcntl.h> and <linux/falloc.h>.  */
 #  undef FALLOC_FL_KEEP_SIZE
 #  undef FALLOC_FL_PUNCH_HOLE
@@ -26,6 +26,7 @@
 #  undef FALLOC_FL_COLLAPSE_RANGE
 #  undef FALLOC_FL_ZERO_RANGE
 #  undef FALLOC_FL_INSERT_RANGE
+#  undef FALLOC_FL_UNSHARE_RANGE
 #  include <linux/falloc.h>
 # endif
 

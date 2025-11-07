@@ -1,7 +1,7 @@
 /*
  * Check decoding of getsockopt and setsockopt for SOL_SOCKET level.
  *
- * Copyright (c) 2017-2023 Dmitry V. Levin <ldv@strace.io>
+ * Copyright (c) 2017-2025 Dmitry V. Levin <ldv@strace.io>
  * Copyright (c) 2022-2024 Eugene Syromyatnikov <evgsyr@gmail.com>
  * All rights reserved.
  *
@@ -156,6 +156,9 @@ main(void)
 		{ ARG_STR(SO_TXREHASH), ARRSZ_PAIR(txrehash_vecs), sizeof(int) },
 		{ ARG_STR(SO_RCVMARK), .optsz = sizeof(int) },
 		{ ARG_STR(SO_PASSPIDFD), .optsz = sizeof(int) },
+		{ ARG_STR(SO_RCVPRIORITY), .optsz = sizeof(int) },
+		{ ARG_STR(SO_PASSRIGHTS), .optsz = sizeof(int) },
+		{ ARG_STR(SO_INQ), .optsz = sizeof(int) },
 		/* SO_PEERPIDFD - see so_peerpidfd test */
 		{ 78, NULL },
 		{ -1, NULL },

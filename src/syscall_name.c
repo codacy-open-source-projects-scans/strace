@@ -4,7 +4,7 @@
  * Copyright (c) 2016-2021 Eugene Syromyatnikov <evgsyr@gmail.com>
  * Copyright (c) 2017 Chen Jingpiao <chenjingpiao@gmail.com>
  * Copyright (c) 2018 Paul Chaignon <paul.chaignon@gmail.com>
- * Copyright (c) 2021-2022 The strace developers.
+ * Copyright (c) 2021-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -36,21 +36,26 @@ const struct audit_arch_t audit_arch_vec[SUPPORTED_PERSONALITIES] = {
 
 
 const char *
-syscall_name_arch(kernel_ulong_t nr, unsigned int arch, const char **prefix)
+syscall_name_arch(unsigned long long ull_nr, unsigned int arch,
+		  const char **prefix)
 {
-	for (size_t i = 0; i < SUPPORTED_PERSONALITIES; i++) {
-		if (arch != audit_arch_vec[i].arch)
-			continue;
+	const kernel_ulong_t nr = (kernel_ulong_t) ull_nr;
 
-		kernel_ulong_t scno = shuffle_scno_pers(nr, i);
-		if (!scno_pers_is_valid(scno, i))
-			continue;
+	if (nr == ull_nr) {
+		for (size_t i = 0; i < SUPPORTED_PERSONALITIES; i++) {
+			if (arch != audit_arch_vec[i].arch)
+				continue;
 
-		if (prefix) {
-			*prefix = (i == current_personality) ? nr_prefix(nr)
-							     : NULL;
+			kernel_ulong_t scno = shuffle_scno_pers(nr, i);
+			if (!scno_pers_is_valid(scno, i))
+				continue;
+
+			if (prefix) {
+				*prefix = (i == current_personality)
+					  ? nr_prefix(nr) : NULL;
+			}
+			return sysent_vec[i][scno].sys_name;
 		}
-		return sysent_vec[i][scno].sys_name;
 	}
 
 	if (prefix)

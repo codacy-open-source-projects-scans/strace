@@ -5,7 +5,7 @@
  * Copyright (c) 1996-1999 Wichert Akkerman <wichert@cistron.nl>
  * Copyright (c) 2005 Roland McGrath <roland@redhat.com>
  * Copyright (c) 2007-2015 Dmitry V. Levin <ldv@strace.io>
- * Copyright (c) 2014-2022 The strace developers.
+ * Copyright (c) 2014-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -38,21 +38,22 @@ SYS_FUNC(mount)
 		ignore_type = ignore_data = true;
 
 	/* source */
+	tprints_arg_name("source");
 	printpath(tcp, tcp->u_arg[0]);
-	tprint_arg_next();
 
 	/* target */
+	tprints_arg_next_name("target");
 	printpath(tcp, tcp->u_arg[1]);
-	tprint_arg_next();
 
 	/* filesystemtype */
+	tprints_arg_next_name("filesystemtype");
 	if (ignore_type)
 		printaddr(tcp->u_arg[2]);
 	else
 		printstr(tcp, tcp->u_arg[2]);
-	tprint_arg_next();
 
 	/* mountflags */
+	tprints_arg_next_name("mountflags");
 	tprint_flags_begin();
 	if (old_magic) {
 		print_xlat(MS_MGC_VAL);
@@ -62,9 +63,9 @@ SYS_FUNC(mount)
 	if (flags || !old_magic)
 		printflags64_in(mount_flags, flags, "MS_???");
 	tprint_flags_end();
-	tprint_arg_next();
 
 	/* data */
+	tprints_arg_next_name("data");
 	if (ignore_data)
 		printaddr(tcp->u_arg[4]);
 	else

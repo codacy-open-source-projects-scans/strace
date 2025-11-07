@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2015 Etienne Gemsa <etienne.gemsa@lse.epita.fr>
  * Copyright (c) 2015-2016 Dmitry V. Levin <ldv@strace.io>
- * Copyright (c) 2015-2021 The strace developers.
+ * Copyright (c) 2015-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -408,10 +408,10 @@ evdev_ioctl(struct tcb *const tcp,
 	case _IOC_READ:
 		if (entering(tcp))
 			return 0;
-		tprint_arg_next();
+		tprints_arg_next_name("argp");
 		return evdev_read_ioctl(tcp, code, arg);
 	case _IOC_WRITE:
-		tprint_arg_next();
+		tprints_arg_next_name("argp");
 		return evdev_write_ioctl(tcp, code, arg) | RVAL_DECODED;
 	default:
 		return RVAL_DECODED;

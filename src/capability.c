@@ -2,7 +2,7 @@
  * Copyright (c) 2000 Wichert Akkerman <wakkerma@debian.org>
  * Copyright (c) 2011 Denys Vlasenko <dvlasenk@redhat.com>
  * Copyright (c) 2005-2015 Dmitry V. Levin <ldv@strace.io>
- * Copyright (c) 2014-2022 The strace developers.
+ * Copyright (c) 2014-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -129,11 +129,12 @@ SYS_FUNC(capget)
 
 	if (entering(tcp)) {
 		/* hdrp */
+		tprints_arg_name("hdrp");
 		h = get_cap_header(tcp, tcp->u_arg[0]);
 		print_cap_header(tcp, tcp->u_arg[0], h);
-		tprint_arg_next();
 	} else {
 		/* datap */
+		tprints_arg_next_name("datap");
 		h = syserror(tcp) ? NULL : get_cap_header(tcp, tcp->u_arg[0]);
 		print_cap_data(tcp, tcp->u_arg[1], h);
 	}
@@ -143,12 +144,13 @@ SYS_FUNC(capget)
 SYS_FUNC(capset)
 {
 	/* hdrp */
+	tprints_arg_name("hdrp");
 	const struct user_cap_header_struct *const h =
 		get_cap_header(tcp, tcp->u_arg[0]);
 	print_cap_header(tcp, tcp->u_arg[0], h);
-	tprint_arg_next();
 
 	/* datap */
+	tprints_arg_next_name("datap");
 	print_cap_data(tcp, tcp->u_arg[1], h);
 
 	return RVAL_DECODED;

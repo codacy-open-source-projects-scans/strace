@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2016 Jeff Mahoney <jeffm@suse.com>
- * Copyright (c) 2016-2021 The strace developers.
+ * Copyright (c) 2016-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -38,7 +38,7 @@ decode_fiemap(struct tcb *const tcp, const kernel_ulong_t arg)
 	struct fiemap args;
 
 	if (entering(tcp))
-		tprint_arg_next();
+		tprints_arg_next_name("argp");
 	else if (syserror(tcp))
 		return RVAL_IOCTL_DECODED;
 	else
@@ -113,7 +113,7 @@ fs_f_ioctl(struct tcb *const tcp, const unsigned int code,
 #if SIZEOF_LONG > 4
 	case FS_IOC32_SETFLAGS:
 #endif
-		tprint_arg_next();
+		tprints_arg_next_name("attr");
 		decode_fs_ioc_flags(tcp, arg);
 		break;
 

@@ -5,7 +5,7 @@
  * Copyright (c) 2016 Masatake Yamato <yamato@redhat.com>
  * Copyright (c) 2016 Dmitry V. Levin <ldv@strace.io>
  * Copyright (c) 2016 Eugene Syromyatnikov <evgsyr@gmail.com>
- * Copyright (c) 2016-2024 The strace developers.
+ * Copyright (c) 2016-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -595,7 +595,7 @@ dm_known_ioctl(struct tcb *const tcp, const unsigned int code,
 		return RVAL_IOCTL_DECODED;
 
 	if (entering(tcp))
-		tprint_arg_next();
+		tprints_arg_next_name("argp");
 	else
 		tprint_value_changed();
 

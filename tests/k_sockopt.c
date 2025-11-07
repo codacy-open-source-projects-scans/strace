@@ -2,7 +2,7 @@
  * [gs]etsockopt() wrappers that avoid glibc and perform syscalls directly.
  *
  * Copyright (c) 2019 Dmitry V. Levin <ldv@strace.io>
- * Copyright (c) 2019-2024 The strace developers.
+ * Copyright (c) 2019-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
@@ -41,7 +41,7 @@ k_getsockopt(const unsigned int fd, const unsigned int level,
 		);
 }
 
-# define SC_setsockopt 14
+#define SC_setsockopt 14
 long
 k_setsockopt(const unsigned int fd, const unsigned int level,
 	     const unsigned int optname, const void *const optval,

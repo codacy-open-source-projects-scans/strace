@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2024 The strace developers.
+ * Copyright (c) 2018-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
+#include "kernel_fcntl.h"
 #include "kernel_v4l2_types.h"
 
 static bool
@@ -611,6 +612,37 @@ main(int argc, char **argv)
 		       XLAT_STR(VIDIOC_REQBUFS),
 		       buf_types[i % ARRAY_SIZE(buf_types)].str,
 		       reqb_mems[i % ARRAY_SIZE(reqb_mems)].str,
+		       inject_retval);
+	}
+
+
+	/* VIDIOC_EXPBUF */
+	ioctl(-1, VIDIOC_EXPBUF, 0);
+	printf("ioctl(-1, %s, NULL) = %ld (INJECTED)\n",
+	       XLAT_STR(VIDIOC_EXPBUF), inject_retval);
+
+	TAIL_ALLOC_OBJECT_CONST_PTR(struct v4l2_exportbuffer, expb);
+	fill_memory(expb, sizeof(*expb));
+
+	ioctl(-1, VIDIOC_EXPBUF, (char *) expb + 1);
+	printf("ioctl(-1, %s, %p) = %ld (INJECTED)\n",
+	       XLAT_STR(VIDIOC_EXPBUF), (char *) expb + 1, inject_retval);
+
+	for (size_t i = 0; i < ARRAY_SIZE(buf_types); i++) {
+		expb->type = buf_types[i].val;
+		expb->flags = O_RDONLY | O_CLOEXEC;
+
+		ioctl(-1, VIDIOC_EXPBUF, expb);
+		printf("ioctl(-1, %s"
+		       ", {type=%s, index=%u, plane=%u, flags=" NABBR("%#x")
+		       VERB(" /* ") NRAW("O_RDONLY|O_CLOEXEC") VERB(" */")
+		       "} => {fd=%d}) = %ld (INJECTED)\n",
+		       XLAT_STR(VIDIOC_EXPBUF),
+		       buf_types[i].str,
+		       expb->index,
+		       expb->plane,
+		       NABBR(expb->flags,)
+		       expb->fd,
 		       inject_retval);
 	}
 
@@ -1257,12 +1289,13 @@ main(int argc, char **argv)
 		{ ARG_XLAT_UNKNOWN(0x104, "V4L2_CTRL_TYPE_???") },
 		{ ARG_XLAT_UNKNOWN(0x105, "V4L2_CTRL_TYPE_???") },
 		{ ARG_XLAT_KNOWN(0x106, "V4L2_CTRL_TYPE_AREA") },
-		{ ARG_XLAT_UNKNOWN(0x107, "V4L2_CTRL_TYPE_???") },
+		{ ARG_XLAT_KNOWN(0x107, "V4L2_CTRL_TYPE_RECT") },
+		{ ARG_XLAT_UNKNOWN(0x108, "V4L2_CTRL_TYPE_???") },
 		{ ARG_XLAT_UNKNOWN(0xdeadc0de, "V4L2_CTRL_TYPE_???") },
 	};
 	static const struct strval32 ctrl_flags[] = {
 		{ ARG_STR(0) },
-		{ ARG_XLAT_KNOWN(0xfff, "V4L2_CTRL_FLAG_DISABLED"
+		{ ARG_XLAT_KNOWN(0x1fff, "V4L2_CTRL_FLAG_DISABLED"
 					"|V4L2_CTRL_FLAG_GRABBED"
 					"|V4L2_CTRL_FLAG_READ_ONLY"
 					"|V4L2_CTRL_FLAG_UPDATE"
@@ -1273,7 +1306,8 @@ main(int argc, char **argv)
 					"|V4L2_CTRL_FLAG_HAS_PAYLOAD"
 					"|V4L2_CTRL_FLAG_EXECUTE_ON_WRITE"
 					"|V4L2_CTRL_FLAG_MODIFY_LAYOUT"
-					"|V4L2_CTRL_FLAG_DYNAMIC_ARRAY") },
+					"|V4L2_CTRL_FLAG_DYNAMIC_ARRAY"
+					"|V4L2_CTRL_FLAG_HAS_WHICH_MIN_MAX") },
 		{ ARG_XLAT_KNOWN(0xbeefface, "V4L2_CTRL_FLAG_GRABBED"
 					     "|V4L2_CTRL_FLAG_READ_ONLY"
 					     "|V4L2_CTRL_FLAG_UPDATE"
@@ -1281,8 +1315,9 @@ main(int argc, char **argv)
 					     "|V4L2_CTRL_FLAG_VOLATILE"
 					     "|V4L2_CTRL_FLAG_EXECUTE_ON_WRITE"
 					     "|V4L2_CTRL_FLAG_DYNAMIC_ARRAY"
-					     "|0xbeeff000") },
-		{ ARG_XLAT_UNKNOWN(0xfffff000, "V4L2_CTRL_FLAG_???") },
+					     "|V4L2_CTRL_FLAG_HAS_WHICH_MIN_MAX"
+					     "|0xbeefe000") },
+		{ ARG_XLAT_UNKNOWN(0xffffe000, "V4L2_CTRL_FLAG_???") },
 	};
 	static const size_t qctrl_iters = MAX(MAX(ARRAY_SIZE(cids),
 						  ARRAY_SIZE(ctrl_types)),

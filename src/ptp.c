@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2014 Stefan Sørensen <stefan.sorensen@spectralink.com>
  * Copyright (c) 2014-2015 Dmitry V. Levin <ldv@strace.io>
- * Copyright (c) 2014-2024 The strace developers.
+ * Copyright (c) 2014-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -82,11 +82,10 @@ ptp_ioctl(struct tcb *const tcp, const unsigned int code,
 		CHECK_IOCTL_SIZE(PTP_CLOCK_GETCAPS, 80);
 		CHECK_IOCTL_SIZE(PTP_CLOCK_GETCAPS2, 80);
 
-		if (entering(tcp)) {
-			tprint_arg_next();
+		if (entering(tcp))
 			return 0;
-		}
 
+		tprints_arg_next_name("argp");
 		if (umove_or_printaddr(tcp, arg, &caps))
 			break;
 
@@ -120,7 +119,7 @@ ptp_ioctl(struct tcb *const tcp, const unsigned int code,
 		CHECK_IOCTL_SIZE(PTP_EXTTS_REQUEST, 16);
 		CHECK_IOCTL_SIZE(PTP_EXTTS_REQUEST2, 16);
 
-		tprint_arg_next();
+		tprints_arg_next_name("argp");
 		if (umove_or_printaddr(tcp, arg, &extts))
 			break;
 
@@ -141,7 +140,7 @@ ptp_ioctl(struct tcb *const tcp, const unsigned int code,
 		CHECK_IOCTL_SIZE(PTP_PEROUT_REQUEST, 56);
 		CHECK_IOCTL_SIZE(PTP_PEROUT_REQUEST2, 56);
 
-		tprint_arg_next();
+		tprints_arg_next_name("argp");
 		if (umove_or_printaddr(tcp, arg, &perout))
 			break;
 
@@ -174,7 +173,7 @@ ptp_ioctl(struct tcb *const tcp, const unsigned int code,
 
 	case PTP_ENABLE_PPS:
 	case PTP_ENABLE_PPS2:
-		tprint_arg_next();
+		tprints_arg_next_name("argp");
 		PRINT_VAL_X(arg);
 		break;
 
@@ -186,7 +185,7 @@ ptp_ioctl(struct tcb *const tcp, const unsigned int code,
 		CHECK_IOCTL_SIZE(PTP_SYS_OFFSET2, 832);
 
 		if (entering(tcp)) {
-			tprint_arg_next();
+			tprints_arg_next_name("argp");
 			if (umove_or_printaddr(tcp, arg, &sysoff))
 				break;
 
@@ -225,7 +224,7 @@ ptp_ioctl(struct tcb *const tcp, const unsigned int code,
 		CHECK_IOCTL_SIZE(PTP_PIN_SETFUNC2, 96);
 
 		if (entering(tcp)) {
-			tprint_arg_next();
+			tprints_arg_next_name("argp");
 
 			if (umove_or_printaddr(tcp, arg, &pinfunc))
 				break;
@@ -247,7 +246,7 @@ ptp_ioctl(struct tcb *const tcp, const unsigned int code,
 			}
 
 			if (umove(tcp, arg, &pinfunc) < 0) {
-				tprint_arg_next();
+				tprint_struct_next();
 				tprint_unavailable();
 				tprint_struct_end();
 				break;
@@ -279,11 +278,10 @@ ptp_ioctl(struct tcb *const tcp, const unsigned int code,
 		CHECK_IOCTL_SIZE(PTP_SYS_OFFSET_PRECISE, 64);
 		CHECK_IOCTL_SIZE(PTP_SYS_OFFSET_PRECISE2, 64);
 
-		if (entering(tcp)) {
-			tprint_arg_next();
+		if (entering(tcp))
 			return 0;
-		}
 
+		tprints_arg_next_name("argp");
 		if (umove_or_printaddr(tcp, arg, &sysoff))
 			break;
 
@@ -308,7 +306,7 @@ ptp_ioctl(struct tcb *const tcp, const unsigned int code,
 		CHECK_IOCTL_SIZE(PTP_SYS_OFFSET_EXTENDED2, 1216);
 
 		if (entering(tcp)) {
-			tprint_arg_next();
+			tprints_arg_next_name("argp");
 			if (umove_or_printaddr(tcp, arg, &sysoff))
 				break;
 

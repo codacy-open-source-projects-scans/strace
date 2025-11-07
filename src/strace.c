@@ -3,7 +3,7 @@
  * Copyright (c) 1993 Branko Lankester <branko@hacktic.nl>
  * Copyright (c) 1993, 1994, 1995, 1996 Rick Sladkey <jrs@world.std.com>
  * Copyright (c) 1996-1999 Wichert Akkerman <wichert@cistron.nl>
- * Copyright (c) 1999-2024 The strace developers.
+ * Copyright (c) 1999-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -84,6 +84,7 @@ bool Tflag;
 int Tflag_scale = 1000;
 int Tflag_width = 6;
 bool iflag;
+bool Nflag;
 bool count_wallclock;
 bool tracing_fds;
 long long syscall_limit = -1;
@@ -375,8 +376,10 @@ Output format:\n\
   -e quiet=SET, --quiet=SET\n\
                  suppress various informational messages\n\
      messages:   attach, exit, path-resolution, personality, thread-execve\n\
-  -e kvm=vcpu, --kvm=vcpu\n\
-                 print exit reason of kvm vcpu\n\
+  -e kvm=vcpu[+], --kvm=vcpu[+]\n\
+                 print exit reason of kvm vcpu ('+' for printing kvm_run struct)\n\
+  -e namespace=new, --namespace=new\n\
+                 print namespace IDs that the tracee enters\n\
   -e decode-fds=SET, --decode-fds=SET\n\
                  what kinds of file descriptor information details to decode\n\
      details:    dev (device major/minor for block/char device files),\n\
@@ -421,6 +424,8 @@ Output format:\n\
 "\
   -n, --syscall-number\n\
                  print syscall number\n\
+  -N, --arg-names\n\
+		 print syscall argument names\n\
   -o FILE, --output=FILE\n\
                  send trace output to FILE instead of stderr\n\
   -A, --output-append-mode\n\
@@ -1885,51 +1890,26 @@ startup_child(char **argv, char **env)
 static void
 test_ptrace_seize(void)
 {
-	int pid;
-
-	/* Need fork for test. NOMMU has no forks */
-	if (NOMMU_SYSTEM) {
-		post_attach_sigstop = 0; /* this sets use_seize to 1 */
-		return;
-	}
-
-	pid = fork();
-	if (pid < 0)
-		perror_func_msg_and_die("fork");
-
-	if (pid == 0) {
-		pause();
-		_exit(0);
-	}
-
-	/* PTRACE_SEIZE, unlike ATTACH, doesn't force tracee to trap.  After
-	 * attaching tracee continues to run unless a trap condition occurs.
-	 * PTRACE_SEIZE doesn't affect signal or group stop state.
+	/* ptracing oneself has never been supported. */
+	if (ptrace(PTRACE_SEIZE, getpid(), 0, 0) == 0)
+		error_func_msg_and_die("seized myself by the tail!");
+	/*
+	 * Before Linux kernel commit v3.1-rc1~308^2~28, PTRACE_SEIZE was
+	 * an unrecognized operation and therefore used to fail with ESRCH.
+	 *
+	 * Starting with v3.1-rc1~308^2~28 and up to v3.4-rc1~109^2~20,
+	 * PTRACE_SEIZE used to require PTRACE_SEIZE_DEVEL flag.
+	 * Without that flag, PTRACE_SEIZE used to fail with EIO.
+	 *
+	 * Since v3.4-rc1~109^2~20, PTRACE_SEIZE of oneself fails with EPERM.
+	 *
+	 * Like any ptrace operation, PTRACE_SEIZE could also be filtered out
+	 * by a syscall filter, but that is beyond the scope of this check.
 	 */
-	if (ptrace(PTRACE_SEIZE, pid, 0, 0) == 0) {
+	if (errno == EPERM)
 		post_attach_sigstop = 0; /* this sets use_seize to 1 */
-	} else {
+	else
 		debug_msg("PTRACE_SEIZE doesn't work");
-	}
-
-	kill(pid, SIGKILL);
-
-	while (1) {
-		int status, tracee_pid;
-
-		errno = 0;
-		tracee_pid = waitpid(pid, &status, 0);
-		if (tracee_pid <= 0) {
-			if (errno == EINTR)
-				continue;
-			perror_func_msg_and_die("unexpected wait result %d",
-						tracee_pid);
-		}
-		if (WIFSIGNALED(status))
-			return;
-
-		error_func_msg_and_die("unexpected wait status %#x", status);
-	}
 }
 
 static unsigned int
@@ -2281,6 +2261,7 @@ init(int argc, char *argv[])
 	static const char ttflag_str[] = "precision:us,format:time";
 	static const char tttflag_str[] = "format:unix,precision:us";
 	static const char secontext_qual[] = "!full,mismatch";
+	static const char namespace_qual[] = "new";
 
 	int c, i;
 	int optF = 0, zflags = 0;
@@ -2351,7 +2332,7 @@ init(int argc, char *argv[])
 #endif
 
 	static const char optstring[] =
-		"+a:Ab:cCdDe:E:fFhiI:kno:O:p:P:qrs:S:tTu:U:vVwxX:yYzZ";
+		"+a:Ab:cCdDe:E:fFhiI:knNo:O:p:P:qrs:S:tTu:U:vVwxX:yYzZ";
 
 	enum {
 		GETOPT_SECCOMP = 0x100,
@@ -2381,6 +2362,7 @@ init(int argc, char *argv[])
 		GETOPT_QUAL_FAULT,
 		GETOPT_QUAL_INJECT,
 		GETOPT_QUAL_KVM,
+		GETOPT_QUAL_NAMESPACE,
 		GETOPT_QUAL_QUIET,
 		GETOPT_QUAL_DECODE_FD,
 		GETOPT_QUAL_DECODE_PID,
@@ -2409,6 +2391,7 @@ init(int argc, char *argv[])
 		{ "stack-trace-frame-limit", required_argument, 0, GETOPT_STACK_TRACE_FRAME_LIMIT },
 		{ "syscall-limit",	required_argument, 0, GETOPT_SYSCALL_LIMIT },
 		{ "syscall-number",	no_argument,	   0, 'n' },
+		{ "arg-names",		no_argument,	   0, 'N' },
 		{ "output",		required_argument, 0, 'o' },
 		{ "summary-syscall-overhead", required_argument, 0, 'O' },
 		{ "attach",		required_argument, 0, 'p' },
@@ -2447,6 +2430,7 @@ init(int argc, char *argv[])
 		{ "fault",	required_argument, 0, GETOPT_QUAL_FAULT },
 		{ "inject",	required_argument, 0, GETOPT_QUAL_INJECT },
 		{ "kvm",	required_argument, 0, GETOPT_QUAL_KVM },
+		{ "namespace",  optional_argument, 0, GETOPT_QUAL_NAMESPACE },
 		{ "quiet",	optional_argument, 0, GETOPT_QUAL_QUIET },
 		{ "silent",	optional_argument, 0, GETOPT_QUAL_QUIET },
 		{ "silence",	optional_argument, 0, GETOPT_QUAL_QUIET },
@@ -2610,6 +2594,9 @@ init(int argc, char *argv[])
 		case 'n':
 			nflag = 1;
 			break;
+		case 'N':
+			Nflag = true;
+			break;
 		case 'o':
 			outfname = optarg;
 			break;
@@ -2770,6 +2757,9 @@ init(int argc, char *argv[])
 			break;
 		case GETOPT_QUAL_KVM:
 			qualify_kvm(optarg);
+			break;
+		case GETOPT_QUAL_NAMESPACE:
+			qualify_namespace(optarg ?: namespace_qual);
 			break;
 		case GETOPT_QUAL_QUIET:
 			qualify_quiet(optarg ?: qflag_qual);
@@ -2944,6 +2934,9 @@ init(int argc, char *argv[])
 		if (nflag)
 			error_msg("-n/--syscall-number has no effect "
 				  "with -c/--summary-only");
+		if (Nflag)
+			error_msg("-N/--arg-names has no effect "
+				  "with -c/--summary-only");
 		if (rflag)
 			error_msg("-r/--relative-timestamps has no effect "
 				  "with -c/--summary-only");
@@ -3059,6 +3052,8 @@ init(int argc, char *argv[])
 
 	debug_msg("ptrace_setoptions = %#x", ptrace_setoptions);
 	test_ptrace_seize();
+	if (inject_set)
+		test_ptrace_set_syscall_info();
 	test_ptrace_get_syscall_info();
 
 	/*
@@ -3927,11 +3922,11 @@ next_event_get_tcp:
 	}
 
 next_event_exit:
+	clear_regs(tcp);
+
 	/* Is this the very first time we see this tracee stopped? */
 	if (tcp->flags & TCB_STARTUP)
 		startup_tcb(tcp);
-
-	clear_regs(tcp);
 
 	/* Set current output file */
 	set_current_tcp(tcp);

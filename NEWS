@@ -2,8 +2,76 @@ Noteworthy changes in release ?.?? (????-??-??)
 ===============================================
 
 * Improvements
+  * Added -e kvm=vcpu+ option for kvm_run struct decoding.
+  * Implemented decoding of FS_IOC_GETFSUUID, FS_IOC_GETFSSYSFSPATH, and
+    FS_IOC_GETLBMD_CAP ioctl commands.
+  * Updated lists of AUDIT_*, BR_*, and RWF_* constants.
+
+Noteworthy changes in release 6.17 (2025-09-29)
+===============================================
+
+* Improvements
+  * Implemented decoding of file_getattr and file_setattr syscalls.
+  * Implemented decoding of SO_INQ socket option.
+  * Updated lists of BPF_*, BTN_*, BTRFS_*, DEVCONF_*, ETHTOOL_*, FALLOC_*,
+    KEXEC_*, KEY_*, KVM_*, NETCONFA_*, NFT_*, PR_*, SCM_*, V4L2_*, and XDP_*
+    constants.
+  * Updated lists of ioctl commands from Linux 6.17.
+
+Noteworthy changes in release 6.16 (2025-08-05)
+===============================================
+
+* Improvements
+  * Added -N/--arg-names option for printing syscall argument names.
+  * Implemented setting of system call information using
+    PTRACE_SET_SYSCALL_INFO ptrace API introduced in Linux 6.16.
+  * Implemented decoding of SO_RCVPRIORITY and SO_PASSRIGHTS socket options.
+  * Implemented decoding of RTA_NH_ID and RTA_FLOWLABEL netlink attributes.
+  * Updated decoding of statx syscall.
+  * Updated lists of BR_*, CRYPTOCFGA_*, FUTEX2_*, IORING_*, IPSET_*, KVM_*,
+    MDB_*, NETDEV_*, PR_*, RXRPC_*, SW_*, THERMAL_*, and V4L2_*
+    constants.
+  * Updated lists of ioctl commands from Linux 6.16.
+
+Noteworthy changes in release 6.15 (2025-05-26)
+===============================================
+
+* Improvements
+  * Implemented decoding of open_tree_attr syscall.
+  * Implemented decoding of AF_TIPC socket addresses and socket options.
+  * Updated decoding of statmount syscall.
+  * Updated lists of AUDIT_*, BPF_*, BTRFS_*, COUNTER_*, FAN_*, FRA_*, IFLA_*,
+    IORING_*, KVM_*, LANDLOCK_*, PKEY_*, RTPROT_*, TCP_*, and V4L2_* constants.
+  * Updated lists of ioctl commands from Linux 6.15.
+
+Noteworthy changes in release 6.14 (2025-03-25)
+===============================================
+
+* Improvements
+  * Added -e namespace=new option for printing the namespaces entered
+    by the tracee.
+  * Implemented decoding of FRA_FLOWLABEL and FRA_FLOWLABEL_MASK netlink
+    attributes of RTM_{NEW,DEL,GET}RULE NETLINK_ROUTE messages.
+  * Implemented decoding of RTM_{NEW,DEL}MULTICAST and RTM_{NEW,DEL}ANYCAST
+    NETLINK_ROUTE messages.
+  * Updated decoding of statx syscall.
+  * Updated lists of AT_*, AUDIT_*, ETHTOOL_*, FAN_*, IORING_*, IPPROTO_*,
+    KEY_*, NL80211_*, RWF_*, and SECBIT_* constants.
+  * Updated lists of ioctl commands from Linux 6.14.
+
+Noteworthy changes in release 6.13 (2025-01-23)
+===============================================
+
+* Improvements
+  * Implemented decoding of getxattrat, setxattrat, listxattrat,
+    and removexattrat syscalls.
   * Updated decoding of struct io_uring_clone_buffers, struct io_uring_napi,
     and struct perf_event_attr.
+  * Updated decoding of crypto_user_alg netlink attributes of NETLINK_CRYPTO.
+  * Implemented decoding of IFLA_MCTP_PHYS_BINDING netlink attribute.
+  * Updated lists of AT_*, BPF_*, FAN_*, IORING_*, MADV_*, NT_*, and SCM_*
+    constants.
+  * Updated lists of ioctl commands from Linux 6.13.
 
 Noteworthy changes in release 6.12 (2024-11-18)
 ===============================================

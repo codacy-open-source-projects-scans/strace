@@ -2,7 +2,7 @@
  * This file is part of execveat strace test.
  *
  * Copyright (c) 2015-2016 Dmitry V. Levin <ldv@strace.io>
- * Copyright (c) 2015-2023 The strace developers.
+ * Copyright (c) 2015-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
@@ -11,13 +11,34 @@
 #include "tests.h"
 #include "scno.h"
 
-#ifdef __NR_execveat
+#include <fcntl.h>
+#include <stdio.h>
+#include <unistd.h>
 
-# include <fcntl.h>
-# include <stdio.h>
-# include <unistd.h>
+#include "secontext.h"
 
-# include "secontext.h"
+static const char *errstr;
+
+static long
+k_execveat(const unsigned int dirfd,
+	   const void *const pathname,
+	   const void *const argv,
+	   const void *const envp,
+	   const unsigned int flags)
+{
+	const kernel_ulong_t fill = (kernel_ulong_t) 0xdefaced00000000ULL;
+	const kernel_ulong_t bad = (kernel_ulong_t) 0xbadc0dedbadc0dedULL;
+
+	const kernel_ulong_t arg1 = fill | dirfd;
+	const kernel_ulong_t arg2 = (uintptr_t) pathname;
+	const kernel_ulong_t arg3 = (uintptr_t) argv;
+	const kernel_ulong_t arg4 = (uintptr_t) envp;
+	const kernel_ulong_t arg5 = fill | flags;
+	const long rc = syscall(__NR_execveat,
+				arg1, arg2, arg3, arg4, arg5, bad);
+	errstr = sprintrc(rc);
+	return rc;
+}
 
 static void
 tests_with_existing_file(void)
@@ -42,22 +63,22 @@ tests_with_existing_file(void)
 	 * Tests with AT_FDCWD.
 	 */
 
-	long rc = syscall(__NR_execveat, -100, sample, argv, NULL, 0);
+	k_execveat(-100, sample, argv, NULL, 0);
 	printf("%s%s(AT_FDCWD, \"%s\"%s, [\"%s\"], NULL, 0) = %s\n",
 	       my_secontext, "execveat",
 	       sample, sample_secontext,
 	       argv[0],
-	       sprintrc(rc));
+	       errstr);
 
 	if (unlink(sample))
 		perror_msg_and_fail("unlink");
 
-	rc = syscall(__NR_execveat, -100, sample, argv, NULL, 0);
+	k_execveat(-100, sample, argv, NULL, 0);
 	printf("%s%s(AT_FDCWD, \"%s\", [\"%s\"], NULL, 0) = %s\n",
 	       my_secontext, "execveat",
 	       sample,
 	       argv[0],
-	       sprintrc(rc));
+	       errstr);
 
 	/*
 	 * Tests with dirfd.
@@ -69,36 +90,36 @@ tests_with_existing_file(void)
 	char *sample_realpath = xasprintf("%s/%s", cwd, sample);
 
 	/* no file */
-	rc = syscall(__NR_execveat, cwd_fd, sample, argv, NULL, 0);
+	k_execveat(cwd_fd, sample, argv, NULL, 0);
 	printf("%s%s(%d%s, \"%s\", [\"%s\"], NULL, 0) = %s\n",
 	       my_secontext, "execveat",
 	       cwd_fd, cwd_secontext,
 	       sample,
 	       argv[0],
-	       sprintrc(rc));
+	       errstr);
 
 	if (open(sample, O_RDONLY | O_CREAT, 0400) < 0)
 		perror_msg_and_fail("open");
 
-	rc = syscall(__NR_execveat, cwd_fd, sample, argv, NULL, 0);
+	k_execveat(cwd_fd, sample, argv, NULL, 0);
 	printf("%s%s(%d%s, \"%s\"%s, [\"%s\"], NULL, 0) = %s\n",
 	       my_secontext, "execveat",
 	       cwd_fd, cwd_secontext,
 	       sample, sample_secontext,
 	       argv[0],
-	       sprintrc(rc));
+	       errstr);
 
 	/* cwd_fd ignored when path is absolute */
 	if (chdir("../.."))
 		perror_msg_and_fail("chdir");
 
-	rc = syscall(__NR_execveat, cwd_fd, sample_realpath, argv, NULL, 0);
+	k_execveat(cwd_fd, sample_realpath, argv, NULL, 0);
 	printf("%s%s(%d%s, \"%s\"%s, [\"%s\"], NULL, 0) = %s\n",
 	       my_secontext, "execveat",
 	       cwd_fd, cwd_secontext,
 	       sample_realpath, sample_secontext,
 	       argv[0],
-	       sprintrc(rc));
+	       errstr);
 
 	if (fchdir(cwd_fd))
 		perror_msg_and_fail("fchdir");
@@ -109,8 +130,8 @@ tests_with_existing_file(void)
 	leave_and_remove_subdir();
 }
 
-# define FILENAME "test.execveat\nfilename"
-# define Q_FILENAME "test.execveat\\nfilename"
+#define FILENAME "test.execveat\nfilename"
+#define Q_FILENAME "test.execveat\\nfilename"
 
 static const char * const argv[] = {
 	FILENAME, "first", "second", (const char *) -1L,
@@ -135,81 +156,81 @@ main(void)
 	const char ** const tail_envp = tail_memdup(envp, sizeof(envp));
 	char *my_secontext = SECONTEXT_PID_MY();
 
-	syscall(__NR_execveat, -100, FILENAME, tail_argv, tail_envp, 0x1100);
+	k_execveat(-100, FILENAME, tail_argv, tail_envp, 0x1100);
 	printf("%s%s(AT_FDCWD, \"%s\""
 	       ", [\"%s\", \"%s\", \"%s\", %p, %p, %p, ... /* %p */]"
-# if VERBOSE
+#if VERBOSE
 	       ", [\"%s\", \"%s\", %p, %p, %p, ... /* %p */]"
-# else
+#else
 	       ", %p /* 5 vars, unterminated */"
-# endif
+#endif
 	       ", AT_SYMLINK_NOFOLLOW|AT_EMPTY_PATH) = %s\n",
 	       my_secontext, "execveat",
 	       Q_FILENAME, q_argv[0], q_argv[1], q_argv[2],
 	       argv[3], argv[4], argv[5], (char *) tail_argv + sizeof(argv),
-# if VERBOSE
+#if VERBOSE
 	       q_envp[0], q_envp[1], envp[2], envp[3], envp[4],
 	       (char *) tail_envp + sizeof(envp),
-# else
+#else
 	       tail_envp,
-# endif
+#endif
 	       sprintrc(-1));
 
 	tail_argv[ARRAY_SIZE(q_argv)] = NULL;
 	tail_envp[ARRAY_SIZE(q_envp)] = NULL;
 	(void) q_envp;	/* workaround for clang bug #33068 */
 
-	syscall(__NR_execveat, -100, FILENAME, tail_argv, tail_envp, 0x1100);
+	k_execveat(-100, FILENAME, tail_argv, tail_envp, 0x1100);
 	printf("%s%s(AT_FDCWD, \"%s\", [\"%s\", \"%s\", \"%s\"]"
-# if VERBOSE
+#if VERBOSE
 	       ", [\"%s\", \"%s\"]"
-# else
+#else
 	       ", %p /* 2 vars */"
-# endif
+#endif
 	       ", AT_SYMLINK_NOFOLLOW|AT_EMPTY_PATH) = %s\n",
 	       my_secontext, "execveat",
 	       Q_FILENAME, q_argv[0], q_argv[1], q_argv[2],
-# if VERBOSE
+#if VERBOSE
 	       q_envp[0], q_envp[1],
-# else
+#else
 	       tail_envp,
-# endif
+#endif
 	       sprintrc(-1));
 
-	syscall(__NR_execveat, -100, FILENAME, tail_argv + 2, tail_envp + 1, 0x1100);
+	k_execveat(-100, FILENAME, tail_argv + 2, tail_envp + 1, 0x1100);
 	printf("%s%s(AT_FDCWD, \"%s\", [\"%s\"]"
-# if VERBOSE
+#if VERBOSE
 	       ", [\"%s\"]"
-# else
+#else
 	       ", %p /* 1 var */"
-# endif
+#endif
 	       ", AT_SYMLINK_NOFOLLOW|AT_EMPTY_PATH) = %s\n",
 	       my_secontext, "execveat",
 	       Q_FILENAME, q_argv[2],
-# if VERBOSE
+#if VERBOSE
 	       q_envp[1],
-# else
+#else
 	       tail_envp + 1,
-# endif
+#endif
 	       sprintrc(-1));
 
 	TAIL_ALLOC_OBJECT_CONST_PTR(char *, empty);
 	char **const efault = empty + 1;
 	*empty = NULL;
 
-	syscall(__NR_execveat, -100, FILENAME, empty, empty, 0x1100);
+	k_execveat(-100, FILENAME, empty, empty, 0x1100);
 	printf("%s%s(AT_FDCWD, \"%s\", []"
-# if VERBOSE
+#if VERBOSE
 	       ", []"
-# else
+#else
 	       ", %p /* 0 vars */"
-# endif
+#endif
 	       ", AT_SYMLINK_NOFOLLOW|AT_EMPTY_PATH) = %s\n",
 	       my_secontext, "execveat",
 	       Q_FILENAME,
-# if !VERBOSE
+#if !VERBOSE
 	       empty,
-# endif
+#endif
 	       sprintrc(-1));
 
 	char *const str_a = tail_alloc(DEFAULT_STRLEN + 2);
@@ -229,54 +250,54 @@ main(void)
 	}
 	a[i] = b[i] = NULL;
 
-	syscall(__NR_execveat, -100, FILENAME, a, b, 0x1100);
+	k_execveat(-100, FILENAME, a, b, 0x1100);
 	printf("%s%s(AT_FDCWD, \"%s\", [\"%.*s\"...",
 	       my_secontext, "execveat",
 	       Q_FILENAME, DEFAULT_STRLEN, a[0]);
 	for (i = 1; i < DEFAULT_STRLEN; ++i)
 		printf(", \"%s\"", a[i]);
-# if VERBOSE
+#if VERBOSE
 	printf(", \"%s\"", a[i]);
-# else
+#else
 	printf(", ...");
-# endif
-# if VERBOSE
+#endif
+#if VERBOSE
 	printf("], [\"%.*s\"...", DEFAULT_STRLEN, b[0]);
 	for (i = 1; i <= DEFAULT_STRLEN; ++i)
 		printf(", \"%s\"", b[i]);
 	printf("]");
-# else
+#else
 	printf("], %p /* %u vars */", b, DEFAULT_STRLEN + 1);
-# endif
+#endif
 	printf(", AT_SYMLINK_NOFOLLOW|AT_EMPTY_PATH) = %s\n",
 	       sprintrc(-1));
 
-	syscall(__NR_execveat, -100, FILENAME, a + 1, b + 1, 0x1100);
+	k_execveat(-100, FILENAME, a + 1, b + 1, 0x1100);
 	printf("%s%s(AT_FDCWD, \"%s\", [\"%s\"",
 	       my_secontext, "execveat",
 	       Q_FILENAME, a[1]);
 	for (i = 2; i <= DEFAULT_STRLEN; ++i)
 		printf(", \"%s\"", a[i]);
-# if VERBOSE
+#if VERBOSE
 	printf("], [\"%s\"", b[1]);
 	for (i = 2; i <= DEFAULT_STRLEN; ++i)
 		printf(", \"%s\"", b[i]);
 	printf("]");
-# else
+#else
 	printf("], %p /* %d vars */", b + 1, DEFAULT_STRLEN);
-# endif
+#endif
 	printf(", AT_SYMLINK_NOFOLLOW|AT_EMPTY_PATH) = %s\n",
 	       sprintrc(-1));
 
-	syscall(__NR_execveat, -100, FILENAME, NULL, efault, 0x1100);
+	k_execveat(-100, FILENAME, NULL, efault, 0x11100);
 	printf("%s%s(AT_FDCWD, \"%s\", NULL, %p"
-	       ", AT_SYMLINK_NOFOLLOW|AT_EMPTY_PATH) = %s\n",
+	       ", AT_SYMLINK_NOFOLLOW|AT_EMPTY_PATH|AT_EXECVE_CHECK) = %s\n",
 	       my_secontext, "execveat",
 	       Q_FILENAME, efault, sprintrc(-1));
 
-	syscall(__NR_execveat, -100, FILENAME, efault, NULL, 0x1100);
+	k_execveat(-100, FILENAME, efault, NULL, 0xfffeeeff);
 	printf("%s%s(AT_FDCWD, \"%s\", %p, NULL"
-	       ", AT_SYMLINK_NOFOLLOW|AT_EMPTY_PATH) = %s\n",
+	       ", 0xfffeeeff /* AT_??? */) = %s\n",
 	       my_secontext, "execveat",
 	       Q_FILENAME, efault, sprintrc(-1));
 
@@ -285,9 +306,3 @@ main(void)
 	puts("+++ exited with 0 +++");
 	return 0;
 }
-
-#else
-
-SKIP_MAIN_UNDEFINED("__NR_execveat")
-
-#endif

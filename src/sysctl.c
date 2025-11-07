@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022 Dmitry V. Levin <ldv@strace.io>
+ * Copyright (c) 2021-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -16,6 +17,7 @@ SYS_FUNC(sysctl)
 {
 	struct_sysctl_args info;
 
+	tprints_arg_name("args");
 	if (umove_or_printaddr(tcp, tcp->u_arg[0], &info))
 		return RVAL_DECODED;
 

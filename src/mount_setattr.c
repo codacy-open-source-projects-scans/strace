@@ -1,16 +1,18 @@
 /*
- * Copyright (c) 2019-2021 Dmitry V. Levin <ldv@strace.io>
+ * Copyright (c) 2019-2025 Dmitry V. Levin <ldv@strace.io>
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "defs.h"
+#include "kernel_fcntl.h"
 #include <linux/fcntl.h>
 #include <linux/mount.h>
 #include "xlat/mount_setattr_flags.h"
 #include "xlat/mount_attr_attr.h"
 #include "xlat/mount_attr_propagation.h"
+#include "xlat/open_tree_flags.h"
 
 static void
 print_mount_attr(struct tcb *const tcp,
@@ -53,26 +55,80 @@ print_mount_attr(struct tcb *const tcp,
 	tprint_struct_end();
 }
 
+static void
+decode_dfd_file_flags(struct tcb *const tcp,
+		      const int dirfd,
+		      const kernel_ulong_t fname,
+		      const struct xlat *const x,
+		      const unsigned int flags,
+		      const char *const dflt)
+{
+	tprints_arg_name("dirfd");
+	print_dirfd(tcp, dirfd);
+
+	tprints_arg_next_name("pathname");
+	printpath(tcp, fname);
+
+	tprints_arg_next_name("flags");
+	printflags(x, flags, dflt);
+
+}
+
+static void
+decode_dfd_file_flags_attr(struct tcb *const tcp,
+			   const int dirfd,
+			   const kernel_ulong_t fname,
+			   const struct xlat *const x,
+			   const unsigned int flags,
+			   const char *const dflt,
+			   const kernel_ulong_t attr,
+			   const kernel_ulong_t attr_size)
+{
+	decode_dfd_file_flags(tcp, dirfd, fname, x, flags, dflt);
+
+	tprints_arg_next_name("attr");
+	print_mount_attr(tcp, attr, attr_size);
+
+	tprints_arg_next_name("size");
+	PRINT_VAL_U(attr_size);
+}
+
 SYS_FUNC(mount_setattr)
 {
-	/* dirfd */
-	print_dirfd(tcp, tcp->u_arg[0]);
-	tprint_arg_next();
+	decode_dfd_file_flags_attr(tcp,
+				   tcp->u_arg[0],
+				   tcp->u_arg[1],
+				   mount_setattr_flags,
+				   tcp->u_arg[2],
+				   "AT_???",
+				   tcp->u_arg[3],
+				   tcp->u_arg[4]);
 
-	/* pathname */
-	printpath(tcp, tcp->u_arg[1]);
-	tprint_arg_next();
+	return RVAL_DECODED | RVAL_FD;
+}
 
-	/* flags */
-	printflags(mount_setattr_flags, tcp->u_arg[2], "AT_???");
-	tprint_arg_next();
+SYS_FUNC(open_tree)
+{
+	decode_dfd_file_flags(tcp,
+			      tcp->u_arg[0],
+			      tcp->u_arg[1],
+			      open_tree_flags,
+			      tcp->u_arg[2],
+			      "OPEN_TREE_???");
 
-	/* uattr */
-	print_mount_attr(tcp, tcp->u_arg[3], tcp->u_arg[4]);
-	tprint_arg_next();
+	return RVAL_DECODED | RVAL_FD;
+}
 
-	/* usize */
-	PRINT_VAL_U(tcp->u_arg[4]);
+SYS_FUNC(open_tree_attr)
+{
+	decode_dfd_file_flags_attr(tcp,
+				   tcp->u_arg[0],
+				   tcp->u_arg[1],
+				   open_tree_flags,
+				   tcp->u_arg[2],
+				   "OPEN_TREE_???",
+				   tcp->u_arg[3],
+				   tcp->u_arg[4]);
 
 	return RVAL_DECODED | RVAL_FD;
 }

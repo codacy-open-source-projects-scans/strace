@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2017 JingPiao Chen <chenjingpiao@gmail.com>
- * Copyright (c) 2017-2021 The strace developers.
+ * Copyright (c) 2017-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -166,7 +166,8 @@ static const nla_decoder_t crypto_user_alg_nla_decoders[] = {
 	[CRYPTOCFGA_REPORT_CIPHER]	= decode_crypto_report_cipher,
 	[CRYPTOCFGA_REPORT_AKCIPHER]	= decode_crypto_report_generic,
 	[CRYPTOCFGA_REPORT_KPP]		= decode_crypto_report_generic,
-	[CRYPTOCFGA_REPORT_ACOMP]	= decode_crypto_report_generic
+	[CRYPTOCFGA_REPORT_ACOMP]	= decode_crypto_report_generic,
+	[CRYPTOCFGA_REPORT_SIG]		= decode_crypto_report_generic,
 };
 
 static void

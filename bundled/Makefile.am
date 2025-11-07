@@ -1,6 +1,6 @@
 # Automake input for bundled.
 #
-# Copyright (c) 2018-2024 The strace developers.
+# Copyright (c) 2018-2025 The strace developers.
 # All rights reserved.
 #
 # SPDX-License-Identifier: LGPL-2.1-or-later
@@ -20,6 +20,7 @@ EXTRA_DIST = \
 	linux/arch/sparc/include/uapi/asm/fcntl.h \
 	linux/include/uapi/asm-generic/fcntl.h \
 	linux/include/uapi/asm-generic/hugetlb_encode.h \
+	linux/include/uapi/linux/audit.h \
 	linux/include/uapi/linux/blkpg.h \
 	linux/include/uapi/linux/blktrace_api.h \
 	linux/include/uapi/linux/blkzoned.h \
@@ -35,8 +36,10 @@ EXTRA_DIST = \
 	linux/include/uapi/linux/devlink.h \
 	linux/include/uapi/linux/dm-ioctl.h \
 	linux/include/uapi/linux/dqblk_xfs.h \
+	linux/include/uapi/linux/elf-em.h \
 	linux/include/uapi/linux/ethtool.h \
 	linux/include/uapi/linux/ethtool_netlink.h \
+	linux/include/uapi/linux/ethtool_netlink_generated.h \
 	linux/include/uapi/linux/eventpoll.h \
 	linux/include/uapi/linux/falloc.h \
 	linux/include/uapi/linux/fcntl.h \
@@ -129,6 +132,7 @@ EXTRA_DIST = \
 	linux/include/uapi/linux/tcp_metrics.h \
 	linux/include/uapi/linux/tee.h \
 	linux/include/uapi/linux/thermal.h \
+	linux/include/uapi/linux/tipc.h \
 	linux/include/uapi/linux/tls.h \
 	linux/include/uapi/linux/types.h \
 	linux/include/uapi/linux/unix_diag.h \
@@ -139,6 +143,7 @@ EXTRA_DIST = \
 	linux/include/uapi/linux/version.h \
 	linux/include/uapi/linux/videodev2.h \
 	linux/include/uapi/linux/vm_sockets.h \
+	linux/include/uapi/linux/xattr.h \
 	linux/include/uapi/mtd/mtd-abi.h \
 	linux/include/uapi/mtd/ubi-user.h \
 	linux/include/uapi/rdma/ib_user_verbs.h \

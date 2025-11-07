@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021 The strace developers.
+ * Copyright (c) 2018-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -19,7 +19,7 @@ inotify_ioctl(struct tcb *const tcp, const unsigned int code,
 {
 	switch (code) {
 	case INOTIFY_IOC_SETNEXTWD:
-		tprint_arg_next();
+		tprints_arg_next_name("argp");
 		PRINT_VAL_D((int) arg);
 
 		return RVAL_IOCTL_DECODED;

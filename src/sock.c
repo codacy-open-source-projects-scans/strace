@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1993, 1994, 1995, 1996 Rick Sladkey <jrs@world.std.com>
- * Copyright (c) 1996-2023 The strace developers.
+ * Copyright (c) 1996-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -185,7 +185,7 @@ decode_ifconf(struct tcb *const tcp, const kernel_ulong_t addr)
 		if (entering(tcp)) {
 			free(ifc);
 
-			tprint_arg_next();
+			tprints_arg_next_name("argp");
 			printaddr(addr);
 		} else {
 			/*
@@ -205,7 +205,7 @@ decode_ifconf(struct tcb *const tcp, const kernel_ulong_t addr)
 	}
 
 	if (entering(tcp)) {
-		tprint_arg_next();
+		tprints_arg_next_name("argp");
 		tprint_struct_begin();
 		tprints_field_name("ifc_len");
 		if (ifc->ifc_buf)
@@ -258,7 +258,7 @@ MPERS_PRINTER_DECL(int, sock_ioctl,
 
 	case SIOCBRADDBR:
 	case SIOCBRDELBR:
-		tprint_arg_next();
+		tprints_arg_next_name("argp");
 		printstr_ex(tcp, arg, sizeof(ifr.ifr_name), QUOTE_0_TERMINATED);
 		break;
 
@@ -276,13 +276,13 @@ MPERS_PRINTER_DECL(int, sock_ioctl,
 	case FIOSETOWN:
 	case SIOCSIFENCAP:
 	case SIOCSPGRP:
-		tprint_arg_next();
+		tprints_arg_next_name("argp");
 		printnum_int(tcp, arg, "%d");
 		break;
 
 	case SIOCBRADDIF:
 	case SIOCBRDELIF:
-		tprint_arg_next();
+		tprints_arg_next_name("argp");
 		if (!umove_or_printaddr(tcp, arg, &ifr)) {
 			tprint_struct_begin();
 			PRINT_FIELD_IFINDEX(ifr, ifr_ifindex);
@@ -305,13 +305,13 @@ MPERS_PRINTER_DECL(int, sock_ioctl,
 	case SIOCSIFNETMASK:
 	case SIOCSIFSLAVE:
 	case SIOCSIFTXQLEN:
-		tprint_arg_next();
+		tprints_arg_next_name("argp");
 		if (umove_or_printaddr(tcp, arg, &ifr))
 			break;
 
 		tprint_struct_begin();
 		PRINT_FIELD_CSTRING(ifr, ifr_name);
-		tprint_arg_next();
+		tprint_struct_next();
 		print_ifreq(tcp, code, arg, &ifr);
 		tprint_struct_end();
 		break;
@@ -330,7 +330,7 @@ MPERS_PRINTER_DECL(int, sock_ioctl,
 	case SIOCGIFSLAVE:
 	case SIOCGIFTXQLEN:
 		if (entering(tcp)) {
-			tprint_arg_next();
+			tprints_arg_next_name("argp");
 			if (umove_or_printaddr(tcp, arg, &ifr))
 				break;
 
@@ -405,7 +405,7 @@ MPERS_PRINTER_DECL(int, sock_ioctl,
 	case SIOCSMIIREG:
 	case SIOCSRARP:
 	case SIOCWANDEV:
-		tprint_arg_next();
+		tprints_arg_next_name("argp");
 		printaddr(arg);
 		break;
 

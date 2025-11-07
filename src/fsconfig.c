@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2019-2023 Dmitry V. Levin <ldv@strace.io>
+ * Copyright (c) 2021-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -17,12 +18,13 @@ SYS_FUNC(fsconfig)
 	const kernel_ulong_t value = tcp->u_arg[3];
 	const int aux = tcp->u_arg[4];
 
+	tprints_arg_name("fd");
 	printfd(tcp, fs_fd);
-	tprint_arg_next();
 
+	tprints_arg_next_name("cmd");
 	printxval(fsconfig_cmds, cmd, "FSCONFIG_???");
-	tprint_arg_next();
 
+	tprints_arg_next_name("key");
 	switch (cmd) {
 		case FSCONFIG_SET_FLAG:
 		case FSCONFIG_SET_STRING:
@@ -39,8 +41,8 @@ SYS_FUNC(fsconfig)
 			printaddr(key);
 			break;
 	}
-	tprint_arg_next();
 
+	tprints_arg_next_name("value");
 	switch (cmd) {
 		case FSCONFIG_SET_STRING:
 			printstr_ex(tcp, value, 256, QUOTE_0_TERMINATED);
@@ -64,8 +66,8 @@ SYS_FUNC(fsconfig)
 			printaddr(value);
 			break;
 	}
-	tprint_arg_next();
 
+	tprints_arg_next_name("aux");
 	switch (cmd) {
 		case FSCONFIG_SET_PATH:
 		case FSCONFIG_SET_PATH_EMPTY:

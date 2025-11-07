@@ -3,7 +3,7 @@
 # Check strace options syntax.
 #
 # Copyright (c) 2016 Dmitry V. Levin <ldv@strace.io>
-# Copyright (c) 2016-2024 The strace developers.
+# Copyright (c) 2016-2025 The strace developers.
 # All rights reserved.
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
@@ -280,6 +280,9 @@ check_h 'deprecated option -F ignored
 check_e "invalid -e kvm= argument: 'chdir'" -e kvm=chdir
 check_e "invalid -e kvm= argument: 'chdir'" --kvm=chdir
 
+check_e "invalid -e namespace= argument: 'NOSUCHITEM'" -e namespace=NOSUCHITEM
+check_e "invalid -e namespace= argument: 'NOSUCHITEM'" --namespace=NOSUCHITEM
+
 check_h "must have PROG [ARGS] or -p PID" -e decode-pid=all
 check_h "must have PROG [ARGS] or -p PID" --decode-pid=none
 check_h "must have PROG [ARGS] or -p PID" -e decode-pids=comm
@@ -378,12 +381,13 @@ $STRACE_EXE: $umsg" -u '!no such user!' -c -${c%%/*} true
 
 	check_e "-i/--instruction-pointer has no effect with -c/--summary-only
 $STRACE_EXE: -n/--syscall-number has no effect with -c/--summary-only
+$STRACE_EXE: -N/--arg-names has no effect with -c/--summary-only
 $STRACE_EXE: -r/--relative-timestamps has no effect with -c/--summary-only
 $STRACE_EXE: -t/--absolute-timestamps has no effect with -c/--summary-only
 $STRACE_EXE: -T/--syscall-times has no effect with -c/--summary-only
 $STRACE_EXE: -y/--decode-fds has no effect with -c/--summary-only
 $STRACE_EXE: Only the last of -z/--successful-only/-Z/--failed-only options will take effect. See status qualifier for more complex filters.
-$STRACE_EXE: $umsg" -u '!no such user!' -cinrtTyzZ true
+$STRACE_EXE: $umsg" -u '!no such user!' -cinNrtTyzZ true
 
 	if [ -n "$compiled_with_secontext" ]; then
 		check_e "--secontext has no effect with -c/--summary-only

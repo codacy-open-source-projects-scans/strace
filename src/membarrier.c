@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2015 Dmitry V. Levin <ldv@strace.io>
- * Copyright (c) 2015-2021 The strace developers.
+ * Copyright (c) 2015-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -19,16 +19,16 @@ SYS_FUNC(membarrier)
 		int cpu_id = tcp->u_arg[2];
 
 		/* cmd */
+		tprints_arg_name("cmd");
 		printxval(membarrier_cmds, cmd, "MEMBARRIER_CMD_???");
-		tprint_arg_next();
 
 		/* flags */
+		tprints_arg_next_name("flags");
 		printflags(membarrier_flags, flags, "MEMBARRIER_CMD_FLAG_???");
 
 		if (flags & MEMBARRIER_CMD_FLAG_CPU) {
-			tprint_arg_next();
-
 			/* cpu_id */
+			tprints_arg_next_name("cpu_id");
 			PRINT_VAL_D(cpu_id);
 		}
 

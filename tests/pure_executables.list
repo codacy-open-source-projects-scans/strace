@@ -1,6 +1,6 @@
 # Executables without side effects.
 #
-# Copyright (c) 2017-2024 The strace developers.
+# Copyright (c) 2017-2025 The strace developers.
 # All rights reserved.
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
@@ -44,6 +44,7 @@ clone3
 clone3-Xabbrev
 clone3-Xraw
 clone3-Xverbose
+clone3-report-ns-id
 copy_file_range
 creat
 delete_module
@@ -116,7 +117,22 @@ fcntl
 fcntl64
 fdatasync
 fflush
+file_getattr
+file_getattr-P
+file_getattr-success
+file_getattr-success-Xabbrev
+file_getattr-success-Xraw
+file_getattr-success-Xverbose
+file_getattr-y
+file_getattr-yy
 file_handle
+file_setattr
+file_setattr-P
+file_setattr-Xabbrev
+file_setattr-Xraw
+file_setattr-Xverbose
+file_setattr-y
+file_setattr-yy
 finit_module
 flock
 fsconfig
@@ -184,6 +200,10 @@ getsid
 getsockname
 getuid
 getuid32
+getxattrat
+getxattrat-P
+getxattrat-y
+getxattrat-yy
 getxgid
 getxpid
 getxuid
@@ -225,6 +245,10 @@ ioctl_fiemap
 ioctl_fiemap-Xabbrev
 ioctl_fiemap-Xraw
 ioctl_fiemap-Xverbose
+ioctl_fs_0x15
+ioctl_fs_0x15-Xabbrev
+ioctl_fs_0x15-Xraw
+ioctl_fs_0x15-Xverbose
 ioctl_fs_f
 ioctl_fs_f-Xabbrev
 ioctl_fs_f-Xraw
@@ -257,6 +281,7 @@ ioctl_kd-Xverbose
 ioctl_kvm_run
 ioctl_kvm_run-v
 ioctl_kvm_run_auxstr_vcpu
+ioctl_kvm_run_auxstr_vcpu_more
 ioctl_lirc
 ioctl_loop
 ioctl_mtd
@@ -348,6 +373,10 @@ link
 linkat
 listmount
 listmount-success
+listxattrat
+listxattrat-P
+listxattrat-y
+listxattrat-yy
 llseek
 lookup_dcookie
 lseek
@@ -533,6 +562,8 @@ oldstat
 open
 open_tree
 open_tree-P
+open_tree_attr
+open_tree_attr-P
 openat
 openat2
 openat2-Xabbrev
@@ -655,6 +686,10 @@ ptrace-y
 ptrace-y-Xabbrev
 ptrace-y-Xraw
 ptrace-y-Xverbose
+ptrace_set_syscall_info
+ptrace_set_syscall_info-Xabbrev
+ptrace_set_syscall_info-Xraw
+ptrace_set_syscall_info-Xverbose
 ptrace_syscall_info
 ptrace_syscall_info-Xabbrev
 ptrace_syscall_info-Xraw
@@ -684,6 +719,10 @@ remap_file_pages
 remap_file_pages-Xabbrev
 remap_file_pages-Xraw
 remap_file_pages-Xverbose
+removexattrat
+removexattrat-P
+removexattrat-y
+removexattrat-yy
 rename
 renameat
 renameat2
@@ -741,6 +780,7 @@ setgroups
 setgroups32
 sethostname
 setns
+setns-report-ns-id
 setregid
 setregid32
 setresgid
@@ -755,6 +795,10 @@ setrlimit-Xraw
 setrlimit-Xverbose
 setuid
 setuid32
+setxattrat
+setxattrat-P
+setxattrat-y
+setxattrat-yy
 shmxt
 shutdown
 sigaction
@@ -861,6 +905,7 @@ uname
 unlink
 unlinkat
 unshare
+unshare-report-ns-id
 userfaultfd
 ustat
 utime

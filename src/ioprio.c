@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2015 Dmitry V. Levin <ldv@strace.io>
- * Copyright (c) 2014-2023 The strace developers.
+ * Copyright (c) 2014-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -70,10 +70,11 @@ SYS_FUNC(ioprio_get)
 {
 	if (entering(tcp)) {
 		/* which */
+		tprints_arg_name("which");
 		printxval(ioprio_who, tcp->u_arg[0], "IOPRIO_WHO_???");
-		tprint_arg_next();
 
 		/* who */
+		tprints_arg_next_name("who");
 		ioprio_print_who(tcp, tcp->u_arg[0], tcp->u_arg[1]);
 		return 0;
 	} else {
@@ -90,14 +91,15 @@ SYS_FUNC(ioprio_get)
 SYS_FUNC(ioprio_set)
 {
 	/* which */
+	tprints_arg_name("which");
 	printxval(ioprio_who, tcp->u_arg[0], "IOPRIO_WHO_???");
-	tprint_arg_next();
 
 	/* who */
+	tprints_arg_next_name("who");
 	ioprio_print_who(tcp, tcp->u_arg[0], tcp->u_arg[1]);
-	tprint_arg_next();
 
 	/* ioprio */
+	tprints_arg_next_name("ioprio");
 	if (xlat_verbose(xlat_verbosity) != XLAT_STYLE_ABBREV)
 		PRINT_VAL_D((int) tcp->u_arg[2]);
 

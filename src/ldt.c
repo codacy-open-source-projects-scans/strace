@@ -6,7 +6,7 @@
  * Copyright (c) 2002-2004 Roland McGrath <roland@redhat.com>
  * Copyright (c) 2010 Andreas Schwab <schwab@linux-m68k.org>
  * Copyright (c) 2014-2015 Dmitry V. Levin <ldv@strace.io>
- * Copyright (c) 2014-2021 The strace developers.
+ * Copyright (c) 2014-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -128,23 +128,24 @@ SYS_FUNC(modify_ldt)
 {
 	if (entering(tcp)) {
 		/* func */
+		tprints_arg_name("func");
 		PRINT_VAL_D((int) tcp->u_arg[0]);
-		tprint_arg_next();
 
 		/* ptr */
+		tprints_arg_next_name("ptr");
 		if (tcp->u_arg[2] != sizeof(struct user_desc))
 			printaddr(tcp->u_arg[1]);
 		else
 			print_user_desc(tcp, tcp->u_arg[1], USER_DESC_BOTH);
-		tprint_arg_next();
 
+		tprints_arg_next_name("bytecount");
 		PRINT_VAL_U(tcp->u_arg[2]);
 
 		return 0;
 	}
 
 	/*
-	 * For some reason ("tht ABI for sys_modify_ldt() expects
+	 * For some reason ("the ABI for sys_modify_ldt() expects
 	 * 'int'"), modify_ldt clips higher bits on x86_64.
 	 */
 
@@ -159,6 +160,7 @@ SYS_FUNC(modify_ldt)
 SYS_FUNC(set_thread_area)
 {
 	if (entering(tcp)) {
+		tprints_arg_name("u_info");
 		print_user_desc(tcp, tcp->u_arg[0], USER_DESC_BOTH);
 	} else {
 		struct user_desc desc;
@@ -179,6 +181,7 @@ SYS_FUNC(set_thread_area)
 
 SYS_FUNC(get_thread_area)
 {
+	tprints_arg_name("u_info");
 	print_user_desc(tcp, tcp->u_arg[0],
 			entering(tcp) ? USER_DESC_ENTERING : USER_DESC_EXITING);
 	return 0;
@@ -186,9 +189,21 @@ SYS_FUNC(get_thread_area)
 
 #endif /* HAVE_STRUCT_USER_DESC */
 
-#if defined(M68K) || defined(MIPS)
+#if defined(M68K)
 SYS_FUNC(set_thread_area)
 {
+	tprints_arg_name("tp");
+	printaddr(tcp->u_arg[0]);
+
+	return RVAL_DECODED;
+
+}
+#endif
+
+#if defined(MIPS)
+SYS_FUNC(set_thread_area)
+{
+	tprints_arg_name("addr");
 	printaddr(tcp->u_arg[0]);
 
 	return RVAL_DECODED;

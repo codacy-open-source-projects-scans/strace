@@ -1,7 +1,7 @@
 /*
  * Check decoding of FUTEX2_* flags.
  *
- * Copyright (c) 2024 Dmitry V. Levin <ldv@strace.io>
+ * Copyright (c) 2024-2025 Dmitry V. Levin <ldv@strace.io>
  * All rights reserved.
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
@@ -38,6 +38,10 @@ static const struct {
 		"FUTEX2_SIZE_U8|FUTEX2_NUMA",
 		"0x4 /* FUTEX2_SIZE_U8|FUTEX2_NUMA */"
 	}, {
+		ARG_STR(0x9),
+		"FUTEX2_SIZE_U16|FUTEX2_MPOL",
+		"0x9 /* FUTEX2_SIZE_U16|FUTEX2_MPOL */"
+	}, {
 		ARG_STR(0x82),
 		"FUTEX2_SIZE_U32|FUTEX2_PRIVATE",
 		"0x82 /* FUTEX2_SIZE_U32|FUTEX2_PRIVATE */"
@@ -46,13 +50,15 @@ static const struct {
 		"FUTEX2_SIZE_U64|FUTEX2_NUMA|FUTEX2_PRIVATE",
 		"0x87 /* FUTEX2_SIZE_U64|FUTEX2_NUMA|FUTEX2_PRIVATE */"
 	}, {
-		ARG_STR(0xffffff78),
-		"FUTEX2_SIZE_U8|0xffffff78",
-		"0xffffff78 /* FUTEX2_SIZE_U8|0xffffff78 */"
+		ARG_STR(0xffffff70),
+		"FUTEX2_SIZE_U8|0xffffff70",
+		"0xffffff70 /* FUTEX2_SIZE_U8|0xffffff70 */"
 	}, {
 		ARG_STR(0xffffffff),
-		"FUTEX2_SIZE_U64|FUTEX2_NUMA|FUTEX2_PRIVATE|0xffffff78",
-		"0xffffffff /* FUTEX2_SIZE_U64|FUTEX2_NUMA|FUTEX2_PRIVATE|0xffffff78 */"
+		"FUTEX2_SIZE_U64|FUTEX2_NUMA|FUTEX2_MPOL"
+			"|FUTEX2_PRIVATE|0xffffff70",
+		"0xffffffff /* FUTEX2_SIZE_U64|FUTEX2_NUMA|FUTEX2_MPOL"
+			"|FUTEX2_PRIVATE|0xffffff70 */"
 	},
 };
 

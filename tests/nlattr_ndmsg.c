@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2017 JingPiao Chen <chenjingpiao@gmail.com>
- * Copyright (c) 2017-2023 The strace developers.
+ * Copyright (c) 2017-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
@@ -187,9 +187,12 @@ main(void)
 		{ ARG_STR(0) },
 		{ ARG_XLAT_KNOWN(0x1, "NTF_EXT_MANAGED") },
 		{ ARG_XLAT_KNOWN(0x2, "NTF_EXT_LOCKED") },
-		{ ARG_XLAT_KNOWN(0xdeadbeef, "NTF_EXT_MANAGED|NTF_EXT_LOCKED"
-					     "|0xdeadbeec") },
-		{ ARG_XLAT_UNKNOWN(0xfeedcafc, "NTF_EXT_???") },
+		{ ARG_XLAT_KNOWN(0x4, "NTF_EXT_EXT_VALIDATED") },
+		{ ARG_XLAT_KNOWN(0xdeadbeef, "NTF_EXT_MANAGED|"
+					     "NTF_EXT_LOCKED|"
+					     "NTF_EXT_EXT_VALIDATED|"
+					     "0xdeadbee8") },
+		{ ARG_XLAT_UNKNOWN(0xfeedcaf8, "NTF_EXT_???") },
 	};
 
 	for (size_t i = 0; i < ARRAY_SIZE(ntfe_flags); i++) {

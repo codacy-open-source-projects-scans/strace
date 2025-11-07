@@ -2,7 +2,7 @@
  * Check decoding of pkey_alloc syscall.
  *
  * Copyright (c) 2016 Eugene Syromyatnikov <evgsyr@gmail.com>
- * Copyright (c) 2016-2021 The strace developers.
+ * Copyright (c) 2016-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
@@ -35,7 +35,7 @@ main(void)
 				"0xdec0de8" },
 		{ 0x7, "PKEY_DISABLE_ACCESS|PKEY_DISABLE_WRITE|"
 				"PKEY_DISABLE_EXECUTE" },
-		{ ARG_STR(0) },
+		{ 0, "PKEY_UNRESTRICTED" },
 		{ 0xbadc0de8, "0xbadc0de8 /* PKEY_??? */" },
 	};
 

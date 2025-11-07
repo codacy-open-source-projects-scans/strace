@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2016 Fabien Siron <fabien.siron@epita.fr>
  * Copyright (c) 2017 JingPiao Chen <chenjingpiao@gmail.com>
- * Copyright (c) 2016-2024 The strace developers.
+ * Copyright (c) 2016-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -88,6 +88,7 @@ DECL_NLA(s16);
 DECL_NLA(s32);
 DECL_NLA(s64);
 DECL_NLA(be16);
+DECL_NLA(be32);
 DECL_NLA(be64);
 DECL_NLA(xval);
 DECL_NLA(flags);

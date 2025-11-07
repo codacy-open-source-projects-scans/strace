@@ -1,6 +1,6 @@
 #!/usr/bin/m4
 #
-# Copyright (c) 2016-2021 The strace developers.
+# Copyright (c) 2016-2025 The strace developers.
 # All rights reserved.
 #
 # SPDX-License-Identifier: LGPL-2.1-or-later
@@ -62,4 +62,8 @@ if test "$enable_gcc_Werror" = yes; then
   gl_WARN_ADD([-Werror])
 fi
 AC_SUBST([WARN_CFLAGS])
+
+gl_WARN_ADD([-Wno-error=unterminated-string-initialization], [TEST_WARN_CFLAGS])
+gl_WARN_ADD([-Wno-error=stringop-overflow], [TEST_WARN_CFLAGS])
+AC_SUBST([TEST_WARN_CFLAGS])
 ])

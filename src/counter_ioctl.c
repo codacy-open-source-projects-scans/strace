@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021 Eugene Syromyatnikov <evgsyr@gmail.com>.
+ * Copyright (c) 2021-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -57,7 +58,7 @@ counter_ioctl(struct tcb *const tcp, const unsigned int code,
 {
 	switch (code) {
 	case COUNTER_ADD_WATCH_IOCTL:
-		tprint_arg_next();
+		tprints_arg_next_name("argp");
 		print_struct_counter_watch(tcp, arg);
 		return RVAL_IOCTL_DECODED;
 

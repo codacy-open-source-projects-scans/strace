@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2016 Fabien Siron <fabien.siron@epita.fr>
  * Copyright (c) 2017 JingPiao Chen <chenjingpiao@gmail.com>
- * Copyright (c) 2016-2024 The strace developers.
+ * Copyright (c) 2016-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -1356,8 +1356,9 @@ static const nla_decoder_t ifla_inet_nla_decoders[] = {
 };
 
 static const nla_decoder_t ifla_mctp_nla_decoders[] = {
-	[IFLA_MCTP_UNSPEC]	= NULL,
-	[IFLA_MCTP_NET]		= decode_nla_u32,
+	[IFLA_MCTP_UNSPEC]		= NULL,
+	[IFLA_MCTP_NET]			= decode_nla_u32,
+	[IFLA_MCTP_PHYS_BINDING]	= decode_nla_x8,
 };
 
 static bool
@@ -1662,6 +1663,8 @@ static const nla_decoder_t ifinfomsg_nla_decoders[] = {
 	[IFLA_DEVLINK_PORT]	= decode_nla_u32,
 	[IFLA_GSO_IPV4_MAX_SIZE]	= decode_nla_u32,
 	[IFLA_GRO_IPV4_MAX_SIZE]	= decode_nla_u32,
+	[IFLA_MAX_PACING_OFFLOAD_HORIZON]	= decode_nla_u64,
+	[IFLA_NETNS_IMMUTABLE]	= decode_nla_u8,
 };
 
 DECL_NETLINK_ROUTE_DECODER(decode_ifinfomsg)

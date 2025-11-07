@@ -1,4 +1,5 @@
 #sorted
+#From include/uapi/asm-generic/mman-common.h
 MADV_NORMAL		0
 MADV_RANDOM		1
 MADV_SEQUENTIAL		2
@@ -30,3 +31,5 @@ MADV_DONTNEED_LOCKED	24
 /* MADV_COLLAPSE	25 - see madvise_hppa_generic_cmds */
 MADV_HWPOISON		100
 MADV_SOFT_OFFLINE	101
+MADV_GUARD_INSTALL	102
+MADV_GUARD_REMOVE	103

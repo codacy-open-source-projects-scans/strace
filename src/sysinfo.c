@@ -7,7 +7,7 @@
  * Copyright (c) 2012 Denys Vlasenko <vda.linux@googlemail.com>
  * Copyright (c) 2014-2015 Dmitry V. Levin <ldv@strace.io>
  * Copyright (c) 2015 Elvira Khabirova <lineprinter0@gmail.com>
- * Copyright (c) 2014-2021 The strace developers.
+ * Copyright (c) 2014-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -26,6 +26,7 @@ SYS_FUNC(sysinfo)
 	if (entering(tcp))
 		return 0;
 
+	tprints_arg_name("info");
 	if (!umove_or_printaddr(tcp, tcp->u_arg[0], &si)) {
 		tprint_struct_begin();
 		PRINT_FIELD_U(si, uptime);

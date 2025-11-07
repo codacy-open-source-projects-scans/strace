@@ -5,7 +5,7 @@
  * Copyright (c) 1996-1999 Wichert Akkerman <wichert@cistron.nl>
  * Copyright (c) 2005-2015 Dmitry V. Levin <ldv@strace.io>
  * Copyright (c) 2015 Elvira Khabirova <lineprinter0@gmail.com>
- * Copyright (c) 2015-2021 The strace developers.
+ * Copyright (c) 2015-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -42,10 +42,11 @@ SYS_FUNC(sigaltstack)
 {
 	if (entering(tcp)) {
 		/* ss */
+		tprints_arg_name("ss");
 		print_stack_t(tcp, tcp->u_arg[0]);
-		tprint_arg_next();
 	} else {
 		/* old_ss */
+		tprints_arg_next_name("old_ss");
 		print_stack_t(tcp, tcp->u_arg[1]);
 	}
 	return 0;

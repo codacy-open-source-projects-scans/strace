@@ -2,7 +2,7 @@
  * Copyright (c) 2014 Philippe De Muyter <phdm@macqel.be>
  * Copyright (c) 2014 William Manley <will@williammanley.net>
  * Copyright (c) 2011 Peter Zotov <whitequark@whitequark.org>
- * Copyright (c) 2014-2024 The strace developers.
+ * Copyright (c) 2014-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -118,7 +118,7 @@ print_v4l2_capability(struct tcb *const tcp, const kernel_ulong_t arg)
 	if (entering(tcp))
 		return 0;
 
-	tprint_arg_next();
+	tprints_arg_next_name("argp");
 	if (umove_or_printaddr(tcp, arg, &caps))
 		return RVAL_IOCTL_DECODED;
 
@@ -152,7 +152,7 @@ print_v4l2_fmtdesc(struct tcb *const tcp, const kernel_ulong_t arg)
 	struct v4l2_fmtdesc f;
 
 	if (entering(tcp)) {
-		tprint_arg_next();
+		tprints_arg_next_name("argp");
 		if (umove_or_printaddr(tcp, arg, &f))
 			return RVAL_IOCTL_DECODED;
 
@@ -425,7 +425,7 @@ print_v4l2_format(struct tcb *const tcp, const kernel_ulong_t arg,
 	struct_v4l2_format f;
 
 	if (entering(tcp)) {
-		tprint_arg_next();
+		tprints_arg_next_name("argp");
 		if (umove_or_printaddr(tcp, arg, &f))
 			return RVAL_IOCTL_DECODED;
 
@@ -462,7 +462,7 @@ print_v4l2_requestbuffers(struct tcb *const tcp, const kernel_ulong_t arg)
 	struct v4l2_requestbuffers reqbufs;
 
 	if (entering(tcp)) {
-		tprint_arg_next();
+		tprints_arg_next_name("argp");
 		if (umove_or_printaddr(tcp, arg, &reqbufs))
 			return RVAL_IOCTL_DECODED;
 
@@ -481,6 +481,39 @@ print_v4l2_requestbuffers(struct tcb *const tcp, const kernel_ulong_t arg)
 	if (!syserror(tcp) && !umove(tcp, arg, &reqbufs)) {
 		tprint_value_changed();
 		PRINT_VAL_U(reqbufs.count);
+	}
+
+	tprint_struct_end();
+
+	return RVAL_IOCTL_DECODED;
+}
+
+static int
+print_v4l2_exportbuffer(struct tcb *const tcp, const kernel_ulong_t arg)
+{
+	struct v4l2_exportbuffer expbuf;
+
+	if (entering(tcp)) {
+		tprints_arg_next_name("argp");
+		if (umove_or_printaddr(tcp, arg, &expbuf))
+			return RVAL_IOCTL_DECODED;
+
+		tprint_struct_begin();
+		PRINT_FIELD_XVAL(expbuf, type, v4l2_buf_types,
+				 "V4L2_BUF_TYPE_???");
+		tprint_struct_next();
+		PRINT_FIELD_U(expbuf, index);
+		tprint_struct_next();
+		PRINT_FIELD_U(expbuf, plane);
+		tprint_struct_next();
+		PRINT_FIELD_OBJ_VAL(expbuf, flags, tprint_open_modes);
+
+		return 0;
+	}
+
+	if (!syserror(tcp) && !umove(tcp, arg, &expbuf)) {
+		tprint_struct_end_value_changed_struct_begin();
+		PRINT_FIELD_FD(expbuf, fd, tcp);
 	}
 
 	tprint_struct_end();
@@ -598,7 +631,7 @@ print_v4l2_buffer(struct tcb *const tcp, const unsigned int code,
 	kernel_v4l2_buffer_t b;
 
 	if (entering(tcp)) {
-		tprint_arg_next();
+		tprints_arg_next_name("argp");
 		if (umove_or_printaddr(tcp, arg, &b))
 			return RVAL_IOCTL_DECODED;
 
@@ -659,7 +692,7 @@ print_v4l2_buffer_time32(struct tcb *const tcp, const unsigned int code,
 	kernel_v4l2_buffer_time32_t b32;
 
 	if (entering(tcp)) {
-		tprint_arg_next();
+		tprints_arg_next_name("argp");
 		if (umove_or_printaddr(tcp, arg, &b32))
 			return RVAL_IOCTL_DECODED;
 
@@ -685,7 +718,7 @@ print_v4l2_framebuffer(struct tcb *const tcp, const kernel_ulong_t arg)
 {
 	struct_v4l2_framebuffer b;
 
-	tprint_arg_next();
+	tprints_arg_next_name("argp");
 	if (!umove_or_printaddr(tcp, arg, &b)) {
 		tprint_struct_begin();
 		PRINT_FIELD_X(b, capability);
@@ -704,7 +737,7 @@ print_v4l2_buf_type(struct tcb *const tcp, const kernel_ulong_t arg)
 {
 	int type;
 
-	tprint_arg_next();
+	tprints_arg_next_name("argp");
 	if (!umove_or_printaddr(tcp, arg, &type)) {
 		tprint_indirect_begin();
 		printxval(v4l2_buf_types, type, "V4L2_BUF_TYPE_???");
@@ -765,7 +798,7 @@ print_v4l2_streamparm(struct tcb *const tcp, const kernel_ulong_t arg,
 	struct v4l2_streamparm s;
 
 	if (entering(tcp)) {
-		tprint_arg_next();
+		tprints_arg_next_name("argp");
 		if (umove_or_printaddr(tcp, arg, &s))
 			return RVAL_IOCTL_DECODED;
 
@@ -817,7 +850,7 @@ print_v4l2_standard(struct tcb *const tcp, const kernel_ulong_t arg)
 	struct_v4l2_standard s;
 
 	if (entering(tcp)) {
-		tprint_arg_next();
+		tprints_arg_next_name("argp");
 		if (umove_or_printaddr(tcp, arg, &s))
 			return RVAL_IOCTL_DECODED;
 
@@ -852,7 +885,7 @@ print_v4l2_input(struct tcb *const tcp, const kernel_ulong_t arg)
 	struct_v4l2_input i;
 
 	if (entering(tcp)) {
-		tprint_arg_next();
+		tprints_arg_next_name("argp");
 		if (umove_or_printaddr(tcp, arg, &i))
 			return RVAL_IOCTL_DECODED;
 
@@ -958,7 +991,7 @@ print_v4l2_control(struct tcb *const tcp, const kernel_ulong_t arg,
 	struct v4l2_control c;
 
 	if (entering(tcp)) {
-		tprint_arg_next();
+		tprints_arg_next_name("argp");
 		if (umove_or_printaddr(tcp, arg, &c))
 			return RVAL_IOCTL_DECODED;
 
@@ -997,7 +1030,7 @@ print_v4l2_tuner(struct tcb *const tcp, const kernel_ulong_t arg,
 {
 	struct v4l2_tuner c;
 	if (entering(tcp)) {
-		tprint_arg_next();
+		tprints_arg_next_name("argp");
 		if (umove_or_printaddr(tcp, arg, &c))
 			return RVAL_IOCTL_DECODED;
 
@@ -1058,7 +1091,7 @@ print_v4l2_queryctrl(struct tcb *const tcp, const kernel_ulong_t arg)
 	struct v4l2_queryctrl c;
 
 	if (entering(tcp)) {
-		tprint_arg_next();
+		tprints_arg_next_name("argp");
 		if (umove_or_printaddr(tcp, arg, &c))
 			return RVAL_IOCTL_DECODED;
 
@@ -1119,7 +1152,7 @@ print_v4l2_query_ext_ctrl(struct tcb *const tcp, const kernel_ulong_t arg)
 	struct v4l2_query_ext_ctrl c;
 
 	if (entering(tcp)) {
-		tprint_arg_next();
+		tprints_arg_next_name("argp");
 		if (umove_or_printaddr(tcp, arg, &c))
 			return RVAL_IOCTL_DECODED;
 
@@ -1189,7 +1222,7 @@ print_v4l2_cropcap(struct tcb *const tcp, const kernel_ulong_t arg)
 	struct v4l2_cropcap c;
 
 	if (entering(tcp)) {
-		tprint_arg_next();
+		tprints_arg_next_name("argp");
 		if (umove_or_printaddr(tcp, arg, &c))
 			return RVAL_IOCTL_DECODED;
 
@@ -1221,7 +1254,7 @@ print_v4l2_crop(struct tcb *const tcp, const kernel_ulong_t arg,
 	struct v4l2_crop c;
 
 	if (entering(tcp)) {
-		tprint_arg_next();
+		tprints_arg_next_name("argp");
 		if (umove_or_printaddr(tcp, arg, &c))
 			return RVAL_IOCTL_DECODED;
 
@@ -1275,7 +1308,7 @@ print_v4l2_ext_controls(struct tcb *const tcp, const kernel_ulong_t arg,
 	struct_v4l2_ext_controls c;
 
 	if (entering(tcp)) {
-		tprint_arg_next();
+		tprints_arg_next_name("argp");
 		if (umove_or_printaddr(tcp, arg, &c))
 			return RVAL_IOCTL_DECODED;
 
@@ -1368,7 +1401,7 @@ print_v4l2_frmsizeenum(struct tcb *const tcp, const kernel_ulong_t arg)
 	struct v4l2_frmsizeenum s;
 
 	if (entering(tcp)) {
-		tprint_arg_next();
+		tprints_arg_next_name("argp");
 		if (umove_or_printaddr(tcp, arg, &s))
 			return RVAL_IOCTL_DECODED;
 
@@ -1424,7 +1457,7 @@ print_v4l2_frmivalenum(struct tcb *const tcp, const kernel_ulong_t arg)
 	struct v4l2_frmivalenum f;
 
 	if (entering(tcp)) {
-		tprint_arg_next();
+		tprints_arg_next_name("argp");
 		if (umove_or_printaddr(tcp, arg, &f))
 			return RVAL_IOCTL_DECODED;
 
@@ -1482,7 +1515,7 @@ print_v4l2_create_buffers(struct tcb *const tcp, const kernel_ulong_t arg)
 	struct_v4l2_create_buffers b;
 
 	if (entering(tcp)) {
-		tprint_arg_next();
+		tprints_arg_next_name("argp");
 		if (umove_or_printaddr(tcp, arg, &b))
 			return RVAL_IOCTL_DECODED;
 
@@ -1528,6 +1561,9 @@ MPERS_PRINTER_DECL(int, v4l2_ioctl, struct tcb *const tcp,
 	case VIDIOC_REQBUFS: /* RW */
 		return print_v4l2_requestbuffers(tcp, arg);
 
+	case VIDIOC_EXPBUF: /* RW */
+		return print_v4l2_exportbuffer(tcp, arg);
+
 	case VIDIOC_QUERYBUF: /* RW */
 	case VIDIOC_QBUF: /* RW */
 	case VIDIOC_DQBUF: /* RW */
@@ -1562,7 +1598,7 @@ MPERS_PRINTER_DECL(int, v4l2_ioctl, struct tcb *const tcp,
 			return 0;
 		ATTRIBUTE_FALLTHROUGH;
 	case VIDIOC_S_STD: /* W */
-		tprint_arg_next();
+		tprints_arg_next_name("argp");
 		printnum_int64(tcp, arg, "%#" PRIx64);
 		break;
 
@@ -1591,7 +1627,7 @@ MPERS_PRINTER_DECL(int, v4l2_ioctl, struct tcb *const tcp,
 			return 0;
 		ATTRIBUTE_FALLTHROUGH;
 	case VIDIOC_S_INPUT: /* RW */
-		tprint_arg_next();
+		tprints_arg_next_name("argp");
 		printnum_int(tcp, arg, "%u");
 		break;
 

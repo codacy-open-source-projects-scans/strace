@@ -3,7 +3,7 @@
  *
  * Copyright (c) 2015-2016 Dmitry V. Levin <ldv@strace.io>
  * Copyright (c) 2016 Eugene Syromyatnikov <evgsyr@gmail.com>
- * Copyright (c) 2015-2023 The strace developers.
+ * Copyright (c) 2015-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
@@ -99,6 +99,24 @@ main(void)
 			"FAN_MARK_IGNORED_SURV_MODIFY"
 #  endif
 			},
+		{ (kernel_ulong_t) 0xffffffff00000013ULL,
+#  if XLAT_RAW
+			"0x13"
+#  elif XLAT_VERBOSE
+			"0x13 /* FAN_MARK_ADD|FAN_MARK_REMOVE|FAN_MARK_MOUNT */"
+#  else
+			"FAN_MARK_ADD|FAN_MARK_REMOVE|FAN_MARK_MOUNT"
+#  endif
+			},
+		{ (kernel_ulong_t) 0xffffffff00000182ULL,
+#  if XLAT_RAW
+			"0x182"
+#  elif XLAT_VERBOSE
+			"0x182 /* FAN_MARK_REMOVE|FAN_MARK_FLUSH|FAN_MARK_FILESYSTEM */"
+#  else
+			"FAN_MARK_REMOVE|FAN_MARK_FLUSH|FAN_MARK_FILESYSTEM"
+#  endif
+			},
 		{ (kernel_ulong_t) 0xbadc0deddeadffffULL,
 #  if XLAT_RAW || XLAT_VERBOSE
 			"0xdeadffff"
@@ -107,11 +125,10 @@ main(void)
 			" /* "
 #  endif
 #  if !XLAT_RAW
-			"FAN_MARK_ADD|FAN_MARK_REMOVE|FAN_MARK_DONT_FOLLOW|"
-			"FAN_MARK_ONLYDIR|FAN_MARK_MOUNT|FAN_MARK_IGNORED_MASK|"
-			"FAN_MARK_IGNORED_SURV_MODIFY|FAN_MARK_FLUSH|"
-			"FAN_MARK_FILESYSTEM|FAN_MARK_EVICTABLE|"
-			"FAN_MARK_IGNORE|0xdeadf800"
+			"FAN_MARK_ADD|FAN_MARK_REMOVE|FAN_MARK_FLUSH|"
+			"FAN_MARK_DONT_FOLLOW|FAN_MARK_ONLYDIR|FAN_MARK_MNTNS|"
+			"FAN_MARK_IGNORED_MASK|FAN_MARK_IGNORED_SURV_MODIFY|"
+			"FAN_MARK_IGNORE|FAN_MARK_EVICTABLE|0xdeadf800"
 #  endif
 #  if XLAT_VERBOSE
 			" */"
@@ -147,16 +164,19 @@ main(void)
 			"FAN_ACCESS_PERM|"
 			"FAN_OPEN_EXEC_PERM|"
 			"FAN_DIR_MODIFY|"
-			"FAN_ONDIR|"
+			"FAN_PRE_ACCESS|"
+			"FAN_MNT_ATTACH|"
+			"FAN_MNT_DETACH|"
 			"FAN_EVENT_ON_CHILD|"
 			"FAN_RENAME|"
-			"0xdeadfeeda7f02000"
+			"FAN_ONDIR|"
+			"0xdeadfeeda4e02000"
 #  endif
 #  if XLAT_VERBOSE
 			" */"
 #  endif
 			},
-		{ ARG_ULL_STR(0xffffffffa7f02000)
+		{ ARG_ULL_STR(0xffffffffa4e02000)
 #  if !XLAT_RAW
 			" /* FAN_??? */"
 #  endif

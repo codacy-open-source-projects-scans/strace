@@ -5,7 +5,7 @@
  * Copyright (c) 1996-1999 Wichert Akkerman <wichert@cistron.nl>
  * Copyright (c) 2003-2006 Roland McGrath <roland@redhat.com>
  * Copyright (c) 2006-2015 Dmitry V. Levin <ldv@strace.io>
- * Copyright (c) 2015-2022 The strace developers.
+ * Copyright (c) 2015-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -23,10 +23,11 @@
 SYS_FUNC(msgget)
 {
 	/* key */
+	tprints_arg_name("key");
 	printxval(ipc_private, (unsigned int) tcp->u_arg[0], NULL);
-	tprint_arg_next();
 
 	/* msgflg */
+	tprints_arg_next_name("msgflg");
 	tprint_flags_begin();
 	if (printflags_in(resource_flags, tcp->u_arg[1] & ~0777, NULL) != 0)
 		tprint_flags_or();
@@ -39,23 +40,24 @@ static void
 tprint_msgsnd(struct tcb *const tcp, const kernel_ulong_t addr,
 	      const kernel_ulong_t count, const unsigned int flags)
 {
-	/* msqid */
+	/* msgp */
+	tprints_arg_next_name("msgp");
 	tprint_msgbuf(tcp, addr, count);
-	tprint_arg_next();
 
 	/* msgsz */
+	tprints_arg_next_name("msgsz");
 	PRINT_VAL_U(count);
-	tprint_arg_next();
 
 	/* msgflg */
+	tprints_arg_next_name("msgflg");
 	printflags(ipc_msg_flags, flags, "MSG_???");
 }
 
 SYS_FUNC(msgsnd)
 {
 	/* msqid */
+	tprints_arg_name("msqid");
 	PRINT_VAL_D((int) tcp->u_arg[0]);
-	tprint_arg_next();
 
 	if (indirect_ipccall(tcp)) {
 		tprint_msgsnd(tcp, tcp->u_arg[3], tcp->u_arg[1],
@@ -71,15 +73,16 @@ static void
 tprint_msgrcv(struct tcb *const tcp, const kernel_ulong_t addr,
 	      const kernel_ulong_t count, const kernel_ulong_t msgtyp)
 {
-	/* msqid */
+	/* msgp */
+	tprints_arg_next_name("msgp");
 	tprint_msgbuf(tcp, addr, count);
-	tprint_arg_next();
 
 	/* msgsz */
+	tprints_arg_next_name("msgsz");
 	PRINT_VAL_U(count);
-	tprint_arg_next();
 
 	/* msgtyp */
+	tprints_arg_next_name("msgtyp");
 	PRINT_VAL_D(truncate_klong_to_current_klongsize(msgtyp));
 }
 
@@ -88,12 +91,12 @@ fetch_msgrcv_args(struct tcb *const tcp, const kernel_ulong_t addr,
 		  kernel_ulong_t *const pair)
 {
 	if (current_wordsize == sizeof(*pair)) {
-		if (umoven_or_printaddr(tcp, addr, 2 * sizeof(*pair), pair))
+		if (umoven(tcp, addr, 2 * sizeof(*pair), pair))
 			return -1;
 	} else {
 		unsigned int tmp[2];
 
-		if (umove_or_printaddr(tcp, addr, &tmp))
+		if (umove(tcp, addr, &tmp))
 			return -1;
 		pair[0] = tmp[0];
 		pair[1] = (int) tmp[1];
@@ -105,8 +108,8 @@ SYS_FUNC(msgrcv)
 {
 	if (entering(tcp)) {
 		/* msqid */
+		tprints_arg_name("msqid");
 		PRINT_VAL_D((int) tcp->u_arg[0]);
-		tprint_arg_next();
 	} else {
 		if (indirect_ipccall(tcp)) {
 			const bool direct =
@@ -121,23 +124,24 @@ SYS_FUNC(msgrcv)
 				kernel_ulong_t pair[2];
 
 				if (fetch_msgrcv_args(tcp, tcp->u_arg[3], pair)) {
-					tprint_arg_next();
+					tprints_arg_next_name("ipc_kludge");
+					printaddr(tcp->u_arg[3]);
+					tprints_arg_next_name("msgsz");
 					PRINT_VAL_U(tcp->u_arg[1]);
 				} else {
 					tprint_msgrcv(tcp, pair[0],
 						      tcp->u_arg[1], pair[1]);
 				}
 			}
-			tprint_arg_next();
-
 			/* msgflg */
+			tprints_arg_next_name("msgflg");
 			printflags(ipc_msg_flags, tcp->u_arg[2], "MSG_???");
 		} else {
 			tprint_msgrcv(tcp, tcp->u_arg[1],
 				tcp->u_arg[2], tcp->u_arg[3]);
-			tprint_arg_next();
 
 			/* msgflg */
+			tprints_arg_next_name("msgflg");
 			printflags(ipc_msg_flags, tcp->u_arg[4], "MSG_???");
 		}
 	}

@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2016 Fabien Siron <fabien.siron@epita.fr>
  * Copyright (c) 2017 JingPiao Chen <chenjingpiao@gmail.com>
- * Copyright (c) 2016-2021 The strace developers.
+ * Copyright (c) 2016-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -73,8 +73,12 @@ static const netlink_route_decoder_t route_decoders[] = {
 
 	/* RTM_NEWPREFIX */
 
+	[RTM_NEWMULTICAST - RTM_BASE] = decode_ifaddrmsg,
+	[RTM_DELMULTICAST - RTM_BASE] = decode_ifaddrmsg,
 	[RTM_GETMULTICAST - RTM_BASE] = decode_ifaddrmsg,
 
+	[RTM_NEWANYCAST - RTM_BASE] = decode_ifaddrmsg,
+	[RTM_DELANYCAST - RTM_BASE] = decode_ifaddrmsg,
 	[RTM_GETANYCAST - RTM_BASE] = decode_ifaddrmsg,
 
 	[RTM_NEWNEIGHTBL - RTM_BASE] = decode_ndtmsg,

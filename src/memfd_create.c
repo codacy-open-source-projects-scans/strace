@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2015 Dmitry V. Levin <ldv@strace.io>
- * Copyright (c) 2015-2022 The strace developers.
+ * Copyright (c) 2015-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -17,10 +17,11 @@
 SYS_FUNC(memfd_create)
 {
 	/* name */
+	tprints_arg_name("name");
 	printstr_ex(tcp, tcp->u_arg[0], MFD_NAME_MAX_LEN + 1,
 		    QUOTE_0_TERMINATED);
-	tprint_arg_next();
 
+	tprints_arg_next_name("flags");
 	unsigned int flags = tcp->u_arg[1];
 
 	if (!flags || xlat_verbose(xlat_verbosity) != XLAT_STYLE_ABBREV)

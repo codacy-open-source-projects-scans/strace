@@ -2,7 +2,7 @@
  * Copyright (c) 1991, 1992 Paul Kranenburg <pk@cs.few.eur.nl>
  * Copyright (c) 1993 Branko Lankester <branko@hacktic.nl>
  * Copyright (c) 1993, 1994, 1995, 1996 Rick Sladkey <jrs@world.std.com>
- * Copyright (c) 1996-2021 The strace developers.
+ * Copyright (c) 1996-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -33,10 +33,11 @@ SYS_FUNC(gettimeofday)
 {
 	if (exiting(tcp)) {
 		/* tv */
+		tprints_arg_name("tv");
 		print_timeval(tcp, tcp->u_arg[0]);
-		tprint_arg_next();
 
 		/* tz */
+		tprints_arg_next_name("tz");
 		print_timezone(tcp, tcp->u_arg[1]);
 	}
 	return 0;
@@ -45,10 +46,11 @@ SYS_FUNC(gettimeofday)
 SYS_FUNC(settimeofday)
 {
 	/* tv */
+	tprints_arg_name("tv");
 	print_timeval(tcp, tcp->u_arg[0]);
-	tprint_arg_next();
 
 	/* tz */
+	tprints_arg_next_name("tz");
 	print_timezone(tcp, tcp->u_arg[1]);
 
 	return RVAL_DECODED;
@@ -60,10 +62,11 @@ SYS_FUNC(osf_gettimeofday)
 {
 	if (exiting(tcp)) {
 		/* tv */
+		tprints_arg_name("tv");
 		print_timeval32(tcp, tcp->u_arg[0]);
-		tprint_arg_next();
 
 		/* tz */
+		tprints_arg_next_name("tz");
 		print_timezone(tcp, tcp->u_arg[1]);
 	}
 	return 0;
@@ -74,10 +77,11 @@ SYS_FUNC(osf_gettimeofday)
 SYS_FUNC(osf_settimeofday)
 {
 	/* tv */
+	tprints_arg_name("tv");
 	print_timeval32(tcp, tcp->u_arg[0]);
-	tprint_arg_next();
 
 	/* tz */
+	tprints_arg_next_name("tz");
 	print_timezone(tcp, tcp->u_arg[1]);
 
 	return RVAL_DECODED;
@@ -90,8 +94,8 @@ do_nanosleep(struct tcb *const tcp, const print_obj_by_addr_fn print_ts)
 {
 	if (entering(tcp)) {
 		/* req */
+		tprints_arg_name("req");
 		print_ts(tcp, tcp->u_arg[0]);
-		tprint_arg_next();
 	} else {
 		/* rem */
 		/*
@@ -100,6 +104,7 @@ do_nanosleep(struct tcb *const tcp, const print_obj_by_addr_fn print_ts)
 		 * print only its address, since kernel doesn't modify it,
 		 * and printing the value may show uninitialized data.
 		 */
+		tprints_arg_next_name("rem");
 		if (is_erestart(tcp)) {
 			temporarily_clear_syserror(tcp);
 			print_ts(tcp, tcp->u_arg[1]);
@@ -132,10 +137,11 @@ SYS_FUNC(getitimer)
 {
 	if (entering(tcp)) {
 		/* which */
+		tprints_arg_name("which");
 		printxval(itimer_which, tcp->u_arg[0], "ITIMER_???");
-		tprint_arg_next();
 	} else {
 		/* curr_value */
+		tprints_arg_next_name("curr_value");
 		print_itimerval(tcp, tcp->u_arg[1]);
 	}
 	return 0;
@@ -146,10 +152,11 @@ SYS_FUNC(osf_getitimer)
 {
 	if (entering(tcp)) {
 		/* which */
+		tprints_arg_name("which");
 		printxval(itimer_which, tcp->u_arg[0], "ITIMER_???");
-		tprint_arg_next();
 	} else {
 		/* curr_value */
+		tprints_arg_next_name("curr_value");
 		print_itimerval32(tcp, tcp->u_arg[1]);
 	}
 	return 0;
@@ -160,14 +167,15 @@ SYS_FUNC(setitimer)
 {
 	if (entering(tcp)) {
 		/* which */
+		tprints_arg_name("which");
 		printxval(itimer_which, tcp->u_arg[0], "ITIMER_???");
-		tprint_arg_next();
 
 		/* new_value */
+		tprints_arg_next_name("new_value");
 		print_itimerval(tcp, tcp->u_arg[1]);
-		tprint_arg_next();
 	} else {
 		/* old_value */
+		tprints_arg_next_name("old_value");
 		print_itimerval(tcp, tcp->u_arg[2]);
 	}
 	return 0;
@@ -178,14 +186,15 @@ SYS_FUNC(osf_setitimer)
 {
 	if (entering(tcp)) {
 		/* which */
+		tprints_arg_name("which");
 		printxval(itimer_which, tcp->u_arg[0], "ITIMER_???");
-		tprint_arg_next();
 
 		/* new_value */
+		tprints_arg_next_name("new_value");
 		print_itimerval32(tcp, tcp->u_arg[1]);
-		tprint_arg_next();
 	} else {
 		/* old_value */
+		tprints_arg_next_name("old_value");
 		print_itimerval32(tcp, tcp->u_arg[2]);
 	}
 	return 0;
@@ -199,6 +208,7 @@ do_adjtimex(struct tcb *const tcp, const print_obj_by_addr_fn print_tx,
 	    const kernel_ulong_t addr)
 {
 	/* buf */
+	tprints_arg_name("buf");
 	if (print_tx(tcp, addr))
 		return 0;
 	tcp->auxstr = xlookup(adjtimex_state, (kernel_ulong_t) tcp->u_rval);
@@ -271,10 +281,11 @@ static int
 do_clock_settime(struct tcb *const tcp, const print_obj_by_addr_fn print_ts)
 {
 	/* clockid */
+	tprints_arg_name("clockid");
 	printclockname(tcp->u_arg[0]);
-	tprint_arg_next();
 
 	/* tp */
+	tprints_arg_next_name("tp");
 	print_ts(tcp, tcp->u_arg[1]);
 
 	return RVAL_DECODED;
@@ -297,10 +308,11 @@ do_clock_gettime(struct tcb *const tcp, const print_obj_by_addr_fn print_ts)
 {
 	if (entering(tcp)) {
 		/* clockid */
+		tprints_arg_name("clockid");
 		printclockname(tcp->u_arg[0]);
-		tprint_arg_next();
 	} else {
 		/* tp */
+		tprints_arg_next_name("tp");
 		print_ts(tcp, tcp->u_arg[1]);
 	}
 	return 0;
@@ -323,22 +335,23 @@ do_clock_nanosleep(struct tcb *const tcp, const print_obj_by_addr_fn print_ts)
 {
 	if (entering(tcp)) {
 		/* clockid */
+		tprints_arg_name("clockid");
 		printclockname(tcp->u_arg[0]);
-		tprint_arg_next();
 
 		/* flags */
+		tprints_arg_next_name("flags");
 		printflags(clockflags, tcp->u_arg[1], "TIMER_???");
-		tprint_arg_next();
 
 		/* request */
+		tprints_arg_next_name("request");
 		print_ts(tcp, tcp->u_arg[2]);
-		tprint_arg_next();
 	} else {
 		/* remain */
 		/*
 		 * Second (returned) timespec is only significant
 		 * if syscall was interrupted and flags is not TIMER_ABSTIME.
 		 */
+		tprints_arg_next_name("remain");
 		if (!tcp->u_arg[1] && is_erestart(tcp)) {
 			temporarily_clear_syserror(tcp);
 			print_ts(tcp, tcp->u_arg[3]);
@@ -367,10 +380,11 @@ do_clock_adjtime(struct tcb *const tcp, const print_obj_by_addr_fn print_tx)
 {
 	if (entering(tcp)) {
 		/* clockid */
+		tprints_arg_name("clockid");
 		printclockname(tcp->u_arg[0]);
-		tprint_arg_next();
 		return 0;
 	} else {
+		tprint_arg_next();
 		return do_adjtimex(tcp, print_tx, tcp->u_arg[1]);
 	}
 }
@@ -398,17 +412,26 @@ SYS_FUNC(timer_create)
 {
 	if (entering(tcp)) {
 		/* clockid */
+		tprints_arg_name("clockid");
 		printclockname(tcp->u_arg[0]);
-		tprint_arg_next();
 
 		/* sevp */
+		tprints_arg_next_name("sevp");
 		print_sigevent(tcp, tcp->u_arg[1]);
-		tprint_arg_next();
 	} else {
 		/* timerid */
+		tprints_arg_next_name("timerid");
 		printnum_int(tcp, tcp->u_arg[2], "%d");
 	}
 	return 0;
+}
+
+SYS_FUNC(timer_delete)
+{
+	tprints_arg_name("timerid");
+	PRINT_VAL_D((int) tcp->u_arg[0]);
+
+	return RVAL_DECODED;
 }
 
 static int
@@ -416,18 +439,19 @@ do_timer_settime(struct tcb *const tcp, const print_obj_by_addr_fn print_its)
 {
 	if (entering(tcp)) {
 		/* timerid */
+		tprints_arg_name("timerid");
 		PRINT_VAL_D((int) tcp->u_arg[0]);
-		tprint_arg_next();
 
 		/* flags */
+		tprints_arg_next_name("flags");
 		printflags(clockflags, tcp->u_arg[1], "TIMER_???");
-		tprint_arg_next();
 
 		/* new_value */
+		tprints_arg_next_name("new_value");
 		print_its(tcp, tcp->u_arg[2]);
-		tprint_arg_next();
 	} else {
 		/* old_value */
+		tprints_arg_next_name("old_value");
 		print_its(tcp, tcp->u_arg[3]);
 	}
 	return 0;
@@ -450,10 +474,11 @@ do_timer_gettime(struct tcb *const tcp, const print_obj_by_addr_fn print_its)
 {
 	if (entering(tcp)) {
 		/* timerid */
+		tprints_arg_name("timerid");
 		PRINT_VAL_D((int) tcp->u_arg[0]);
-		tprint_arg_next();
 	} else {
 		/* curr_value */
+		tprints_arg_next_name("curr_value");
 		print_its(tcp, tcp->u_arg[1]);
 	}
 	return 0;
@@ -476,10 +501,11 @@ SYS_FUNC(timer_gettime64)
 SYS_FUNC(timerfd_create)
 {
 	/* clockid */
+	tprints_arg_name("clockid");
 	printclockname(tcp->u_arg[0]);
-	tprint_arg_next();
 
 	/* flags */
+	tprints_arg_next_name("flags");
 	printflags(timerfdflags, tcp->u_arg[1], "TFD_???");
 
 	return RVAL_DECODED | RVAL_FD;
@@ -490,18 +516,19 @@ do_timerfd_settime(struct tcb *const tcp, const print_obj_by_addr_fn print_its)
 {
 	if (entering(tcp)) {
 		/* fd */
+		tprints_arg_name("fd");
 		printfd(tcp, tcp->u_arg[0]);
-		tprint_arg_next();
 
 		/* flags */
+		tprints_arg_next_name("flags");
 		printflags(timerfdflags, tcp->u_arg[1], "TFD_???");
-		tprint_arg_next();
 
 		/* new_value */
+		tprints_arg_next_name("new_value");
 		print_its(tcp, tcp->u_arg[2]);
-		tprint_arg_next();
 	} else {
 		/* old_value */
+		tprints_arg_next_name("old_value");
 		print_its(tcp, tcp->u_arg[3]);
 	}
 	return 0;
@@ -524,10 +551,11 @@ do_timerfd_gettime(struct tcb *const tcp, const print_obj_by_addr_fn print_its)
 {
 	if (entering(tcp)) {
 		/* fd */
+		tprints_arg_name("fd");
 		printfd(tcp, tcp->u_arg[0]);
-		tprint_arg_next();
 	} else {
 		/* curr_value */
+		tprints_arg_next_name("curr_value");
 		print_its(tcp, tcp->u_arg[1]);
 	}
 	return 0;

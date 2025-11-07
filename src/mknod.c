@@ -6,7 +6,7 @@
  * Copyright (c) 2006 Ulrich Drepper <drepper@redhat.com>
  * Copyright (c) 2006 Bernhard Kaindl <bk@suse.de>
  * Copyright (c) 2006-2015 Dmitry V. Levin <ldv@strace.io>
- * Copyright (c) 2014-2021 The strace developers.
+ * Copyright (c) 2014-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -24,19 +24,20 @@ decode_mknod(struct tcb *tcp, int offset)
 	unsigned int dev;
 
 	/* pathname */
+	tprints_arg_name("pathname");
 	printpath(tcp, tcp->u_arg[offset]);
-	tprint_arg_next();
 
 	/* mode */
+	tprints_arg_next_name("mode");
 	print_symbolic_mode_t(mode);
 
 	switch (mode & S_IFMT) {
 	case S_IFCHR:
 	case S_IFBLK:
 		dev = tcp->u_arg[offset + 2];
-		tprint_arg_next();
 
 		/* dev */
+		tprints_arg_next_name("dev");
 		print_dev_t(dev);
 		break;
 	}
@@ -52,9 +53,10 @@ SYS_FUNC(mknod)
 SYS_FUNC(mknodat)
 {
 	/* dirfd */
+	tprints_arg_name("dirfd");
 	print_dirfd(tcp, tcp->u_arg[0]);
-	tprint_arg_next();
 
+	tprint_arg_next();
 	decode_mknod(tcp, 1);
 
 	return RVAL_DECODED;

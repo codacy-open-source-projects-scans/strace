@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 1993 Branko Lankester <branko@hacktic.nl>
  * Copyright (c) 1993, 1994, 1995 Rick Sladkey <jrs@world.std.com>
- * Copyright (c) 1995-2024 The strace developers.
+ * Copyright (c) 1995-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -74,6 +74,7 @@
 # define sys_setfsgid16		sys_setfsuid16
 # define sys_setgid		sys_setuid
 # define sys_setgid16		sys_setuid16
+# define sys_setpgrp		sys_setpgid
 # define sys_setregid		sys_setreuid
 # define sys_setregid16		sys_setreuid16
 # define sys_setresgid		sys_setresuid
@@ -82,6 +83,7 @@
 # define sys_swapoff		sys_chdir
 # define sys_symlink		sys_link
 # define sys_syncfs		sys_close
+# define sys_timer_getoverrun	sys_timer_delete
 # define sys_umount		sys_chdir
 # define sys_unlink		sys_chdir
 # define sys_uselib		sys_chdir
@@ -94,24 +96,11 @@
 # define sys_printargs		printargs
 # define sys_sched_yield		printargs
 # define sys_setsid		printargs
-# define sys_set_tid_address	printargs
 # define sys_setup		printargs
 # define sys_sync		printargs
 # define sys_syscall		printargs
 # define sys_uretprobe		printargs
 # define sys_vhangup		printargs
-
-/* printargs_u does the right thing */
-# define sys_alarm		printargs_u
-
-/* printargs_d does the right thing */
-# define sys_iopl		printargs_d
-# define sys_exit		printargs_d
-# define sys_nice		printargs_d
-# define sys_pkey_free		printargs_d
-# define sys_setpgrp		printargs_d
-# define sys_timer_delete	printargs_d
-# define sys_timer_getoverrun	printargs_d
 
 /* unimplemented */
 # define sys_afs_syscall		printargs

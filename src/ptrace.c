@@ -8,7 +8,7 @@
  *                    <barrow_dj@mail.yahoo.com,djbarrow@de.ibm.com>
  * Copyright (c) 2000 PocketPenguins Inc.  Linux for Hitachi SuperH
  *                    port by Greg Banks <gbanks@pocketpenguins.com>
- * Copyright (c) 1999-2022 The strace developers.
+ * Copyright (c) 1999-2025 The strace developers.
  *
  * All rights reserved.
  *
@@ -277,16 +277,17 @@ decode_ptrace_entering(struct tcb *const tcp)
 		case COMPAT_PTRACE_SETVFPREGS:
 		case COMPAT_PTRACE_GETHBPREGS:
 		case COMPAT_PTRACE_SETHBPREGS:
+			tprints_arg_name("op");
 			printxvals_ex(request, "COMPAT_PTRACE_???",
 				      xlat_verbose(xlat_verbosity)
 					== XLAT_STYLE_RAW ? XLAT_STYLE_RAW
 							  : XLAT_STYLE_VERBOSE,
 				      compat_ptrace_cmds, NULL);
-			tprint_arg_next();
+			tprints_arg_next_name("pid");
 			printpid(tcp, pid, PT_TGID);
-			tprint_arg_next();
+			tprints_arg_next_name("addr");
 			printaddr(addr);
-			tprint_arg_next();
+			tprints_arg_next_name("data");
 			printaddr(data);
 			return RVAL_DECODED;
 		}
@@ -294,6 +295,7 @@ decode_ptrace_entering(struct tcb *const tcp)
 #endif /* HAVE_COMPAT_PTRACE_MACROS */
 
 	/* request */
+	tprints_arg_name("op");
 	printxval64(ptrace_cmds, request, "PTRACE_???");
 
 	if (request == PTRACE_TRACEME) {
@@ -302,7 +304,7 @@ decode_ptrace_entering(struct tcb *const tcp)
 	}
 
 	/* pid */
-	tprint_arg_next();
+	tprints_arg_next_name("pid");
 	printpid(tcp, pid, PT_TGID);
 
 	switch (request) {
@@ -315,7 +317,7 @@ decode_ptrace_entering(struct tcb *const tcp)
 	}
 
 	/* addr */
-	tprint_arg_next();
+	tprints_arg_next_name("addr");
 	switch (request) {
 	case PTRACE_PEEKUSER:
 #ifdef IA64
@@ -335,6 +337,7 @@ decode_ptrace_entering(struct tcb *const tcp)
 	case PTRACE_SECCOMP_GET_FILTER:
 	case PTRACE_SECCOMP_GET_METADATA:
 	case PTRACE_GET_SYSCALL_INFO:
+	case PTRACE_SET_SYSCALL_INFO:
 		PRINT_VAL_U(addr);
 		break;
 	case PTRACE_PEEKSIGINFO:
@@ -382,7 +385,7 @@ decode_ptrace_entering(struct tcb *const tcp)
 	}
 
 	/* data */
-	tprint_arg_next();
+	tprints_arg_next_name("data");
 	switch (request) {
 	case PTRACE_CONT:
 	case PTRACE_DETACH:
@@ -421,6 +424,9 @@ decode_ptrace_entering(struct tcb *const tcp)
 		break;
 	case PTRACE_SECCOMP_GET_METADATA:
 		return decode_seccomp_metadata(tcp, data, addr);
+	case PTRACE_SET_SYSCALL_INFO:
+		print_ptrace_syscall_info(tcp, data, addr, addr);
+		break;
 #ifndef IA64
 	case PTRACE_PEEKDATA:
 	case PTRACE_PEEKTEXT:
@@ -482,7 +488,7 @@ decode_ptrace_exiting(struct tcb *const tcp)
 	case PTRACE_SECCOMP_GET_METADATA:
 		return decode_seccomp_metadata(tcp, data, tcp->u_rval);
 	case PTRACE_GET_SYSCALL_INFO:
-		print_ptrace_syscall_info(tcp, data, addr);
+		print_ptrace_syscall_info(tcp, data, addr, tcp->u_rval);
 		break;
 #ifdef PTRACE_GETREGS
 	case PTRACE_GETREGS:

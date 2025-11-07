@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2011 Comtrol Corp.
- * Copyright (c) 2011-2023 The strace developers.
+ * Copyright (c) 2011-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -275,19 +275,26 @@ pathtrace_match_set(struct tcb *tcp, struct path_set *set,
 	case SEN_fchmodat:
 	case SEN_fchmodat2:
 	case SEN_fchownat:
+	case SEN_file_getattr:
+	case SEN_file_setattr:
 	case SEN_fspick:
 	case SEN_fstatat64:
 	case SEN_futimesat:
+	case SEN_getxattrat:
 	case SEN_inotify_add_watch:
+	case SEN_listxattrat:
 	case SEN_mkdirat:
 	case SEN_mknodat:
 	case SEN_mount_setattr:
 	case SEN_name_to_handle_at:
 	case SEN_newfstatat:
 	case SEN_open_tree:
+	case SEN_open_tree_attr:
 	case SEN_openat:
 	case SEN_openat2:
 	case SEN_readlinkat:
+	case SEN_removexattrat:
+	case SEN_setxattrat:
 	case SEN_statx:
 	case SEN_unlinkat:
 	case SEN_utimensat_time32:

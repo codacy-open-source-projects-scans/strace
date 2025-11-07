@@ -1,7 +1,7 @@
 # Automake input for strace tests.
 #
 # Copyright (c) 2011-2016 Dmitry V. Levin <ldv@strace.io>
-# Copyright (c) 2011-2024 The strace developers.
+# Copyright (c) 2011-2025 The strace developers.
 # All rights reserved.
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
@@ -18,7 +18,7 @@ SIZEOF_LONG = @SIZEOF_LONG@
 MPERS_NAME =
 MPERS_CC_FLAGS =
 ARCH_MFLAGS =
-AM_CFLAGS = $(WARN_CFLAGS)
+AM_CFLAGS = $(WARN_CFLAGS) $(TEST_WARN_CFLAGS)
 bundled_CPPFLAGS =
 if USE_BUNDLED_HEADERS
 bundled_CPPFLAGS += -isystem $(top_srcdir)/bundled/$(OS)/arch/$(KARCH)/include/uapi \
@@ -188,6 +188,10 @@ check_PROGRAMS = $(PURE_EXECUTABLES) \
 	ioctl_fiemap-success-v-Xabbrev \
 	ioctl_fiemap-success-v-Xraw \
 	ioctl_fiemap-success-v-Xverbose \
+	ioctl_fs_0x15-success \
+	ioctl_fs_0x15-success-Xabbrev \
+	ioctl_fs_0x15-success-Xraw \
+	ioctl_fs_0x15-success-Xverbose \
 	ioctl_fs_x-success \
 	ioctl_fs_x-success-Xabbrev \
 	ioctl_fs_x-success-Xraw \
@@ -407,6 +411,22 @@ check_PROGRAMS = $(PURE_EXECUTABLES) \
 	sockopt-sol_socket-success-Xabbrev \
 	sockopt-sol_socket-success-Xraw \
 	sockopt-sol_socket-success-Xverbose \
+	sol_tipc-group_join \
+	sol_tipc-group_join-Xabbrev \
+	sol_tipc-group_join-Xraw \
+	sol_tipc-group_join-Xverbose \
+	sol_tipc-group_join-success \
+	sol_tipc-group_join-success-Xabbrev \
+	sol_tipc-group_join-success-Xraw \
+	sol_tipc-group_join-success-Xverbose \
+	sol_tipc-importance \
+	sol_tipc-importance-Xabbrev \
+	sol_tipc-importance-Xraw \
+	sol_tipc-importance-Xverbose \
+	sol_tipc-importance-success \
+	sol_tipc-importance-success-Xabbrev \
+	sol_tipc-importance-success-Xraw \
+	sol_tipc-importance-success-Xverbose \
 	stack-fcall \
 	stack-fcall-attach \
 	stack-fcall-mangled \
@@ -459,9 +479,11 @@ delay_LDADD = $(clock_LIBS) $(LDADD)
 filter_unavailable_LDADD = -lpthread $(LDADD)
 fstat64_CPPFLAGS = $(AM_CPPFLAGS) -D_FILE_OFFSET_BITS=64
 fstatat64_CPPFLAGS = $(AM_CPPFLAGS) -D_FILE_OFFSET_BITS=64
+ftruncate_CPPFLAGS = $(AM_CPPFLAGS) -D_FILE_OFFSET_BITS=64
 ftruncate64_CPPFLAGS = $(AM_CPPFLAGS) -D_FILE_OFFSET_BITS=64
 localtime_LDADD = $(clock_LIBS) $(LDADD)
 looping_threads_LDADD = -lpthread $(LDADD)
+lseek_CPPFLAGS = $(AM_CPPFLAGS) -D_FILE_OFFSET_BITS=64
 lstat64_CPPFLAGS = $(AM_CPPFLAGS) -D_FILE_OFFSET_BITS=64
 maybe_switch_current_tcp_LDADD = -lpthread $(LDADD)
 maybe_switch_current_tcp__quiet_thread_execve_LDADD = -lpthread $(LDADD)
@@ -492,6 +514,7 @@ times_LDADD = $(clock_LIBS) $(LDADD)
 times_Xabbrev_LDADD = $(clock_LIBS) $(LDADD)
 times_Xraw_LDADD = $(clock_LIBS) $(LDADD)
 times_Xverbose_LDADD = $(clock_LIBS) $(LDADD)
+truncate_CPPFLAGS = $(AM_CPPFLAGS) -D_FILE_OFFSET_BITS=64
 truncate64_CPPFLAGS = $(AM_CPPFLAGS) -D_FILE_OFFSET_BITS=64
 uio_CPPFLAGS = $(AM_CPPFLAGS) -D_FILE_OFFSET_BITS=64
 
@@ -633,6 +656,7 @@ MISC_TESTS = \
 	kill-on-exit.test \
 	kill_child.test \
 	legacy_syscall_info.test \
+	legacy_syscall_tampering.test \
 	localtime.test \
 	looping_threads.test \
 	netlink_audit--pidns-translation.test \
@@ -719,6 +743,7 @@ check_SCRIPTS = \
 	PTRACE_SEIZE.sh \
 	arch_prctl.sh \
 	filter_seccomp.sh \
+	init-once.sh \
 	init.sh \
 	ioctl-success.sh \
 	ipc.sh \
@@ -835,6 +860,7 @@ EXTRA_DIST = \
 	cur_audit_arch.h \
 	fadvise.h \
 	fcntl-common.c \
+	file_xetattr-common.c \
 	fstatat.c \
 	fstatx.c \
 	gen_pure_executables.sh \
@@ -866,6 +892,7 @@ EXTRA_DIST = \
 	sockaddr_xlat.c \
 	sockname.c \
 	stack-fcall.h \
+	test_fs_xflags.h \
 	time_enjoyment.h \
 	umode_t.c \
 	xchownx.c \
@@ -905,6 +932,9 @@ clean-local: clean-local-check
 .PHONY: clean-local-check
 clean-local-check:
 	-rm -rf -- $(TESTS:.test=.dir) $(GEN_TESTS:.gen.test=.dir)
+
+.PHONY: check-prerequisites-local
+check-prerequisites-local: $(check_LIBRARIES) $(check_PROGRAMS)
 
 .PHONY: check-valgrind-local
 check-valgrind-local: $(check_LIBRARIES) $(check_PROGRAMS)

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2023 The strace developers.
+ * Copyright (c) 2017-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
@@ -128,7 +128,9 @@ main(void)
 		{ ARG_XLAT_UNKNOWN(0x63, "MADV_???") },
 		{ ARG_XLAT_KNOWN(0x64, "MADV_HWPOISON") },
 		{ ARG_XLAT_KNOWN(0x65, "MADV_SOFT_OFFLINE") },
-		{ ARG_XLAT_UNKNOWN(0x66, "MADV_???") },
+		{ ARG_XLAT_KNOWN(0x66, "MADV_GUARD_INSTALL") },
+		{ ARG_XLAT_KNOWN(0x67, "MADV_GUARD_REMOVE") },
+		{ ARG_XLAT_UNKNOWN(0x68, "MADV_???") },
 
 		{ ARG_XLAT_UNKNOWN(0x80, "MADV_???") },
 		{ ARG_XLAT_UNKNOWN(0x81, "MADV_???") },

@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2009, 2010 Jeff Mahoney <jeffm@suse.com>
  * Copyright (c) 2011-2016 Dmitry V. Levin <ldv@strace.io>
- * Copyright (c) 2016-2021 The strace developers.
+ * Copyright (c) 2016-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -24,15 +24,13 @@ typedef struct hd_geometry struct_hd_geometry;
 static int
 print_hdio_getgeo(struct tcb *const tcp, const kernel_ulong_t arg)
 {
-	if (entering(tcp)) {
-		tprint_arg_next();
-
+	if (entering(tcp))
 		return 0;
-	}
 
 	/* exiting */
 	struct_hd_geometry geo;
 
+	tprints_arg_next_name("argp");
 	if (umove_or_printaddr(tcp, arg, &geo))
 		return RVAL_IOCTL_DECODED;
 
@@ -55,7 +53,7 @@ print_hdio_drive_cmd(struct tcb *const tcp, const kernel_ulong_t arg)
 	enum { SECTOR_SIZE = 512 };
 
 	if (entering(tcp)) {
-		tprint_arg_next();
+		tprints_arg_next_name("argp");
 
 		struct hd_drive_cmd_hdr c;
 		if (umove_or_printaddr(tcp, arg, &c))

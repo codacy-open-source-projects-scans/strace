@@ -2,6 +2,7 @@
  * Check status=unfinished filtering when a non-leader thread invokes execve.
  *
  * Copyright (c) 2019 Paul Chaignon <paul.chaignon@gmail.com>
+ * Copyright (c) 2019-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
@@ -27,7 +28,7 @@ thread(void *arg)
 	kernel_old_timespec_t ts = { .tv_nsec = 100000000 };
 	(void) syscall(__NR_nanosleep, (unsigned long) &ts, 0UL);
 
-	printf("%-5d nanosleep({tv_sec=123, tv_nsec=0},  <unfinished ...>) = ?\n"
+	printf("%-5d nanosleep({tv_sec=123, tv_nsec=0} <unfinished ...>) = ?\n"
 	       "%-5d +++ superseded by execve in pid %u +++\n",
 	       leader, leader, (int) syscall(__NR_gettid));
 

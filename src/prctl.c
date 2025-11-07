@@ -3,7 +3,7 @@
  * Copyright (c) 1996-2000 Wichert Akkerman <wichert@cistron.nl>
  * Copyright (c) 2005-2007 Roland McGrath <roland@redhat.com>
  * Copyright (c) 2008-2015 Dmitry V. Levin <ldv@strace.io>
- * Copyright (c) 2014-2024 The strace developers.
+ * Copyright (c) 2014-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -66,7 +66,8 @@ static void
 print_prctl_args(struct tcb *tcp, const unsigned int first)
 {
 	for (unsigned int i = first; i < n_args(tcp); ++i) {
-		tprint_arg_next();
+		const char name[] = { 'a', 'r', 'g', "123456789"[i], '\0' };
+		tprints_arg_next_name(name);
 		PRINT_VAL_X(tcp->u_arg[i]);
 	}
 }
@@ -224,6 +225,30 @@ sprint_riscv_v_ctrl_val(const kernel_ulong_t arg, bool rval)
 	return out;
 }
 
+static int
+print_get_uint_arg(struct tcb *tcp, const kernel_ulong_t addr, const char *name)
+{
+	if (entering(tcp))
+		return 0;
+
+	tprints_arg_next_name(name);
+	printnum_int(tcp, addr, "%u");
+
+	return RVAL_DECODED;
+}
+
+static int
+print_set_kulong_arg(struct tcb *tcp, const kernel_ulong_t arg, const char *name,
+		     const unsigned int check_first)
+{
+	tprints_arg_next_name(name);
+	PRINT_VAL_U(arg);
+	if (check_first)
+		print_prctl_args(tcp, check_first);
+
+	return RVAL_DECODED;
+}
+
 SYS_FUNC(prctl)
 {
 	const unsigned int option = tcp->u_arg[0];
@@ -233,8 +258,10 @@ SYS_FUNC(prctl)
 	const kernel_ulong_t arg5 = tcp->u_arg[4];
 	unsigned int i;
 
-	if (entering(tcp))
+	if (entering(tcp)) {
+		tprints_arg_name("op");
 		printxval(prctl_options, option, "PR_???");
+	}
 
 	/*
 	 * Grouped options with common decoders first (except for the options
@@ -242,7 +269,7 @@ SYS_FUNC(prctl)
 	 * with it), then sorted according to the option number.
 	 */
 	switch (option) {
-	/* Group 1: no options */
+	/* Group 1: no args */
 	case PR_GET_KEEPCAPS:			/*   7 */
 	case PR_GET_TIMING:			/*  13 */
 	case PR_GET_SECCOMP:			/*  21 */
@@ -253,39 +280,40 @@ SYS_FUNC(prctl)
 
 	/* Group 2: getter with the first options as a uint pointer */
 	case PR_GET_FPEMU:			/*   9 */
+		return print_get_uint_arg(tcp, arg2, "fpemu");
 	case PR_GET_FPEXC:			/*  11 */
+		return print_get_uint_arg(tcp, arg2, "mode");
 	case PR_GET_ENDIAN:			/*  19 */
+		return print_get_uint_arg(tcp, arg2, "endianness");
 	case PR_GET_CHILD_SUBREAPER:		/*  37 */
-		if (entering(tcp))
-			tprint_arg_next();
-		else
-			printnum_int(tcp, arg2, "%u");
-		break;
+		return print_get_uint_arg(tcp, arg2, "isset");
 
-	/* Group 3: one uint argument */
+	/* Group 3: one kulong argument */
 	case PR_SET_KEEPCAPS:			/*   8 */
+		return print_set_kulong_arg(tcp, arg2, "state", 0);
 	case PR_SET_FPEMU:			/*  10 */
+		return print_set_kulong_arg(tcp, arg2, "fpemu", 0);
 	case PR_SET_FPEXC:			/*  12 */
 	case PR_SET_TIMING:			/*  14 */
+		return print_set_kulong_arg(tcp, arg2, "mode", 0);
 	case PR_SET_ENDIAN:			/*  20 */
+		return print_set_kulong_arg(tcp, arg2, "endianness", 0);
 	case PR_SET_CHILD_SUBREAPER:		/*  36 */
-		tprint_arg_next();
-		PRINT_VAL_U(arg2);
-		return RVAL_DECODED;
+		return print_set_kulong_arg(tcp, arg2, "set", 0);
 
 	/* Group 4: one uint option and zero check for the rest */
 	case PR_SET_NO_NEW_PRIVS:		/*  38 */
+		return print_set_kulong_arg(tcp, arg2, "set", 2);
 	case PR_SET_THP_DISABLE:		/*  41 */
+		return print_set_kulong_arg(tcp, arg2, "flag", 2);
 	case PR_SET_IO_FLUSHER:			/*  57 */
-		tprint_arg_next();
-		PRINT_VAL_U(arg2);
-		print_prctl_args(tcp, 2);
-		return RVAL_DECODED;
+		return print_set_kulong_arg(tcp, arg2, "state", 2);
 
 	case PR_GET_PDEATHSIG:			/*   1 */
-		if (entering(tcp)) {
-			tprint_arg_next();
-		} else if (!umove_or_printaddr(tcp, arg2, &i)) {
+		if (entering(tcp))
+			break;
+		tprints_arg_next_name("sig");
+		if (!umove_or_printaddr(tcp, arg2, &i)) {
 			tprint_indirect_begin();
 			printsignal(i);
 			tprint_indirect_end();
@@ -293,7 +321,7 @@ SYS_FUNC(prctl)
 		break;
 
 	case PR_SET_PDEATHSIG:			/*   2 */
-		tprint_arg_next();
+		tprints_arg_next_name("sig");
 		if (arg2 > 128)
 			PRINT_VAL_U(arg2);
 		else
@@ -309,14 +337,15 @@ SYS_FUNC(prctl)
 		return RVAL_STR;
 
 	case PR_SET_DUMPABLE:			/*   4 */
-		tprint_arg_next();
+		tprints_arg_next_name("dumpable");
 		printxval64(pr_dumpable, arg2, "SUID_DUMP_???");
 		return RVAL_DECODED;
 
 	case PR_GET_UNALIGN:			/*   5 */
-		if (entering(tcp)) {
-			tprint_arg_next();
-		} else if (!umove_or_printaddr(tcp, arg2, &i)) {
+		if (entering(tcp))
+			break;
+		tprints_arg_next_name("flags");
+		if (!umove_or_printaddr(tcp, arg2, &i)) {
 			tprint_indirect_begin();
 			printflags(pr_unalign_flags, i, "PR_UNALIGN_???");
 			tprint_indirect_end();
@@ -324,7 +353,7 @@ SYS_FUNC(prctl)
 		break;
 
 	case PR_SET_UNALIGN:			/*   6 */
-		tprint_arg_next();
+		tprints_arg_next_name("flags");
 		printflags(pr_unalign_flags, arg2, "PR_UNALIGN_???");
 		return RVAL_DECODED;
 
@@ -338,21 +367,20 @@ SYS_FUNC(prctl)
 	/* PR_SET_TIMING - group 3		    14 */
 
 	case PR_SET_NAME:			/*  15 */
-		tprint_arg_next();
+		tprints_arg_next_name("name");
 		printstr_ex(tcp, arg2, TASK_COMM_LEN - 1,
 			    QUOTE_0_TERMINATED);
 		return RVAL_DECODED;
 
 	case PR_GET_NAME:			/*  16 */
-		if (entering(tcp)) {
-			tprint_arg_next();
-		} else {
-			if (syserror(tcp))
-				printaddr(arg2);
-			else
-				printstr_ex(tcp, arg2, TASK_COMM_LEN,
-					    QUOTE_0_TERMINATED);
-		}
+		if (entering(tcp))
+			break;
+		tprints_arg_next_name("name");
+		if (syserror(tcp))
+			printaddr(arg2);
+		else
+			printstr_ex(tcp, arg2, TASK_COMM_LEN,
+				    QUOTE_0_TERMINATED);
 		break;
 
 	/* There are no options with numbers 17 and 18 */
@@ -361,13 +389,13 @@ SYS_FUNC(prctl)
 	/* PR_GET_SECCOMP - group 1		    21 */
 
 	case PR_SET_SECCOMP:			/*  22 */
-		tprint_arg_next();
+		tprints_arg_next_name("mode");
 		printxval64(seccomp_mode, arg2,
 			    "SECCOMP_MODE_???");
 		if (SECCOMP_MODE_STRICT == arg2)
 			return RVAL_DECODED;
 		if (SECCOMP_MODE_FILTER == arg2) {
-			tprint_arg_next();
+			tprints_arg_next_name("filter");
 			decode_seccomp_fprog(tcp, arg3);
 			return RVAL_DECODED;
 		}
@@ -376,14 +404,15 @@ SYS_FUNC(prctl)
 
 	case PR_CAPBSET_READ:			/*  23 */
 	case PR_CAPBSET_DROP:			/*  24 */
-		tprint_arg_next();
+		tprints_arg_next_name("cap");
 		printxval64(cap, arg2, "CAP_???");
 		return RVAL_DECODED;
 
 	case PR_GET_TSC:			/*  25 */
-		if (entering(tcp)) {
-			tprint_arg_next();
-		} else if (!umove_or_printaddr(tcp, arg2, &i)) {
+		if (entering(tcp))
+			break;
+		tprints_arg_next_name("flag");
+		if (!umove_or_printaddr(tcp, arg2, &i)) {
 			tprint_indirect_begin();
 			printxval(pr_tsc, i, "PR_TSC_???");
 			tprint_indirect_end();
@@ -391,7 +420,7 @@ SYS_FUNC(prctl)
 		break;
 
 	case PR_SET_TSC:			/*  26 */
-		tprint_arg_next();
+		tprints_arg_next_name("flag");
 		printxval(pr_tsc, arg2, "PR_TSC_???");
 		return RVAL_DECODED;
 
@@ -406,12 +435,12 @@ SYS_FUNC(prctl)
 		return RVAL_HEX | RVAL_STR;
 
 	case PR_SET_SECUREBITS:			/*  28 */
-		tprint_arg_next();
+		tprints_arg_next_name("flags");
 		printflags64(secbits, arg2, "SECBIT_???");
 		return RVAL_DECODED;
 
 	case PR_SET_TIMERSLACK:			/*  29 */
-		tprint_arg_next();
+		tprints_arg_next_name("slack");
 		PRINT_VAL_D(arg2);
 		return RVAL_DECODED;
 
@@ -420,15 +449,16 @@ SYS_FUNC(prctl)
 	/* PR_TASK_PERF_EVENTS_ENABLE - group 1	    32 */
 
 	case PR_MCE_KILL:			/*  33 */
-		tprint_arg_next();
+		tprints_arg_next_name("operation");
 		printxval64(pr_mce_kill, arg2, "PR_MCE_KILL_???");
-		tprint_arg_next();
-		if (PR_MCE_KILL_SET == arg2)
+		if (PR_MCE_KILL_SET == arg2) {
+			tprints_arg_next_name("policy");
 			printxval64(pr_mce_kill_policy, arg3,
 				    "PR_MCE_KILL_???");
-		else
-			PRINT_VAL_X(arg3);
-		print_prctl_args(tcp, 3);
+			print_prctl_args(tcp, 3);
+		} else {
+			print_prctl_args(tcp, 2);
+		}
 		return RVAL_DECODED;
 
 	case PR_MCE_KILL_GET:			/*  34 */
@@ -443,7 +473,7 @@ SYS_FUNC(prctl)
 		return RVAL_STR;
 
 	case PR_SET_MM:				/*  35 */
-		tprint_arg_next();
+		tprints_arg_next_name("operation");
 		printxval(pr_set_mm, arg2, "PR_SET_MM_???");
 		print_prctl_args(tcp, 2);
 		return RVAL_DECODED;
@@ -455,9 +485,9 @@ SYS_FUNC(prctl)
 
 	case PR_GET_TID_ADDRESS:		/*  40 */
 		if (entering(tcp))
-			tprint_arg_next();
-		else
-			printnum_kptr(tcp, arg2);
+			break;
+		tprints_arg_next_name("addr");
+		printnum_kptr(tcp, arg2);
 		break;
 
 	/* PR_SET_THP_DISABLE - group 4		    41 */
@@ -466,7 +496,7 @@ SYS_FUNC(prctl)
 	/* PR_MPX_DISABLE_MANAGEMENT - group 5	    44 */
 
 	case PR_SET_FP_MODE:			/*  45 */
-		tprint_arg_next();
+		tprints_arg_next_name("mode");
 		printflags(pr_fp_mode, arg2, "PR_FP_MODE_???");
 		return RVAL_DECODED;
 
@@ -481,14 +511,14 @@ SYS_FUNC(prctl)
 		return RVAL_HEX | RVAL_STR;
 
 	case PR_CAP_AMBIENT:			/*  47 */
-		tprint_arg_next();
+		tprints_arg_next_name("operation");
 		printxval64(pr_cap_ambient, arg2,
 			       "PR_CAP_AMBIENT_???");
 		switch (arg2) {
 		case PR_CAP_AMBIENT_RAISE:
 		case PR_CAP_AMBIENT_LOWER:
 		case PR_CAP_AMBIENT_IS_SET:
-			tprint_arg_next();
+			tprints_arg_next_name("caps");
 			printxval64(cap, arg3, "CAP_???");
 			print_prctl_args(tcp, 3);
 			break;
@@ -502,7 +532,7 @@ SYS_FUNC(prctl)
 
 	case PR_SVE_SET_VL:			/*  50 */
 		if (entering(tcp)) {
-			tprint_arg_next();
+			tprints_arg_next_name("value");
 			tprints_string(sprint_sve_val(arg2, false));
 			return 0;
 		}
@@ -520,7 +550,7 @@ SYS_FUNC(prctl)
 
 	case PR_GET_SPECULATION_CTRL:		/*  52 */
 		if (entering(tcp)) {
-			tprint_arg_next();
+			tprints_arg_next_name("misfeature");
 			printxval64(pr_spec_cmds, arg2, "PR_SPEC_???");
 
 			break;
@@ -543,10 +573,10 @@ SYS_FUNC(prctl)
 		return RVAL_STR;
 
 	case PR_SET_SPECULATION_CTRL:		/*  53 */
-		tprint_arg_next();
+		tprints_arg_next_name("misfeature");
 		printxval64(pr_spec_cmds, arg2, "PR_SPEC_???");
-		tprint_arg_next();
 
+		tprints_arg_next_name("value");
 		switch (arg2) {
 		case PR_SPEC_STORE_BYPASS:
 		case PR_SPEC_INDIRECT_BRANCH:
@@ -562,7 +592,7 @@ SYS_FUNC(prctl)
 		return RVAL_DECODED;
 
 	case PR_PAC_RESET_KEYS:			/*  54 */
-		tprint_arg_next();
+		tprints_arg_next_name("keys");
 		printflags_ex(arg2, "PR_PAC_???", XLAT_STYLE_DEFAULT,
 			      pr_pac_enabled_keys, pr_pac_keys, NULL);
 		print_prctl_args(tcp, 2);
@@ -570,7 +600,7 @@ SYS_FUNC(prctl)
 		return RVAL_DECODED;
 
 	case PR_SET_TAGGED_ADDR_CTRL:		/*  55 */
-		tprint_arg_next();
+		tprints_arg_next_name("mode");
 		tprints_string(sprint_tagged_addr_val(arg2, false));
 		print_prctl_args(tcp, 2);
 		return RVAL_DECODED;
@@ -590,21 +620,21 @@ SYS_FUNC(prctl)
 	/* PR_GET_IO_FLUSHER - group 5		    58 */
 
 	case PR_SET_SYSCALL_USER_DISPATCH:	/*  59 */
-		tprint_arg_next();
+		tprints_arg_next_name("operation");
 		printxval64(pr_sud_cmds, arg2, "PR_SYS_DISPATCH_???");
-		tprint_arg_next();
+		tprints_arg_next_name("off");
 		PRINT_VAL_X(arg3);
-		tprint_arg_next();
+		tprints_arg_next_name("size");
 		PRINT_VAL_X(arg4);
-		tprint_arg_next();
+		tprints_arg_next_name("switch");
 		printaddr(arg5);
 
 		return RVAL_DECODED;
 
 	case PR_PAC_SET_ENABLED_KEYS:		/*  60 */
-		tprint_arg_next();
+		tprints_arg_next_name("bitmask_affected");
 		printflags64(pr_pac_enabled_keys, arg2, "PR_PAC_???");
-		tprint_arg_next();
+		tprints_arg_next_name("bitmask_set");
 		printflags64(pr_pac_enabled_keys, arg3, "PR_PAC_???");
 		print_prctl_args(tcp, 3);
 
@@ -624,10 +654,10 @@ SYS_FUNC(prctl)
 
 	case PR_SCHED_CORE:			/*  62 */
 		if (entering(tcp)) {
-			tprint_arg_next();
+			tprints_arg_next_name("operation");
 			printxval(pr_sched_core_cmds, arg2, "PR_SCHED_CORE_???");
 
-			tprint_arg_next();
+			tprints_arg_next_name("pid");
 			enum pid_type pt;
 			switch ((unsigned int) arg4) {
 			case PIDTYPE_PID:  pt = PT_TID;  break;
@@ -638,7 +668,7 @@ SYS_FUNC(prctl)
 			}
 			printpid(tcp, arg3, pt);
 
-			tprint_arg_next();
+			tprints_arg_next_name("pid_type");
 			printxval_ex(pr_sched_core_pidtypes,
 				     (unsigned int) arg4, "PIDTYPE_???",
 				     (xlat_verbose(xlat_verbosity)
@@ -646,16 +676,16 @@ SYS_FUNC(prctl)
 					? XLAT_STYLE_DEFAULT
 					: XLAT_STYLE_VERBOSE);
 
-			tprint_arg_next();
 			switch ((unsigned int) arg2) {
 			case PR_SCHED_CORE_GET:
 				/* arg5 is to be decoded on exiting */
 				return 0;
 			default:
-				printaddr(arg5);
+				print_prctl_args(tcp, 4);
 			}
 		} else {
 			/* PR_SCHED_CORE_GET */
+			tprints_arg_next_name("cookie");
 			if (syserror(tcp))
 				printaddr(arg5);
 			else
@@ -666,7 +696,7 @@ SYS_FUNC(prctl)
 
 	case PR_SME_SET_VL:			/*  63 */
 		if (entering(tcp)) {
-			tprint_arg_next();
+			tprints_arg_next_name("arg");
 			tprints_string(sprint_sme_val(arg2, false));
 			return 0;
 		}
@@ -683,7 +713,7 @@ SYS_FUNC(prctl)
 		return RVAL_HEX | RVAL_STR;
 
 	case PR_SET_MDWE:			/*  65 */
-		tprint_arg_next();
+		tprints_arg_next_name("mask");
 		printflags(pr_mdwe_flags, arg2, "PR_MDWE_???");
 		print_prctl_args(tcp, 2);
 		return RVAL_DECODED;
@@ -704,7 +734,7 @@ SYS_FUNC(prctl)
 	/* PR_GET_MEMORY_MERGE - group 5	    68 */
 
 	case PR_RISCV_V_SET_CONTROL:		/*  69 */
-		tprint_arg_next();
+		tprints_arg_next_name("arg");
 		tprints_string(sprint_riscv_v_ctrl_val(arg2, false));
 		/*
 		 * PR_RISCV_V_[GS]ET_CONTROL are modern options
@@ -722,10 +752,10 @@ SYS_FUNC(prctl)
 		return RVAL_HEX | RVAL_STR;
 
 	case PR_RISCV_SET_ICACHE_FLUSH_CTX:	/*  71 */
-		tprint_arg_next();
+		tprints_arg_next_name("ctx");
 		printxval64(pr_riscv_icache_flush_ctxes, arg2,
 			    "PR_RISCV_CTX_???");
-		tprint_arg_next();
+		tprints_arg_next_name("scope");
 		printxval64(pr_riscv_icache_flush_scopes, arg3,
 			    "PR_RISCV_SCOPE_???");
 		/*
@@ -736,7 +766,7 @@ SYS_FUNC(prctl)
 
 	case PR_PPC_GET_DEXCR:			/*  72 */
 		if (entering(tcp)) {
-			tprint_arg_next();
+			tprints_arg_next_name("which");
 			printxval64(pr_ppc_dexcr_aspects, arg2,
 				    "PR_PPC_DEXCR_???");
 			print_prctl_args(tcp, 2);
@@ -749,23 +779,23 @@ SYS_FUNC(prctl)
 		return RVAL_HEX | RVAL_STR;
 
 	case PR_PPC_SET_DEXCR:			/*  73 */
-		tprint_arg_next();
+		tprints_arg_next_name("which");
 		printxval64(pr_ppc_dexcr_aspects, arg2, "PR_PPC_DEXCR_???");
-		tprint_arg_next();
+		tprints_arg_next_name("ctrl");
 		printflags64(pr_ppc_dexcr_ctrl_flags, arg3,
 			     "PR_PPC_DEXCR_CTRL_???");
 		print_prctl_args(tcp, 3);
 		return RVAL_DECODED;
 
 	case PR_SET_VMA:			/* 0x53564d41 */
-		tprint_arg_next();
+		tprints_arg_next_name("attr");
 		printxval64(pr_set_vma, arg2, "PR_SET_VMA_???");
 		if (arg2 == PR_SET_VMA_ANON_NAME) {
-			tprint_arg_next();
+			tprints_arg_next_name("addr");
 			printaddr(arg3);
-			tprint_arg_next();
+			tprints_arg_next_name("size");
 			PRINT_VAL_U(arg4);
-			tprint_arg_next();
+			tprints_arg_next_name("name");
 			printstr(tcp, arg5);
 		} else {
 			/* There are no other sub-options now, but there
@@ -775,7 +805,7 @@ SYS_FUNC(prctl)
 		return RVAL_DECODED;
 
 	case PR_SET_PTRACER:			/* 0x59616d61 */
-		tprint_arg_next();
+		tprints_arg_next_name("pid");
 		if ((int) arg2 == -1) {
 			print_xlat_ex((int) arg2, "PR_SET_PTRACER_ANY",
 				      XLAT_STYLE_FMT_D);
@@ -809,16 +839,18 @@ SYS_FUNC(arch_prctl)
 	const unsigned int option = tcp->u_arg[0];
 	const kernel_ulong_t addr = tcp->u_arg[1];
 
-	if (entering(tcp))
+	if (entering(tcp)) {
+		tprints_arg_name("op");
 		printxval(archvals, option, "ARCH_???");
+	}
 
 	switch (option) {
 	case ARCH_GET_GS:
 	case ARCH_GET_FS:
-		if (entering(tcp))
-			tprint_arg_next();
-		else
+		if (exiting(tcp)) {
+			tprints_arg_next_name("addr");
 			printnum_kptr(tcp, addr);
+		}
 		return 0;
 
 	case ARCH_GET_CPUID: /* has no arguments */
@@ -827,11 +859,10 @@ SYS_FUNC(arch_prctl)
 	case ARCH_GET_XCOMP_SUPP:
 	case ARCH_GET_XCOMP_PERM:
 	case ARCH_GET_XCOMP_GUEST_PERM:
-		if (entering(tcp)) {
-			tprint_arg_next();
-		} else {
+		if (exiting(tcp)) {
 			uint64_t val;
 
+			tprints_arg_next_name("addr");
 			if (umove_or_printaddr(tcp, addr, &val))
 				return 0;
 
@@ -850,7 +881,7 @@ SYS_FUNC(arch_prctl)
 	case ARCH_REQ_XCOMP_GUEST_PERM:
 		if (entering(tcp)) {
 			/* XFEATURE_* enum is not publicly exposed */
-			tprint_arg_next();
+			tprints_arg_next_name("addr");
 			printxvals_ex(addr, "XFEATURE_???",
 				xlat_verbose(xlat_verbosity) == XLAT_STYLE_RAW
 				      ? XLAT_STYLE_RAW : XLAT_STYLE_VERBOSE,
@@ -879,7 +910,7 @@ SYS_FUNC(arch_prctl)
 		break;
 	}
 
-	tprint_arg_next();
+	tprints_arg_next_name("addr");
 	PRINT_VAL_X(addr);
 
 	return RVAL_DECODED;

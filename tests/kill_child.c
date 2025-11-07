@@ -1,12 +1,12 @@
 /*
  * Check for the corner case that previously lead to segfault
- * due to an attempt to access unitialised tcp->s_ent.
+ * due to an attempt to access uninitialised tcp->s_ent.
  *
  * 13994 ???( <unfinished ...>
  * ...
  * 13994 <... ??? resumed>) = ?
  *
- * Copyright (c) 2019-2022 The strace developers.
+ * Copyright (c) 2019-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: GPL-2.0-or-later

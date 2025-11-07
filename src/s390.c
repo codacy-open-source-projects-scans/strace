@@ -1,7 +1,7 @@
 /*
  * s390-specific syscalls decoders.
  *
- * Copyright (c) 2018-2022 The strace developers.
+ * Copyright (c) 2018-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -19,7 +19,7 @@
 
 /*
  * Since, for some reason, kernel doesn't expose all these nice constants and
- * structures in UAPI, we have to re-declare them ourselves.
+ * structures in UAPI, we have to declare them ourselves.
  */
 
 /**
@@ -1268,10 +1268,11 @@ SYS_FUNC(s390_sthyi)
 	kernel_ulong_t flags = tcp->u_arg[3];
 
 	if (entering(tcp)) {
+		tprints_arg_name("function_code");
 		printxval64(s390_sthyi_function_codes, function_code,
 			    "STHYI_FC_???");
-		tprint_arg_next();
 	} else {
+		tprints_arg_next_name("resp_buffer");
 		switch (function_code) {
 		case STHYI_FC_CP_IFL_CAP:
 			print_sthyi_buf(tcp, resp_buffer_ptr);
@@ -1281,10 +1282,10 @@ SYS_FUNC(s390_sthyi)
 			printaddr(resp_buffer_ptr);
 		}
 
-		tprint_arg_next();
+		tprints_arg_next_name("return_code");
 		printnum_int64(tcp, return_code_ptr, "%" PRIu64);
 
-		tprint_arg_next();
+		tprints_arg_next_name("flags");
 		PRINT_VAL_X(flags);
 	}
 
@@ -1304,7 +1305,7 @@ struct guard_storage_control_block {
 	 *  - Bits 0..J, J == 64-GSC - Guard Storage Origin (GSO)
 	 *  - Bits 53..55 - Guard Load Shift (GLS)
 	 *  - Bits 58..63 - Guard Storage Characteristic (GSC), this is J from
-	 *                  the first item, valud values are 25..56.
+	 *                  the first item, valid values are 25..56.
 	 */
 	uint64_t gsd;
 	uint64_t gssm;     /**< Guard Storage Section Mask */
@@ -1461,6 +1462,7 @@ SYS_FUNC(s390_guarded_storage)
 	int command = (int) tcp->u_arg[0];
 	kernel_ulong_t gs_cb = tcp->u_arg[1];
 
+	tprints_arg_name("command");
 	printxval(s390_guarded_storage_commands, command, "GS_???");
 
 	switch (command) {
@@ -1471,12 +1473,12 @@ SYS_FUNC(s390_guarded_storage)
 		break;
 
 	case GS_SET_BC_CB:
-		tprint_arg_next();
+		tprints_arg_next_name("gs_cb");
 		guard_storage_print_gscb(tcp, gs_cb);
 		break;
 
 	default:
-		tprint_arg_next();
+		tprints_arg_next_name("gs_cb");
 		printaddr(gs_cb);
 	}
 
@@ -1488,7 +1490,7 @@ SYS_FUNC(s390_runtime_instr)
 	int command = (int) tcp->u_arg[0];
 	int signum = (int) tcp->u_arg[1];
 
-
+	tprints_arg_name("command");
 	printxval_d(s390_runtime_instr_commands, command,
 		    "S390_RUNTIME_INSTR_???");
 
@@ -1498,7 +1500,7 @@ SYS_FUNC(s390_runtime_instr)
 	 */
 	switch (command) {
 	case S390_RUNTIME_INSTR_START:
-		tprint_arg_next();
+		tprints_arg_next_name("signum");
 		printsignal(signum);
 		break;
 
@@ -1516,12 +1518,13 @@ SYS_FUNC(s390_pci_mmio_write)
 	kernel_ulong_t user_buf  = tcp->u_arg[1];
 	kernel_ulong_t length    = tcp->u_arg[2];
 
+	tprints_arg_name("mmio_addr");
 	PRINT_VAL_X(mmio_addr);
 
-	tprint_arg_next();
+	tprints_arg_next_name("user_buffer");
 	printstr_ex(tcp, user_buf, length, QUOTE_FORCE_HEX);
 
-	tprint_arg_next();
+	tprints_arg_next_name("length");
 	PRINT_VAL_U(length);
 
 	return RVAL_DECODED;
@@ -1534,15 +1537,16 @@ SYS_FUNC(s390_pci_mmio_read)
 	kernel_ulong_t length    = tcp->u_arg[2];
 
 	if (entering(tcp)) {
+		tprints_arg_name("mmio_addr");
 		PRINT_VAL_X(mmio_addr);
-		tprint_arg_next();
 	} else {
+		tprints_arg_next_name("user_buffer");
 		if (!syserror(tcp))
 			printstr_ex(tcp, user_buf, length, QUOTE_FORCE_HEX);
 		else
 			printaddr(user_buf);
 
-		tprint_arg_next();
+		tprints_arg_next_name("length");
 		PRINT_VAL_U(length);
 	}
 

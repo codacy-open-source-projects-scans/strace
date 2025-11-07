@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2017 JingPiao Chen <chenjingpiao@gmail.com>
- * Copyright (c) 2017-2024 The strace developers.
+ * Copyright (c) 2017-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
@@ -411,6 +411,8 @@ test_inet_diag_proto(const int fd)
 		{ 0, "IPPROTO_IP" },
 		{ 3, "0x3 /* IPPROTO_??? */" },
 		{ 6, "IPPROTO_TCP" },
+		{ 144, "IPPROTO_AGGFRAG" },
+		{ 145, "0x91 /* IPPROTO_??? */" },
 		{ 256, "IPPROTO_SMC" },
 		{ 257, "0x101 /* IPPROTO_??? */" },
 		{ 262, "IPPROTO_MPTCP" },

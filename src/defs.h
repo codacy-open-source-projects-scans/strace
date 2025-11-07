@@ -2,7 +2,7 @@
  * Copyright (c) 1991, 1992 Paul Kranenburg <pk@cs.few.eur.nl>
  * Copyright (c) 1993 Branko Lankester <branko@hacktic.nl>
  * Copyright (c) 1993, 1994, 1995, 1996 Rick Sladkey <jrs@world.std.com>
- * Copyright (c) 1999-2024 The strace developers.
+ * Copyright (c) 1999-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -83,12 +83,10 @@ extern char *stpcpy(char *dst, const char *src);
  * linux/<ARCH>/syscallent*.h:
  *	all have nargs <= 6 except mips o32 which has nargs <= 7.
  */
-# ifndef MAX_ARGS
-#  ifdef LINUX_MIPSO32
-#   define MAX_ARGS	7
-#  else
-#   define MAX_ARGS	6
-#  endif
+# ifdef LINUX_MIPSO32
+#  define MAX_ARGS	7
+# else
+#  define MAX_ARGS	6
 # endif
 /* default sorting method for call profiling */
 # ifndef DEFAULT_SORTBY
@@ -321,6 +319,8 @@ struct tcb {
 
 # ifdef HAVE_LINUX_KVM_H
 	struct vcpu_info *vcpu_info_list;
+	struct kvm_run *vcpu_leaving;
+	struct kvm_run *vcpu_entering;
 # endif
 
 # ifdef ENABLE_STACKTRACE
@@ -371,6 +371,7 @@ struct tcb {
 # define TCB_SECCOMP_FILTER		0x40000	/* This process has a seccomp filter
 						 * attached.
 						 */
+# define TCP_AFTER_KVM_RUN		0x80000	/* The process has returned from KVM_RUN ioctl */
 
 /* qualifier flags */
 # define QUAL_TRACE	0x001	/* this system call should be traced */
@@ -404,7 +405,7 @@ struct tcb {
 
 extern const struct_sysent stub_sysent;
 # define tcp_sysent(tcp) (tcp->s_ent ?: &stub_sysent)
-# define n_args(tcp) (tcp_sysent(tcp)->nargs)
+# define n_args(tcp) MIN(tcp_sysent(tcp)->nargs, MAX_ARGS)
 
 # include "xlat.h"
 
@@ -417,6 +418,7 @@ extern const struct xlat dirent_types[];
 extern const struct xlat ethernet_protocols[];
 extern const struct xlat evdev_abs[];
 extern const struct xlat evdev_ev[];
+extern const struct xlat fs_xflags[];
 extern const struct xlat fsmagic[];
 extern const struct xlat futexbitset[];
 extern const struct xlat iffflags[];
@@ -520,6 +522,7 @@ extern bool Tflag;
 extern int Tflag_scale;
 extern int Tflag_width;
 extern bool iflag;
+extern bool Nflag;
 extern bool count_wallclock;
 extern bool tracing_fds;
 extern long long syscall_limit;
@@ -561,6 +564,16 @@ enum stack_trace_modes {
 extern enum stack_trace_modes stack_trace_mode;
 # else
 #  define stack_trace_mode STACK_TRACE_OFF
+# endif
+enum decode_kvm_run_structure_modes {
+	DECODE_KVM_RUN_STRUCTURE_OFF,
+	DECODE_KVM_RUN_STRUCTURE_EXIT_REASON,
+	DECODE_KVM_RUN_STRUCTURE_MORE,
+};
+# ifdef HAVE_LINUX_KVM_H
+extern enum decode_kvm_run_structure_modes decode_kvm_run_structure;
+# else
+#  define decode_kvm_run_structure DECODE_KVM_RUN_STRUCTURE_OFF
 # endif
 extern unsigned max_strlen;
 extern unsigned os_release;
@@ -611,7 +624,7 @@ extern kernel_ulong_t get_rt_sigframe_addr(struct tcb *);
  * @return       String literal corresponding to the syscall number in case
  *               the latter is valid;  NULL otherwise.
  */
-extern const char *syscall_name_arch(kernel_ulong_t nr, unsigned int arch,
+extern const char *syscall_name_arch(unsigned long long nr, unsigned int arch,
 				     const char **prefix);
 /**
  * Convert a syscall name to the corresponding (shuffled) syscall number.
@@ -1020,8 +1033,6 @@ extern void print_xlat_ex(uint64_t val, const char *str, uint32_t style);
 	print_xlat_ex((val_), #val_, XLAT_STYLE_FMT_D)
 
 extern int printargs(struct tcb *);
-extern int printargs_u(struct tcb *);
-extern int printargs_d(struct tcb *);
 
 extern int printflags_ex(uint64_t flags, const char *dflt,
 			 enum xlat_style, const struct xlat *, ...)
@@ -1099,7 +1110,7 @@ typedef void (*print_obj_by_addr_size_fn)(struct tcb *,
  * @param opaque_data      A value that is unconditionally passed to print_func
  *                         in the opaque_data argument.
  * @param flags            Combination of xlat style settings and additional
- *                         flags from enum print_array_flags that are appled
+ *                         flags from enum print_array_flags that are applied
  *                         to index printing.
  * @param index_xlat       xlat that is used for printing indices.
  * @param index_dflt       Default string for the values not found
@@ -1440,6 +1451,7 @@ extern void qualify_write(const char *);
 extern void qualify_fault(const char *);
 extern void qualify_inject(const char *);
 extern void qualify_kvm(const char *);
+extern void qualify_namespace(const char *);
 extern unsigned int qual_flags(const unsigned int);
 
 # define DECL_IOCTL(name)						\
@@ -1451,6 +1463,7 @@ DECL_IOCTL(counter);
 DECL_IOCTL(dm);
 DECL_IOCTL(epoll);
 DECL_IOCTL(evdev);
+DECL_IOCTL(fs_0x15);
 DECL_IOCTL(fs_0x94);
 DECL_IOCTL(fs_f);
 DECL_IOCTL(fs_x);
@@ -1592,9 +1605,12 @@ extern void unwind_tcb_capture(struct tcb *);
 # endif
 
 # ifdef HAVE_LINUX_KVM_H
-extern void kvm_run_structure_decoder_init(void);
+extern void kvm_run_structure_decoder_init(enum decode_kvm_run_structure_modes);
 extern void kvm_vcpu_info_free(struct tcb *);
+extern void kvm_run_structure_decode(struct tcb *);
 # endif
+
+extern void namespace_auxstr_init(void);
 
 extern void maybe_load_task_comm(struct tcb *tcp);
 /* Print the contents of /proc/$pid/comm. */

@@ -2,7 +2,7 @@
  * Check decoding of io_uring_enter syscall.
  *
  * Copyright (c) 2019-2021 Dmitry V. Levin <ldv@strace.io>
- * Copyright (c) 2019-2024 The strace developers.
+ * Copyright (c) 2019-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
@@ -69,8 +69,10 @@ main(void)
 	       "|IORING_ENTER_SQ_WAIT|IORING_ENTER_EXT_ARG"
 	       "|IORING_ENTER_REGISTERED_RING"
 	       "|IORING_ENTER_ABS_TIMER"
+	       "|IORING_ENTER_EXT_ARG_REG"
+	       "|IORING_ENTER_NO_IOWAIT"
 	       "|%#x, %s, %u) = %s\n",
-	       fd, path, to_submit, min_complete, -1U - 63U,
+	       fd, path, to_submit, min_complete, -1U - 255U,
 	       "~[HUP KILL STOP]", size, errstr);
 
 	puts("+++ exited with 0 +++");

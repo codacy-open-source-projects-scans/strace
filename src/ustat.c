@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2017 JingPiao Chen <chenjingpiao@gmail.com>
- * Copyright (c) 2017-2021 The strace developers.
+ * Copyright (c) 2017-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -19,10 +19,11 @@ SYS_FUNC(ustat)
 {
 	if (entering(tcp)) {
 		/* dev */
+		tprints_arg_name("dev");
 		print_dev_t((unsigned int) tcp->u_arg[0]);
-		tprint_arg_next();
 	} else {
 		/* ubuf */
+		tprints_arg_next_name("ubuf");
 #ifdef HAVE_USTAT_H
 		struct_ustat ust;
 

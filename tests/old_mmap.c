@@ -2,7 +2,7 @@
  * Check decoding of "old mmap" edition of mmap syscall.
  *
  * Copyright (c) 2016 Dmitry V. Levin <ldv@strace.io>
- * Copyright (c) 2016-2021 The strace developers.
+ * Copyright (c) 2016-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
@@ -38,7 +38,9 @@ main(void)
 {
 	long rc = syscall(__NR_mmap, 0);
 	const bool implemented = rc != -1 || errno != ENOSYS;
-# ifndef PATH_TRACING
+# ifdef PATH_TRACING
+	skip_if_unavailable("/proc/self/fd/");
+# else
 	printf("mmap(NULL) = %s\n", sprintrc(rc));
 # endif
 

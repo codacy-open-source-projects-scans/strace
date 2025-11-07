@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2007 Ulrich Drepper <drepper@redhat.com>
  * Copyright (c) 2008-2021 Dmitry V. Levin <ldv@strace.io>
+ * Copyright (c) 2021-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -14,12 +15,13 @@ static int
 do_eventfd(struct tcb *tcp, int flags_arg)
 {
 	/* initval */
+	tprints_arg_name("initval");
 	unsigned int initval = tcp->u_arg[0];
 	PRINT_VAL_U(initval);
 
 	if (flags_arg >= 0) {
 		/* flags */
-		tprint_arg_next();
+		tprints_arg_next_name("flags");
 		printflags(efd_flags, tcp->u_arg[flags_arg], "EFD_???");
 	}
 

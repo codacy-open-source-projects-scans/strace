@@ -47,15 +47,26 @@ enum nfnl_hook_chain_info_attributes {
 };
 #define NFNLA_HOOK_INFO_MAX (__NFNLA_HOOK_INFO_MAX - 1)
 
+enum nfnl_hook_chain_desc_attributes {
+	NFNLA_CHAIN_UNSPEC,
+	NFNLA_CHAIN_TABLE,
+	NFNLA_CHAIN_FAMILY,
+	NFNLA_CHAIN_NAME,
+	__NFNLA_CHAIN_MAX,
+};
+#define NFNLA_CHAIN_MAX (__NFNLA_CHAIN_MAX - 1)
+
 /**
  * enum nfnl_hook_chaintype - chain type
  *
  * @NFNL_HOOK_TYPE_NFTABLES: nf_tables base chain
  * @NFNL_HOOK_TYPE_BPF: bpf program
+ * @NFNL_HOOK_TYPE_NFT_FLOWTABLE: nf_tables flowtable
  */
 enum nfnl_hook_chaintype {
 	NFNL_HOOK_TYPE_NFTABLES = 0x1,
 	NFNL_HOOK_TYPE_BPF,
+	NFNL_HOOK_TYPE_NFT_FLOWTABLE,
 };
 
 /**

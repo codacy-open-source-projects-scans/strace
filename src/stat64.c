@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2005-2015 Dmitry V. Levin <ldv@strace.io>
- * Copyright (c) 2015-2021 The strace developers.
+ * Copyright (c) 2015-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -22,10 +22,11 @@ SYS_FUNC(stat64)
 {
 	if (entering(tcp)) {
 		/* pathname */
+		tprints_arg_name("pathname");
 		printpath(tcp, tcp->u_arg[0]);
-		tprint_arg_next();
 	} else {
 		/* statbuf */
+		tprints_arg_next_name("statbuf");
 		decode_struct_stat64(tcp, tcp->u_arg[1]);
 	}
 	return 0;
@@ -35,10 +36,11 @@ SYS_FUNC(fstat64)
 {
 	if (entering(tcp)) {
 		/* fd */
+		tprints_arg_name("fd");
 		printfd(tcp, tcp->u_arg[0]);
-		tprint_arg_next();
 	} else {
 		/* statbuf */
+		tprints_arg_next_name("statbuf");
 		decode_struct_stat64(tcp, tcp->u_arg[1]);
 	}
 	return 0;
@@ -48,18 +50,19 @@ SYS_FUNC(fstatat64)
 {
 	if (entering(tcp)) {
 		/* dirfd */
+		tprints_arg_name("dirfd");
 		print_dirfd(tcp, tcp->u_arg[0]);
-		tprint_arg_next();
 
 		/* pathname */
+		tprints_arg_next_name("pathname");
 		printpath(tcp, tcp->u_arg[1]);
-		tprint_arg_next();
 	} else {
 		/* statbuf */
+		tprints_arg_next_name("statbuf");
 		decode_struct_stat64(tcp, tcp->u_arg[2]);
-		tprint_arg_next();
 
 		/* flags */
+		tprints_arg_next_name("flags");
 		printflags(at_flags, tcp->u_arg[3], "AT_???");
 	}
 	return 0;

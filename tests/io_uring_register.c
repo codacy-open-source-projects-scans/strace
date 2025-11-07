@@ -2,7 +2,7 @@
  * Check decoding of io_uring_register syscall.
  *
  * Copyright (c) 2019 Dmitry V. Levin <ldv@strace.io>
- * Copyright (c) 2019-2024 The strace developers.
+ * Copyright (c) 2019-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
@@ -172,7 +172,7 @@ main(void)
 
 
 	/* Invalid op */
-	static const unsigned int invalid_ops[] = { 0x7fffffffU, 31 };
+	static const unsigned int invalid_ops[] = { 0x7fffffffU, 35 };
 	static const struct strval32 op_flags[] = {
 		{ ARG_STR(IORING_REGISTER_USE_REGISTERED_RING) },
 	};
@@ -370,12 +370,12 @@ main(void)
 	probe->ops[0].flags = 0;
 	probe->ops[0].resv2 = 0xbeefface;
 
-	probe->ops[1].op = 57;
+	probe->ops[1].op = 62;
 	probe->ops[1].resv = 0;
 	probe->ops[1].flags = IO_URING_OP_SUPPORTED;
 	probe->ops[1].resv2 = 0xdeadc0de;
 
-	probe->ops[2].op = 58;
+	probe->ops[2].op = 63;
 	probe->ops[2].resv = 0xaf;
 	probe->ops[2].flags = 0xbeef;
 	probe->ops[2].resv2 = 0;
@@ -390,32 +390,32 @@ main(void)
 	       ", ops_len=%hhu, resv2=[0, %#x, 0], ops=["
 	       "{op=" XLAT_FMT_U ", resv=0xde, flags=0, resv2=0xbeefface}, "
 	       "{op=" XLAT_FMT_U ", flags=" XLAT_FMT ", resv2=0xdeadc0de}, "
-	       "{op=58" NRAW(" /* IORING_OP_??? */") ", resv=0xaf, flags="
+	       "{op=63" NRAW(" /* IORING_OP_??? */") ", resv=0xaf, flags="
 	       XLAT_FMT "}, {op=254" NRAW(" /* IORING_OP_??? */")
 	       ", flags=0xc0de" NRAW(" /* IO_URING_OP_??? */") "}]}"
 #if RETVAL_INJECTED
 	       " => {last_op=" XLAT_FMT_U ", ops_len=%hhu, resv2=[0, %#x, 0], "
 	       "ops=[{op=" XLAT_FMT_U ", resv=0xde, flags=0, resv2=0xbeefface}"
 	       ", {op=" XLAT_FMT_U ", flags=" XLAT_FMT ", resv2=0xdeadc0de}"
-	       ", {op=58" NRAW(" /* IORING_OP_??? */") ", resv=0xaf, flags="
+	       ", {op=63" NRAW(" /* IORING_OP_??? */") ", resv=0xaf, flags="
 	       XLAT_FMT "}, {op=254" NRAW(" /* IORING_OP_??? */")
 	       ", flags=0xc0de" NRAW(" /* IO_URING_OP_??? */") "}, ...]}"
 #endif
 	       ", 4) = %s\n",
 	       fd_null, path_null, XLAT_ARGS(IORING_REGISTER_PROBE),
 	       XLAT_ARGS(IORING_OP_EPOLL_CTL), probe->ops_len, probe->resv2[1],
-	       XLAT_ARGS(IORING_OP_NOP), XLAT_ARGS(IORING_OP_LISTEN),
+	       XLAT_ARGS(IORING_OP_NOP), XLAT_ARGS(IORING_OP_PIPE),
 	       XLAT_ARGS(IO_URING_OP_SUPPORTED),
 	       XLAT_ARGS(IO_URING_OP_SUPPORTED|0xbeee),
 #if RETVAL_INJECTED
 	       XLAT_ARGS(IORING_OP_EPOLL_CTL), probe->ops_len, probe->resv2[1],
-	       XLAT_ARGS(IORING_OP_NOP), XLAT_ARGS(IORING_OP_LISTEN),
+	       XLAT_ARGS(IORING_OP_NOP), XLAT_ARGS(IORING_OP_PIPE),
 	       XLAT_ARGS(IO_URING_OP_SUPPORTED),
 	       XLAT_ARGS(IO_URING_OP_SUPPORTED|0xbeee),
 #endif
 	       errstr);
 
-	probe->last_op = 58;
+	probe->last_op = 63;
 	probe->resv2[1] = 0;
 	fill_memory_ex(probe->ops, sizeof(probe->ops[0]) * (DEFAULT_STRLEN + 1),
 		    0x40, 0x80);
@@ -424,7 +424,7 @@ main(void)
 	printf("io_uring_register(%u<%s>, " XLAT_FMT,
 	       fd_null, path_null, XLAT_ARGS(IORING_REGISTER_PROBE));
 	for (size_t c = 0; c < 1 + RETVAL_INJECTED; c++) {
-		printf("%s{last_op=58" NRAW(" /* IORING_OP_??? */")
+		printf("%s{last_op=63" NRAW(" /* IORING_OP_??? */")
 		       ", ops_len=%hhu, ops=[",
 		       c ? " => " : ", ", probe->ops_len);
 		for (size_t i = 0; i < DEFAULT_STRLEN; i++) {
@@ -486,18 +486,18 @@ main(void)
 		{ ARG_STR(IORING_RESTRICTION_REGISTER_OP), true,
 		  "register_op=", ARG_STR(IORING_REGISTER_BUFFERS), true },
 		{ ARG_STR(IORING_RESTRICTION_REGISTER_OP), true,
-		  "register_op=", ARG_STR(IORING_REGISTER_CLONE_BUFFERS),
+		  "register_op=", ARG_STR(IORING_REGISTER_MEM_REGION),
 		  true },
 		{ ARG_STR(IORING_RESTRICTION_REGISTER_OP), true,
-		  "register_op=", 31, " /* IORING_REGISTER_??? */", false },
+		  "register_op=", 35, " /* IORING_REGISTER_??? */", false },
 		{ ARG_STR(IORING_RESTRICTION_REGISTER_OP), true,
 		  "register_op=", 255, " /* IORING_REGISTER_??? */", false },
 		{ ARG_STR(IORING_RESTRICTION_SQE_OP), true,
 		  "sqe_op=", ARG_STR(IORING_OP_NOP), true },
 		{ ARG_STR(IORING_RESTRICTION_SQE_OP), true,
-		  "sqe_op=", ARG_STR(IORING_OP_LISTEN), true },
+		  "sqe_op=", ARG_STR(IORING_OP_PIPE), true },
 		{ ARG_STR(IORING_RESTRICTION_SQE_OP), true,
-		  "sqe_op=", 58, " /* IORING_OP_??? */", false },
+		  "sqe_op=", 63, " /* IORING_OP_??? */", false },
 		{ ARG_STR(IORING_RESTRICTION_SQE_OP), true,
 		  "sqe_op=", 255, " /* IORING_OP_??? */", false },
 		{ ARG_STR(IORING_RESTRICTION_SQE_FLAGS_ALLOWED), true,
@@ -1248,7 +1248,7 @@ main(void)
 			       (intmax_t) sync_cancel_reg->timeout.tv_nsec);
 			if (j & 0x20)
 				printf(", opcode=" XLAT_FMT,
-				       XLAT_ARGS(IORING_OP_LISTEN));
+				       XLAT_ARGS(IORING_OP_PIPE));
 			else
 				printf(", opcode=%#x"
 				       NRAW(" /* IORING_OP_??? */"),
@@ -1584,10 +1584,13 @@ main(void)
 	static const struct strval32 clone_buffers_flags[] = {
 		{ ARG_STR(0) },
 		{ ARG_XLAT_KNOWN(0x1, "IORING_REGISTER_SRC_REGISTERED") },
-		{ ARG_XLAT_UNKNOWN(0x2, "IORING_REGISTER_???") },
-		{ ARG_XLAT_UNKNOWN(0xfffffffe, "IORING_REGISTER_???") },
+		{ ARG_XLAT_KNOWN(0x2, "IORING_REGISTER_DST_REPLACE") },
+		{ ARG_XLAT_UNKNOWN(0x4, "IORING_REGISTER_???") },
+		{ ARG_XLAT_UNKNOWN(0xfffffffc, "IORING_REGISTER_???") },
 		{ ARG_XLAT_KNOWN(0xffffffff,
-				 "IORING_REGISTER_SRC_REGISTERED|0xfffffffe") },
+				 "IORING_REGISTER_SRC_REGISTERED|"
+				 "IORING_REGISTER_DST_REPLACE|"
+				 "0xfffffffc") },
 	};
 
 	for (size_t i = 0; i < ARRAY_SIZE(clone_buffers_flags); ++i) {

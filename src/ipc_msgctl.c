@@ -5,7 +5,7 @@
  * Copyright (c) 1996-1999 Wichert Akkerman <wichert@cistron.nl>
  * Copyright (c) 2003-2006 Roland McGrath <roland@redhat.com>
  * Copyright (c) 2006-2015 Dmitry V. Levin <ldv@strace.io>
- * Copyright (c) 2015-2021 The strace developers.
+ * Copyright (c) 2015-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -118,16 +118,17 @@ SYS_FUNC(msgctl)
 
 	if (entering(tcp)) {
 		/* msqid */
+		tprints_arg_name("msqid");
 		PRINT_VAL_D((int) tcp->u_arg[0]);
-		tprint_arg_next();
 
 		/* cmd */
+		tprints_arg_next_name("op");
 		PRINTCTL(msgctl_flags, tcp->u_arg[1], "MSG_???");
-		tprint_arg_next();
 
 		switch (cmd) {
 		case IPC_SET:
 			/* buf */
+			tprints_arg_next_name("buf");
 			print_msqid_ds(tcp, addr, cmd);
 			return RVAL_DECODED;
 
@@ -141,6 +142,7 @@ SYS_FUNC(msgctl)
 
 		default:
 			/* buf */
+			tprints_arg_next_name("buf");
 			printaddr(addr);
 			return RVAL_DECODED;
 		}
@@ -150,12 +152,14 @@ SYS_FUNC(msgctl)
 		case MSG_STAT:
 		case MSG_STAT_ANY:
 			/* buf */
+			tprints_arg_next_name("buf");
 			print_msqid_ds(tcp, addr, cmd);
 			break;
 
 		case IPC_INFO:
 		case MSG_INFO:
 			/* buf */
+			tprints_arg_next_name("buf");
 			print_msginfo(tcp, addr, cmd);
 			break;
 		}

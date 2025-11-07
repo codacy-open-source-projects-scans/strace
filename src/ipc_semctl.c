@@ -5,7 +5,7 @@
  * Copyright (c) 1996-1999 Wichert Akkerman <wichert@cistron.nl>
  * Copyright (c) 2003-2006 Roland McGrath <roland@redhat.com>
  * Copyright (c) 2006-2015 Dmitry V. Levin <ldv@strace.io>
- * Copyright (c) 2015-2021 The strace developers.
+ * Copyright (c) 2015-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -134,17 +134,18 @@ SYS_FUNC(semctl)
 
 	if (entering(tcp)) {
 		/* semid */
+		tprints_arg_name("semid");
 		PRINT_VAL_D((int) tcp->u_arg[0]);
-		tprint_arg_next();
 
 		/* semnum */
+		tprints_arg_next_name("semnum");
 		PRINT_VAL_D((int) tcp->u_arg[1]);
-		tprint_arg_next();
 
 		/* cmd */
+		tprints_arg_next_name("op");
 		PRINTCTL(semctl_flags, tcp->u_arg[2], "SEM_???");
-		tprint_arg_next();
 
+		tprints_arg_next_name("arg");
 		if (indirect_addr) {
 			semun_ptr_t ptr;
 			if (umove_or_printaddr(tcp, tcp->u_arg[3], &ptr))

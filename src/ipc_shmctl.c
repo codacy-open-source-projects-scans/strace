@@ -5,7 +5,7 @@
  * Copyright (c) 1996-1999 Wichert Akkerman <wichert@cistron.nl>
  * Copyright (c) 2003-2006 Roland McGrath <roland@redhat.com>
  * Copyright (c) 2006-2015 Dmitry V. Levin <ldv@strace.io>
- * Copyright (c) 2015-2021 The strace developers.
+ * Copyright (c) 2015-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -138,13 +138,14 @@ SYS_FUNC(shmctl)
 
 	if (entering(tcp)) {
 		/* shmid */
+		tprints_arg_name("shmid");
 		PRINT_VAL_D((int) tcp->u_arg[0]);
-		tprint_arg_next();
 
 		/* cmd */
+		tprints_arg_next_name("op");
 		PRINTCTL(shmctl_flags, tcp->u_arg[1], "SHM_???");
-		tprint_arg_next();
 
+		tprints_arg_next_name("buf");
 		switch (cmd) {
 		case IPC_SET:
 			/* buf */

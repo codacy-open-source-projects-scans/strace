@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2013 William Manley <william.manley@youview.com>
  * Copyright (c) 2014-2015 Dmitry V. Levin <ldv@strace.io>
- * Copyright (c) 2014-2021 The strace developers.
+ * Copyright (c) 2014-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -15,18 +15,19 @@
 SYS_FUNC(sync_file_range)
 {
 	/* fd */
+	tprints_arg_name("fd");
 	printfd(tcp, tcp->u_arg[0]);
-	tprint_arg_next();
 
 	/* offset */
+	tprints_arg_next_name("offset");
 	unsigned int argn = print_arg_lld(tcp, 1);
-	tprint_arg_next();
 
 	/* nbytes */
+	tprints_arg_next_name("nbytes");
 	argn = print_arg_lld(tcp, argn);
-	tprint_arg_next();
 
 	/* flags */
+	tprints_arg_next_name("flags");
 	printflags(sync_file_range_flags, tcp->u_arg[argn],
 		   "SYNC_FILE_RANGE_???");
 

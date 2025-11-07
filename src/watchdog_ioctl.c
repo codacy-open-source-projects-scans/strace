@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2024 The strace developers.
+ * Copyright (c) 2019-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -25,10 +25,9 @@ watchdog_ioctl(struct tcb *const tcp, const unsigned int code,
 
 	switch (code) {
 	case WDIOC_GETSUPPORT:
-		if (entering(tcp)) {
-			tprint_arg_next();
+		if (entering(tcp))
 			return 0;
-		}
+		tprints_arg_next_name("argp");
 		if (umove_or_printaddr(tcp, arg, &ident))
 			break;
 		tprint_struct_begin();
@@ -55,11 +54,11 @@ watchdog_ioctl(struct tcb *const tcp, const unsigned int code,
 		ATTRIBUTE_FALLTHROUGH;
 	case WDIOC_SETTIMEOUT:
 	case WDIOC_SETPRETIMEOUT:
-		tprint_arg_next();
+		tprints_arg_next_name("argp");
 		printnum_int(tcp, arg, "%d");
 		break;
 	case WDIOC_SETOPTIONS:
-		tprint_arg_next();
+		tprints_arg_next_name("argp");
 		if (umove_or_printaddr(tcp, arg, &options))
 			break;
 		tprint_indirect_begin();
