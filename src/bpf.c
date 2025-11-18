@@ -528,7 +528,8 @@ BEGIN_BPF_CMD_DECODER(BPF_PROG_TEST_RUN)
 	 */
 	if (len > offsetof(struct BPF_PROG_TEST_RUN_struct, flags)) {
 		tprint_struct_next();
-		PRINT_FIELD_FLAGS(attr, flags, bpf_test_run_flags, "BPF_F_???");
+		PRINT_FIELD_FLAGS(attr, flags, bpf_test_run_flags,
+				  "BPF_F_TEST_???");
 		tprint_struct_next();
 		PRINT_FIELD_U(attr, cpu);
 	}
@@ -1494,7 +1495,7 @@ BEGIN_BPF_CMD_DECODER(BPF_LINK_CREATE)
 		tprint_struct_begin();
 		PRINT_FIELD_FLAGS(attr.kprobe_multi, flags,
 				  bpf_link_create_kprobe_multi_flags,
-				  "BPF_F_???");
+				  "BPF_F_KPROBE_MULTI_???");
 		tprint_struct_next();
 		PRINT_FIELD_U(attr.kprobe_multi, cnt);
 		tprint_struct_next();

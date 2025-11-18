@@ -1054,7 +1054,7 @@ static const struct bpf_attr_check BPF_PROG_TEST_RUN_checks[] = {
 		       ", duration=4207541978"
 		       ", ctx_size_in=0, ctx_size_out=0"
 		       ", ctx_in=NULL, ctx_out=NULL"
-		       ", flags=0xfffffffc /* BPF_F_??? */"
+		       ", flags=0xfffffffc /* BPF_F_TEST_??? */"
 		       ", cpu=3141592653, batch_size=2718281828}"
 	},
 };
@@ -1800,7 +1800,7 @@ static struct bpf_attr_check BPF_LINK_CREATE_checks[] = {
 				    kprobe_multi.cookies),
 		.str = "link_create={prog_fd=0" FD0_PATH", target_fd=0" FD0_PATH
 		       ", attach_type=BPF_TRACE_KPROBE_MULTI, flags=0"
-		       ", kprobe_multi={flags=0xdeadc0de /* BPF_F_??? */"
+		       ", kprobe_multi={flags=0xdeadc0de /* BPF_F_KPROBE_MULTI_??? */"
 		       ", cnt=3135220973"
 		       ", syms=" BIG_ADDR("0xffffffff00000000", "NULL")
 		       ", addrs=" BIG_ADDR("0xffffffff00000000", "NULL")

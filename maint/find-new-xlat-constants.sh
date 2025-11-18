@@ -42,6 +42,10 @@ usage()
 		Arguments:
 		  COMMIT_RANGE       Git commit range (e.g., COMMIT1..COMMIT2)
 
+		Xlat file directives:
+		  #Prefix PREFIX...  Space-separated list of prefixes to match
+		  #Pattern REGEX...  Space-separated list of regular expressions
+
 		Examples:
 		  $0 -d /path/to/linux v6.17..v6.18-rc4 < headers_table.txt \\
 		      > new_constants.txt
@@ -138,9 +142,25 @@ extract_xlat_constants()
 	[ -f "$xlat_file" ] || return 1
 
 	# Remove comments, directives, and extract constant names
-	sed -n 's/^\(1<<\)\?\([A-Z_][A-Z0-9_]*\).*/\2/p' \
+	sed -n 's/^\(1<<\)\?\([A-Z_][A-Z_0-9]*\).*/\2/p' \
 		"$xlat_file" |
 		sort -u
+}
+
+# Extract #Prefix directive from xlat file
+extract_prefix_directive()
+{
+	local xlat_file="$1"
+
+	sed '/^#Prefix[[:space:]]\+/!d;s///;q' "$xlat_file"
+}
+
+# Extract #Pattern directive from xlat file
+extract_pattern_directive()
+{
+	local xlat_file="$1"
+
+	sed '/^#Pattern[[:space:]]\+/!d;s///;q' "$xlat_file"
 }
 
 # Calculate longest common prefix from constants in a file
@@ -148,7 +168,15 @@ calculate_prefix()
 {
 	local constants_file="$1"
 	local xlat_file="$2"
-	local prefix basename_file
+	local prefix basename_file prefix_directive
+
+	# Check if #Prefix directive exists
+	prefix_directive=$(extract_prefix_directive "$xlat_file")
+	if [ -n "$prefix_directive" ]; then
+		# Use prefix from #Prefix directive
+		echo "$prefix_directive"
+		return 0
+	fi
 
 	# Determine longest common prefix from xlat constants using awk
 	prefix=$(awk '
@@ -168,7 +196,7 @@ calculate_prefix()
 			if (i > min_len && line_len < prefix_len)
 				prefix = substr(prefix, 1, line_len)
 		}
-		END { print prefix }
+		END { sub(/[^_]*$/, "", prefix); print prefix }
 	' < "$constants_file")
 
 	# If prefix is empty, infer from filename
@@ -184,30 +212,75 @@ calculate_prefix()
 	echo "$prefix"
 }
 
+# Extract all constants from Linux header
+extract_all_header_constants()
+{
+	local commit="$1"
+	local header_file="$2"
+	local sed_define sed_enum
+
+	sed_define='s/^[[:space:]]*#[[:space:]]*define[[:space:]]\+\([A-Z_][A-Z_0-9]*\)[[:space:]].*/\1/p'
+	sed_enum='s/^[[:space:]]*\([A-Z_][A-Z_0-9]*\)[[:space:]]*\(\/\*.*\*\/[[:space:]]*\)\?\([=,]\|$\).*/\1/p'
+
+	git --git-dir="$GIT_DIR" show "${commit}:${header_file}" 2>/dev/null |
+		sed -n -e "$sed_define" -e "$sed_enum" |
+		sort -u
+}
+
+# Filter constants by prefix pattern
+filter_constants_by_prefix()
+{
+	local prefix="$1"
+	local pattern=
+
+	# Build grep pattern from space-separated prefixes
+	set -- $prefix
+	for prefix do
+		[ -z "$pattern" ] ||
+			pattern="$pattern|"
+		pattern="$pattern$prefix[A-Z_0-9]*"
+	done
+
+	grep -E -x -e "$pattern" ||:
+}
+
+# Filter constants by regular expression patterns
+filter_constants_by_pattern()
+{
+	local patterns="$1"
+	local pattern=
+
+	# Build grep pattern from space-separated regex patterns
+	set -- $patterns
+	for pat do
+		[ -z "$pattern" ] ||
+			pattern="$pattern|"
+		pattern="$pattern$pat"
+	done
+
+	grep -E -x -e "$pattern" ||:
+}
+
 # Extract constants from Linux header matching a prefix pattern
-extract_header_constants()
+extract_header_constants_by_prefix()
 {
 	local commit="$1"
 	local header_file="$2"
 	local prefix="$3"
-	local define_p enum_v enum_c enum_cc enum_ccl enum_l
-	local full_p sed_def sed_enum
 
-	# Match both #define and enum constants
-	define_p="^[[:space:]]*#[[:space:]]*define[[:space:]]\+${prefix}[A-Z0-9_]*\b"
-	enum_v="^[[:space:]]*${prefix}[A-Z0-9_]*[[:space:]]*="
-	enum_c="^[[:space:]]*${prefix}[A-Z0-9_]*[[:space:]]*,"
-	enum_cc="^[[:space:]]*${prefix}[A-Z0-9_]*[[:space:]]*/\*.*\*/[[:space:]]*,"
-	enum_ccl="^[[:space:]]*${prefix}[A-Z0-9_]*[[:space:]]*/\*.*\*/[[:space:]]*$"
-	enum_l="^[[:space:]]*${prefix}[A-Z0-9_]*[[:space:]]*$"
-	full_p="${define_p}\|${enum_v}\|${enum_c}\|${enum_cc}\|${enum_ccl}\|${enum_l}"
-	sed_def="s/^[[:space:]]*#[[:space:]]*define[[:space:]]*\([A-Z0-9_]*\).*/\1/"
-	sed_enum="s/^[[:space:]]*\([A-Z0-9_]*\).*/\1/"
+	extract_all_header_constants "$commit" "$header_file" |
+		filter_constants_by_prefix "$prefix"
+}
 
-	git --git-dir="$GIT_DIR" show "${commit}:${header_file}" 2>/dev/null |
-		grep "$full_p" |
-		sed -e "$sed_def" -e "$sed_enum" |
-		sort -u
+# Extract constants from Linux header matching regex patterns
+extract_header_constants_by_pattern()
+{
+	local commit="$1"
+	local header_file="$2"
+	local patterns="$3"
+
+	extract_all_header_constants "$commit" "$header_file" |
+		filter_constants_by_pattern "$patterns"
 }
 
 # Process a single line from the table
@@ -216,7 +289,7 @@ process_line()
 	local xlat_file="$1"
 	local line_type="$2"
 	local header_file="$3"
-	local prefix basename_file
+	local prefix basename_file pattern_directive
 
 	# Skip empty lines
 	[ -n "$xlat_file" ] || return 0
@@ -238,12 +311,24 @@ process_line()
 	[ -s "$xlat_constants_file" ] ||
 		return 0
 
-	# Calculate prefix from xlat constants
-	prefix=$(calculate_prefix "$xlat_constants_file" "$xlat_file")
-
-	# Extract constants from COMMIT1 and COMMIT2 headers to temporary files
-	extract_header_constants "$COMMIT1" "$header_file" "$prefix" > "$v1_file"
-	extract_header_constants "$COMMIT2" "$header_file" "$prefix" > "$v2_file"
+	# Check if #Pattern directive exists
+	pattern_directive=$(extract_pattern_directive "$xlat_file")
+	if [ -n "$pattern_directive" ]; then
+		# Use pattern-based matching
+		extract_header_constants_by_pattern \
+			"$COMMIT1" "$header_file" "$pattern_directive" \
+			> "$v1_file"
+		extract_header_constants_by_pattern \
+			"$COMMIT2" "$header_file" "$pattern_directive" \
+			> "$v2_file"
+	else
+		# Use prefix-based matching
+		prefix=$(calculate_prefix "$xlat_constants_file" "$xlat_file")
+		extract_header_constants_by_prefix \
+			"$COMMIT1" "$header_file" "$prefix" > "$v1_file"
+		extract_header_constants_by_prefix \
+			"$COMMIT2" "$header_file" "$prefix" > "$v2_file"
+	fi
 
 	# Find new constants (in v2 but not in v1 and not in xlat)
 	comm -23 "$v2_file" "$v1_file" |
