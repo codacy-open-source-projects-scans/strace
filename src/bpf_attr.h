@@ -51,11 +51,15 @@ struct BPF_MAP_CREATE_struct {
 	uint32_t btf_value_type_id;
 	uint32_t btf_vmlinux_value_type_id;
 	uint64_t ATTRIBUTE_ALIGNED(8) map_extra;
+	int32_t  value_type_btf_obj_fd;
+	int32_t  map_token_fd;
+	uint64_t ATTRIBUTE_ALIGNED(8) excl_prog_hash;
+	uint32_t excl_prog_hash_size;
 };
 
 # define BPF_MAP_CREATE_struct_size \
-	sizeof(struct BPF_MAP_CREATE_struct)
-# define expected_BPF_MAP_CREATE_struct_size 72
+	offsetofend(struct BPF_MAP_CREATE_struct, excl_prog_hash_size)
+# define expected_BPF_MAP_CREATE_struct_size 92
 
 struct BPF_MAP_LOOKUP_ELEM_struct {
 	uint32_t map_fd;
@@ -128,13 +132,21 @@ struct BPF_PROG_LOAD_struct {
 	uint32_t line_info_cnt;
 	uint32_t attach_btf_id;
 	uint32_t attach_prog_fd;
-	uint32_t pad;
+	uint32_t core_relo_cnt;
 	uint64_t ATTRIBUTE_ALIGNED(8) fd_array;
+	uint64_t ATTRIBUTE_ALIGNED(8) core_relos;
+	uint32_t core_relo_rec_size;
+	uint32_t log_true_size;
+	int32_t  prog_token_fd;
+	uint32_t fd_array_cnt;
+	uint64_t ATTRIBUTE_ALIGNED(8) signature;
+	uint32_t signature_size;
+	int32_t  keyring_id;
 };
 
 # define BPF_PROG_LOAD_struct_size \
-	sizeof(struct BPF_PROG_LOAD_struct)
-# define expected_BPF_PROG_LOAD_struct_size 128
+	offsetofend(struct BPF_PROG_LOAD_struct, keyring_id)
+# define expected_BPF_PROG_LOAD_struct_size 168
 
 struct BPF_OBJ_PIN_struct {
 	uint64_t ATTRIBUTE_ALIGNED(8) pathname;

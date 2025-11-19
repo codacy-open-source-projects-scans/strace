@@ -72,7 +72,16 @@ print_bpf_attr(void)
 		", line_info_cnt=0"
 		", attach_btf_id=0"
 		", attach_prog_fd=0"
-		", fd_array=NULL}");
+		", core_relo_cnt=0"
+		", fd_array=NULL"
+		", core_relos=NULL"
+		", core_relo_rec_size=0"
+		", log_true_size=0"
+		", prog_token_fd=0"
+		", fd_array_cnt=0"
+		", signature=NULL"
+		", signature_size=0"
+		", keyring_id=0}");
 }
 
 int
