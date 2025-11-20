@@ -163,26 +163,28 @@ struct BPF_OBJ_PIN_struct {
 # define BPF_OBJ_GET_struct_size BPF_OBJ_PIN_struct_size
 
 struct BPF_PROG_ATTACH_struct {
-	uint32_t target_fd;
+	union {
+		uint32_t target_fd;
+		uint32_t target_ifindex;
+	};
 	uint32_t attach_bpf_fd;
 	uint32_t attach_type;
 	uint32_t attach_flags;
 	uint32_t replace_bpf_fd;
+	union {
+		uint32_t relative_fd;
+		uint32_t relative_id;
+	};
+	uint64_t ATTRIBUTE_ALIGNED(8) expected_revision;
 };
 
 # define BPF_PROG_ATTACH_struct_size \
-	sizeof(struct BPF_PROG_ATTACH_struct)
-# define expected_BPF_PROG_ATTACH_struct_size 20
+	offsetofend(struct BPF_PROG_ATTACH_struct, expected_revision)
+# define expected_BPF_PROG_ATTACH_struct_size 32
 
-struct BPF_PROG_DETACH_struct {
-	uint32_t target_fd;
-	uint32_t dummy;
-	uint32_t attach_type;
-};
-
-# define BPF_PROG_DETACH_struct_size \
-	sizeof(struct BPF_PROG_DETACH_struct)
-# define expected_BPF_PROG_DETACH_struct_size 12
+# define BPF_PROG_DETACH_struct_size BPF_PROG_ATTACH_struct_size
+# define expected_BPF_PROG_DETACH_struct_size \
+	expected_BPF_PROG_ATTACH_struct_size
 
 struct BPF_PROG_TEST_RUN_struct /* test */ {
 	uint32_t prog_fd;
@@ -210,12 +212,11 @@ struct BPF_PROG_TEST_RUN_struct /* test */ {
 struct BPF_PROG_GET_NEXT_ID_struct {
 	uint32_t start_id;
 	uint32_t next_id;
-	uint32_t open_flags;
 };
 
 # define BPF_PROG_GET_NEXT_ID_struct_size \
 	sizeof(struct BPF_PROG_GET_NEXT_ID_struct)
-# define expected_BPF_PROG_GET_NEXT_ID_struct_size 12
+# define expected_BPF_PROG_GET_NEXT_ID_struct_size 8
 
 # define BPF_MAP_GET_NEXT_ID_struct BPF_PROG_GET_NEXT_ID_struct
 # define BPF_MAP_GET_NEXT_ID_struct_size BPF_PROG_GET_NEXT_ID_struct_size
@@ -225,13 +226,11 @@ struct BPF_PROG_GET_NEXT_ID_struct {
 
 struct BPF_PROG_GET_FD_BY_ID_struct {
 	uint32_t prog_id;
-	uint32_t next_id;
-	uint32_t open_flags;
 };
 
 # define BPF_PROG_GET_FD_BY_ID_struct_size \
 	sizeof(struct BPF_PROG_GET_FD_BY_ID_struct)
-# define expected_BPF_PROG_GET_FD_BY_ID_struct_size 12
+# define expected_BPF_PROG_GET_FD_BY_ID_struct_size 4
 
 struct BPF_MAP_GET_FD_BY_ID_struct {
 	uint32_t map_id;
@@ -254,17 +253,25 @@ struct BPF_OBJ_GET_INFO_BY_FD_struct /* info */ {
 # define expected_BPF_OBJ_GET_INFO_BY_FD_struct_size 16
 
 struct BPF_PROG_QUERY_struct /* query */ {
-	uint32_t target_fd;
+	union {
+		uint32_t target_fd;
+		uint32_t target_ifindex;
+	};
 	uint32_t attach_type;
 	uint32_t query_flags;
 	uint32_t attach_flags;
 	uint64_t ATTRIBUTE_ALIGNED(8) prog_ids;
 	uint32_t prog_cnt;
+	uint32_t dummy;
+	uint64_t ATTRIBUTE_ALIGNED(8) prog_attach_flags;
+	uint64_t ATTRIBUTE_ALIGNED(8) link_ids;
+	uint64_t ATTRIBUTE_ALIGNED(8) link_attach_flags;
+	uint64_t ATTRIBUTE_ALIGNED(8) revision;
 };
 
 # define BPF_PROG_QUERY_struct_size \
-	offsetofend(struct BPF_PROG_QUERY_struct, prog_cnt)
-# define expected_BPF_PROG_QUERY_struct_size 28
+	offsetofend(struct BPF_PROG_QUERY_struct, revision)
+# define expected_BPF_PROG_QUERY_struct_size 64
 
 struct BPF_RAW_TRACEPOINT_OPEN_struct /* raw_tracepoint */ {
 	uint64_t ATTRIBUTE_ALIGNED(8) name;
@@ -291,11 +298,14 @@ struct BPF_BTF_LOAD_struct {
 
 struct BPF_BTF_GET_FD_BY_ID_struct {
 	uint32_t btf_id;
+	uint32_t next_id;
+	uint32_t open_flags;
+	int32_t fd_by_id_token_fd;
 };
 
 # define BPF_BTF_GET_FD_BY_ID_struct_size \
 	sizeof(struct BPF_BTF_GET_FD_BY_ID_struct)
-# define expected_BPF_BTF_GET_FD_BY_ID_struct_size 4
+# define expected_BPF_BTF_GET_FD_BY_ID_struct_size 16
 
 struct BPF_TASK_FD_QUERY_struct /* task_fd_query */ {
 	uint32_t pid;

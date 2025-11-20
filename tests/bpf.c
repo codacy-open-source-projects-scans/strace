@@ -71,7 +71,6 @@ union bpf_attr_data {
 	BPF_ATTR_DATA_FIELD(BPF_PROG_LOAD);
 	BPF_ATTR_DATA_FIELD(BPF_OBJ_PIN);
 	BPF_ATTR_DATA_FIELD(BPF_PROG_ATTACH);
-	BPF_ATTR_DATA_FIELD(BPF_PROG_DETACH);
 	BPF_ATTR_DATA_FIELD(BPF_PROG_TEST_RUN);
 	BPF_ATTR_DATA_FIELD(BPF_PROG_GET_NEXT_ID);
 	BPF_ATTR_DATA_FIELD(BPF_PROG_GET_FD_BY_ID);
@@ -690,6 +689,16 @@ get_log_buf_tail(void)
 	return get_log_buf() + log_buf_size;
 }
 
+static unsigned char signature_data[] = {
+	0x30, 0x82, 0x01, 0x0a,  /* PKCS#7 signature header */
+	0x02, 0x82, 0x01, 0x01,
+	0x00, 0xab, 0xcd, 0xef,
+	0xde, 0xad, 0xbe, 0xef,
+	0xca, 0xfe, 0xba, 0xbe,
+	0xfa, 0xce, 0xfe, 0xed,
+};
+unsigned char *signature_ptr;
+
 #if VERBOSE
 # define INSNS_FMT \
 	"[{code=BPF_JMP|BPF_K|BPF_EXIT, dst_reg=BPF_REG_10" \
@@ -753,6 +762,46 @@ print_BPF_PROG_LOAD_attr4(const struct bpf_attr_check *check,
 	       ", expected_attach_type=BPF_CGROUP_INET6_BIND",
 	       (unsigned int) ARRAY_SIZE(insns), INSNS_ARG,
 	       license, IFINDEX_LO_STR);
+}
+
+static void
+init_BPF_PROG_LOAD_attr_signature(struct bpf_attr_check *check, size_t idx)
+{
+	struct BPF_PROG_LOAD_struct *attr = &check->data.BPF_PROG_LOAD_data;
+
+	if (!signature_ptr)
+		signature_ptr = tail_memdup(signature_data,
+					    sizeof(signature_data));
+
+	attr->insns = (uintptr_t) insns;
+	attr->license = (uintptr_t) license;
+	attr->signature = (uintptr_t) signature_ptr;
+	attr->signature_size = sizeof(signature_data);
+	attr->keyring_id = 123;
+}
+
+static void
+print_BPF_PROG_LOAD_attr_signature(const struct bpf_attr_check *check,
+				   unsigned long addr, size_t idx)
+{
+	printf("prog_type=BPF_PROG_TYPE_UNSPEC, insn_cnt=%u, insns=" INSNS_FMT
+	       ", license=\"%s\", log_level=0, log_size=0, log_buf=NULL"
+	       ", kern_version=KERNEL_VERSION(0, 0, 0)"
+	       ", prog_flags=0, prog_name=\"\", prog_ifindex=0"
+	       ", expected_attach_type=BPF_CGROUP_INET_INGRESS"
+	       ", prog_btf_fd=0" FD0_PATH
+	       ", func_info_rec_size=0, func_info=NULL, func_info_cnt=0"
+	       ", line_info_rec_size=0, line_info=NULL, line_info_cnt=0"
+	       ", attach_btf_id=0, attach_prog_fd=0" FD0_PATH
+	       ", core_relo_cnt=0, fd_array=NULL, core_relos=NULL"
+	       ", core_relo_rec_size=0, log_true_size=0"
+	       ", prog_token_fd=0" FD0_PATH ", fd_array_cnt=0"
+	       ", signature=\"\\x30\\x82\\x01\\x0a\\x02\\x82\\x01\\x01"
+	       "\\x00\\xab\\xcd\\xef\\xde\\xad\\xbe\\xef"
+	       "\\xca\\xfe\\xba\\xbe\\xfa\\xce\\xfe\\xed\""
+	       ", signature_size=%zu, keyring_id=123",
+	       (unsigned int) ARRAY_SIZE(insns), INSNS_ARG,
+	       license, sizeof(signature_data));
 }
 
 static_assert(ARRAY_SIZE(bpf_prog_types_xdata) == 33,
@@ -1039,7 +1088,7 @@ static struct bpf_attr_check BPF_PROG_LOAD_checks[] = {
 	},
 	{ /* 11 */
 		.data = { .BPF_PROG_LOAD_data = {
-			.signature = 0xdeadbeefbadc0ded,
+			.signature = 0xffffffff00000000,
 			.signature_size = 256,
 			.keyring_id = -1
 		} },
@@ -1073,9 +1122,18 @@ static struct bpf_attr_check BPF_PROG_LOAD_checks[] = {
 		       ", log_true_size=0"
 		       ", prog_token_fd=0" FD0_PATH
 		       ", fd_array_cnt=0"
-		       ", signature=0xdeadbeefbadc0ded"
+		       ", signature=" BIG_ADDR("0xffffffff00000000", "NULL")
 		       ", signature_size=256"
 		       ", keyring_id=-1"
+	},
+	{ /* 12 */
+		.data = { .BPF_PROG_LOAD_data = {
+			.insn_cnt = ARRAY_SIZE(insns),
+			.keyring_id = 123
+		} },
+		.size = offsetofend(struct BPF_PROG_LOAD_struct, keyring_id),
+		.init_fn = init_BPF_PROG_LOAD_attr_signature,
+		.print_fn = print_BPF_PROG_LOAD_attr_signature,
 	},
 };
 
@@ -1171,24 +1229,61 @@ static const struct bpf_attr_check BPF_PROG_ATTACH_checks[] = {
 		       ", attach_flags=0xdf80 /* BPF_F_??? */"
 		       ", replace_bpf_fd=-3"
 	},
-};
-
-
-static const struct bpf_attr_check BPF_PROG_DETACH_checks[] = {
 	{
-		.data = { .BPF_PROG_DETACH_data = { .target_fd = -1 } },
-		.size = offsetofend(struct BPF_PROG_DETACH_struct, target_fd),
-		.str = "target_fd=-1, attach_type=BPF_CGROUP_INET_INGRESS"
+		.data = { .BPF_PROG_ATTACH_data = {
+			.relative_fd = -1,
+			.expected_revision = 0xdeadbeefcafebabe,
+		} },
+		.size = offsetofend(struct BPF_PROG_ATTACH_struct,
+				    expected_revision),
+		.str = "target_fd=0" FD0_PATH
+		       ", attach_bpf_fd=0" FD0_PATH
+		       ", attach_type=BPF_CGROUP_INET_INGRESS"
+		       ", attach_flags=0"
+		       ", replace_bpf_fd=0" FD0_PATH
+		       ", relative_fd=-1"
+		       ", expected_revision=16045690984503098046"
 	},
 	{
-		.data = { .BPF_PROG_DETACH_data = {
-			.target_fd = -1,
-			.attach_type = 2
+		.data = { .BPF_PROG_ATTACH_data = {
+			.target_ifindex = 0xdeadbeef,
+			.attach_type = 0x2e,
+			.attach_flags = 0,
+			.relative_fd = -1,
+			.expected_revision = 0xfacefeed,
 		} },
-		.size = offsetofend(struct BPF_PROG_DETACH_struct, attach_type),
-		.str = "target_fd=-1, attach_type=BPF_CGROUP_INET_SOCK_CREATE"
-	}
+		.size = offsetofend(struct BPF_PROG_ATTACH_struct,
+				    expected_revision),
+		.str = "target_ifindex=3735928559"
+		       ", attach_bpf_fd=0" FD0_PATH
+		       ", attach_type=BPF_TCX_INGRESS"
+		       ", attach_flags=0"
+		       ", replace_bpf_fd=0" FD0_PATH
+		       ", relative_fd=-1"
+		       ", expected_revision=4207869677"
+	},
+	{
+		.data = { .BPF_PROG_ATTACH_data = {
+			.target_fd = -1,
+			.attach_bpf_fd = -2,
+			.attach_type = 0,
+			.attach_flags = 0x20,
+			.replace_bpf_fd = -3,
+			.relative_id = 0xfacefeed,
+			.expected_revision = 0xdeadbeef,
+		} },
+		.size = offsetofend(struct BPF_PROG_ATTACH_struct,
+				    expected_revision),
+		.str = "target_fd=-1, attach_bpf_fd=-2"
+		       ", attach_type=BPF_CGROUP_INET_INGRESS"
+		       ", attach_flags=BPF_F_ID"
+		       ", replace_bpf_fd=-3"
+		       ", relative_id=4207869677"
+		       ", expected_revision=3735928559"
+	},
 };
+
+#define BPF_PROG_DETACH_checks BPF_PROG_ATTACH_checks
 
 static const struct bpf_attr_check BPF_PROG_TEST_RUN_checks[] = {
 	{
@@ -1326,16 +1421,6 @@ static const struct bpf_attr_check BPF_PROG_GET_NEXT_ID_checks[] = {
 		} },
 		.size = offsetofend(struct BPF_PROG_GET_NEXT_ID_struct, next_id),
 		.str = "start_id=3134983661, next_id=3405705229"
-	},
-	{
-		.data = { .BPF_PROG_GET_NEXT_ID_data = {
-			.start_id = 0xbadc0ded,
-			.next_id = 0xcafef00d,
-			.open_flags = 0xffffff27
-		} },
-		.size = offsetofend(struct BPF_PROG_GET_NEXT_ID_struct, open_flags),
-		.str = "start_id=3134983661, next_id=3405705229"
-		       ", open_flags=0xffffff27 /* BPF_F_??? */"
 	}
 };
 
@@ -1349,25 +1434,7 @@ static const struct bpf_attr_check BPF_PROG_GET_FD_BY_ID_checks[] = {
 			.prog_id = 0xdeadbeef
 		} },
 		.size = offsetofend(struct BPF_PROG_GET_FD_BY_ID_struct, prog_id),
-		.str = "prog_id=3735928559, next_id=0"
-	},
-	{
-		.data = { .BPF_PROG_GET_FD_BY_ID_data = {
-			.prog_id = 0xbadc0ded,
-			.next_id = 0xcafef00d
-		} },
-		.size = offsetofend(struct BPF_PROG_GET_FD_BY_ID_struct, next_id),
-		.str = "prog_id=3134983661, next_id=3405705229"
-	},
-	{
-		.data = { .BPF_PROG_GET_FD_BY_ID_data = {
-			.prog_id = 0xbadc0ded,
-			.next_id = 0xcafef00d,
-			.open_flags = 0xffffff27
-		} },
-		.size = offsetofend(struct BPF_PROG_GET_FD_BY_ID_struct, open_flags),
-		.str = "prog_id=3134983661, next_id=3405705229"
-		       ", open_flags=0xffffff27 /* BPF_F_??? */"
+		.str = "prog_id=3735928559"
 	}
 };
 
@@ -1377,7 +1444,7 @@ static const struct bpf_attr_check BPF_MAP_GET_FD_BY_ID_checks[] = {
 			.map_id = 0xdeadbeef
 		} },
 		.size = offsetofend(struct BPF_MAP_GET_FD_BY_ID_struct, map_id),
-		.str = "map_id=3735928559, next_id=0"
+		.str = "map_id=3735928559"
 	},
 	{
 		.data = { .BPF_MAP_GET_FD_BY_ID_data = {
@@ -1385,7 +1452,7 @@ static const struct bpf_attr_check BPF_MAP_GET_FD_BY_ID_checks[] = {
 			.next_id = 0xcafef00d
 		} },
 		.size = offsetofend(struct BPF_MAP_GET_FD_BY_ID_struct, next_id),
-		.str = "map_id=3134983661, next_id=3405705229"
+		.str = "map_id=3134983661"
 	},
 	{
 		.data = { .BPF_MAP_GET_FD_BY_ID_data = {
@@ -1394,8 +1461,7 @@ static const struct bpf_attr_check BPF_MAP_GET_FD_BY_ID_checks[] = {
 			.open_flags = 0xffffff27
 		} },
 		.size = offsetofend(struct BPF_MAP_GET_FD_BY_ID_struct, open_flags),
-		.str = "map_id=3134983661, next_id=3405705229"
-		       ", open_flags=0xffffff27 /* BPF_F_??? */"
+		.str = "map_id=3134983661, open_flags=0xffffff27 /* BPF_F_??? */"
 	}
 };
 
@@ -1420,6 +1486,14 @@ static const struct bpf_attr_check BPF_OBJ_GET_INFO_BY_FD_checks[] = {
 
 static uint32_t prog_load_ids[] = { 0, 1, 0xffffffff, 2718281828, };
 uint32_t *prog_load_ids_ptr;
+
+static uint32_t prog_attach_flags_data[] = {
+	0x1,		/* BPF_F_ALLOW_OVERRIDE */
+	0x3,		/* BPF_F_ALLOW_OVERRIDE|BPF_F_ALLOW_MULTI */
+	0x20,		/* BPF_F_ID */
+	0xbeefca80,	/* Unknown flags */
+};
+uint32_t *prog_attach_flags_ptr;
 
 static void
 init_BPF_PROG_QUERY_attr4(struct bpf_attr_check *check, size_t idx)
@@ -1479,6 +1553,79 @@ print_BPF_PROG_QUERY_attr5(const struct bpf_attr_check *check,
 	       prog_load_ids_ptr + ARRAY_SIZE(prog_load_ids)
 #else
 	       ", prog_ids=%p, prog_cnt=5}", prog_load_ids_ptr
+#endif
+	       );
+}
+
+static void
+init_BPF_PROG_QUERY_attr6(struct bpf_attr_check *check, size_t idx)
+{
+	struct BPF_PROG_QUERY_struct *attr = &check->data.BPF_PROG_QUERY_data;
+
+	if (!prog_load_ids_ptr)
+		prog_load_ids_ptr = tail_memdup(prog_load_ids,
+						sizeof(prog_load_ids));
+	if (!prog_attach_flags_ptr)
+		prog_attach_flags_ptr =
+			tail_memdup(prog_attach_flags_data,
+				    sizeof(prog_attach_flags_data));
+
+	attr->prog_ids = (uintptr_t) prog_load_ids_ptr;
+	attr->prog_attach_flags = (uintptr_t) prog_attach_flags_ptr;
+	attr->prog_cnt = ARRAY_SIZE(prog_attach_flags_data);
+}
+
+static void
+print_BPF_PROG_QUERY_attr6(const struct bpf_attr_check *check,
+			   unsigned long addr, size_t idx)
+{
+	printf("query={target_fd=-1153374643"
+	       ", attach_type=0xfeedface /* BPF_??? */"
+	       ", query_flags=BPF_F_QUERY_EFFECTIVE|0xdeadf00c"
+	       ", attach_flags=0xbeefca80 /* BPF_F_??? */"
+#if defined(INJECT_RETVAL)
+	       ", prog_ids=[0, 1, 4294967295, 2718281828], prog_cnt=4"
+	       ", prog_attach_flags=[BPF_F_ALLOW_OVERRIDE"
+	       ", BPF_F_ALLOW_OVERRIDE|BPF_F_ALLOW_MULTI"
+	       ", BPF_F_ID"
+	       ", 0xbeefca80 /* BPF_F_??? */]}"
+#else
+	       ", prog_ids=%p, prog_cnt=4, prog_attach_flags=%p}",
+	       prog_load_ids_ptr, prog_attach_flags_ptr
+#endif
+	       );
+}
+
+static void
+init_BPF_PROG_QUERY_attr7(struct bpf_attr_check *check, size_t idx)
+{
+	struct BPF_PROG_QUERY_struct *attr = &check->data.BPF_PROG_QUERY_data;
+
+	attr->link_ids = (uintptr_t) prog_load_ids_ptr;
+	attr->link_attach_flags = (uintptr_t) prog_attach_flags_ptr;
+	attr->prog_cnt = ARRAY_SIZE(prog_attach_flags_data);
+}
+
+static void
+print_BPF_PROG_QUERY_attr7(const struct bpf_attr_check *check,
+			   unsigned long addr, size_t idx)
+{
+	printf("query={target_ifindex=3735928559"
+	       ", attach_type=BPF_TCX_INGRESS"
+	       ", query_flags=0, attach_flags=0"
+	       ", prog_ids=NULL, prog_cnt=4"
+	       ", prog_attach_flags=NULL"
+#if defined(INJECT_RETVAL)
+	       ", link_ids=[0, 1, 4294967295, 2718281828]"
+	       ", link_attach_flags=[BPF_F_ALLOW_OVERRIDE"
+	       ", BPF_F_ALLOW_OVERRIDE|BPF_F_ALLOW_MULTI"
+	       ", BPF_F_ID"
+	       ", 0xbeefca80 /* BPF_F_??? */]"
+	       ", revision=0xfacefeed}"
+#else
+	       ", link_ids=%p, link_attach_flags=%p"
+	       ", revision=0xfacefeed}",
+	       prog_load_ids_ptr, prog_attach_flags_ptr
 #endif
 	       );
 }
@@ -1563,6 +1710,28 @@ static struct bpf_attr_check BPF_PROG_QUERY_checks[] = {
 		.size = offsetofend(struct BPF_PROG_QUERY_struct, prog_cnt),
 		.init_fn = init_BPF_PROG_QUERY_attr5,
 		.print_fn = print_BPF_PROG_QUERY_attr5,
+	},
+	{ /* 6 */
+		.data = { .BPF_PROG_QUERY_data = {
+			.target_fd = 3141592653U,
+			.attach_type = 0xfeedface,
+			.query_flags = 0xdeadf00d,
+			.attach_flags = 0xbeefca80,
+		} },
+		.size = offsetofend(struct BPF_PROG_QUERY_struct,
+				    prog_attach_flags),
+		.init_fn = init_BPF_PROG_QUERY_attr6,
+		.print_fn = print_BPF_PROG_QUERY_attr6,
+	},
+	{ /* 7 */
+		.data = { .BPF_PROG_QUERY_data = {
+			.target_ifindex = 0xdeadbeef,
+			.attach_type = 0x2e,
+			.revision = 0xfacefeed,
+		} },
+		.size = offsetofend(struct BPF_PROG_QUERY_struct, revision),
+		.init_fn = init_BPF_PROG_QUERY_attr7,
+		.print_fn = print_BPF_PROG_QUERY_attr7,
 	},
 };
 
@@ -1654,6 +1823,18 @@ static const struct bpf_attr_check BPF_BTF_GET_FD_BY_ID_checks[] = {
 		.data = { .BPF_BTF_GET_FD_BY_ID_data = { .btf_id = 0xdeadbeef } },
 		.size = offsetofend(struct BPF_BTF_GET_FD_BY_ID_struct, btf_id),
 		.str = "btf_id=3735928559"
+	},
+	{
+		.data = { .BPF_BTF_GET_FD_BY_ID_data = {
+			.btf_id = 0xbadc0ded,
+			.open_flags = 0xffffff27,
+			.fd_by_id_token_fd = -100
+		} },
+		.size = offsetofend(struct BPF_BTF_GET_FD_BY_ID_struct,
+				    fd_by_id_token_fd),
+		.str = "btf_id=3134983661"
+		       ", open_flags=0xffffff27 /* BPF_F_??? */"
+		       ", fd_by_id_token_fd=-100"
 	}
 };
 
