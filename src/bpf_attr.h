@@ -423,7 +423,10 @@ struct BPF_MAP_LOOKUP_BATCH_struct /* batch */ {
 
 struct BPF_LINK_CREATE_struct /* link_create */ {
 	uint32_t prog_fd;
-	uint32_t target_fd;
+	union {
+		uint32_t target_fd;
+		uint32_t target_ifindex;
+	};
 	uint32_t attach_type;
 	uint32_t flags;
 	union {
@@ -445,12 +448,50 @@ struct BPF_LINK_CREATE_struct /* link_create */ {
 			uint64_t ATTRIBUTE_ALIGNED(8) addrs;
 			uint64_t ATTRIBUTE_ALIGNED(8) cookies;
 		} kprobe_multi;
+
+		struct {
+			uint32_t target_btf_id;
+			/*
+			 * The kernel UAPI is broken by Linux commit
+			 * v5.19-rc1~159^2~4^2~37^2~2 .
+			 */
+			uint64_t ATTRIBUTE_ALIGNED(8) cookie; /* skip check */
+		} tracing; /* skip check */
+
+		struct {
+			uint32_t pf;
+			uint32_t hooknum;
+			int32_t priority;
+			uint32_t flags;
+		} netfilter;
+
+		struct {
+			union {
+				uint32_t relative_fd;
+				uint32_t relative_id;
+			};
+			/*
+			 * The kernel UAPI is broken by Linux commit
+			 * v6.6-rc1~162^2~371^2~2^2~6.
+			 */
+			uint64_t ATTRIBUTE_ALIGNED(8) expected_revision; /* skip check */
+		} tcx; /* skip check */
+
+		struct {
+			uint64_t ATTRIBUTE_ALIGNED(8) path;
+			uint64_t ATTRIBUTE_ALIGNED(8) offsets;
+			uint64_t ATTRIBUTE_ALIGNED(8) ref_ctr_offsets;
+			uint64_t ATTRIBUTE_ALIGNED(8) cookies;
+			uint32_t cnt;
+			uint32_t flags;
+			uint32_t pid;
+		} uprobe_multi;
 	};
 };
 
 # define BPF_LINK_CREATE_struct_size \
-	sizeof(struct BPF_LINK_CREATE_struct)
-# define expected_BPF_LINK_CREATE_struct_size 48
+	offsetofend(struct BPF_LINK_CREATE_struct, uprobe_multi.pid)
+# define expected_BPF_LINK_CREATE_struct_size 60
 
 struct BPF_LINK_UPDATE_struct /* link_update */ {
 	uint32_t link_fd;

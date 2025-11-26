@@ -32,6 +32,8 @@
 #include "xlat/bpf_task_fd_type.h"
 #include "xlat/bpf_test_run_flags.h"
 #include "xlat/bpf_link_create_kprobe_multi_flags.h"
+#include "xlat/bpf_link_create_netfilter_flags.h"
+#include "xlat/bpf_link_create_uprobe_multi_flags.h"
 #include "xlat/ebpf_regs.h"
 #include "xlat/numa_node.h"
 
@@ -1642,11 +1644,19 @@ BEGIN_BPF_CMD_DECODER(BPF_LINK_CREATE)
 	tprint_struct_begin();
 	PRINT_FIELD_FD(attr, prog_fd, tcp);
 	tprint_struct_next();
-	PRINT_FIELD_FD(attr, target_fd, tcp);
+	/*
+	 * target_ifindex union member was added in Linux commit
+	 * v6.6-rc1~162^2~371^2~2^2~6.
+	 * Print target_fd or target_ifindex based on attach_type.
+	 */
+	if (bpf_attach_type_is_ifindex(attr.attach_type))
+		PRINT_FIELD_IFINDEX(attr, target_ifindex);
+	else
+		PRINT_FIELD_FD(attr, target_fd, tcp);
 	tprint_struct_next();
 	PRINT_FIELD_XVAL(attr, attach_type, bpf_attach_type, "BPF_???");
 	tprint_struct_next();
-	PRINT_FIELD_X(attr, flags);
+	PRINT_FIELD_FLAGS(attr, flags, bpf_attach_flags, "BPF_F_???");
 
 	if (len <= offsetof(struct BPF_LINK_CREATE_struct, target_btf_id))
 		goto print_bpf_link_create_end;
@@ -1695,6 +1705,59 @@ BEGIN_BPF_CMD_DECODER(BPF_LINK_CREATE)
 		attr_size = offsetofend(typeof(attr), perf_event.bpf_cookie);
 		break;
 
+	/* TODO: prog type == BPF_PROG_TYPE_TRACING */
+	case BPF_TRACE_FENTRY:
+	case BPF_TRACE_FEXIT:
+	case BPF_MODIFY_RETURN:
+	case BPF_LSM_MAC:
+		/* Introduced in Linux commit v5.19-rc1~159^2~4^2~37^2~2 */
+		tprint_struct_next();
+		tprints_field_name("tracing");
+		tprint_struct_begin();
+		PRINT_FIELD_U(attr.tracing, target_btf_id);
+		tprint_struct_next();
+		PRINT_FIELD_X(attr.tracing, cookie);
+		tprint_struct_end();
+		attr_size = offsetofend(typeof(attr), tracing.cookie);
+		break;
+
+	/* TODO: prog type == BPF_PROG_TYPE_NETFILTER */
+	case BPF_NETFILTER:
+		/* Introduced in Linux commit v6.4-rc6~18^2~5^2~2 */
+		tprint_struct_next();
+		tprints_field_name("netfilter");
+		tprint_struct_begin();
+		PRINT_FIELD_U(attr.netfilter, pf);
+		tprint_struct_next();
+		PRINT_FIELD_U(attr.netfilter, hooknum);
+		tprint_struct_next();
+		PRINT_FIELD_D(attr.netfilter, priority);
+		tprint_struct_next();
+		PRINT_FIELD_FLAGS(attr.netfilter, flags,
+				  bpf_link_create_netfilter_flags,
+				  "BPF_F_NETFILTER_???");
+		tprint_struct_end();
+		attr_size = offsetofend(typeof(attr), netfilter.flags);
+		break;
+
+	/* TODO: prog type == BPF_PROG_TYPE_SCHED_CLS */
+	case BPF_TCX_INGRESS:
+	case BPF_TCX_EGRESS:
+		/* Introduced in Linux commit v6.6-rc1~162^2~371^2~2^2~6 */
+		tprint_struct_next();
+		tprints_field_name("tcx");
+		tprint_struct_begin();
+		if (attr.flags & BPF_F_ID) {
+			PRINT_FIELD_U(attr.tcx, relative_id);
+		} else {
+			PRINT_FIELD_FD(attr.tcx, relative_fd, tcp);
+		}
+		tprint_struct_next();
+		PRINT_FIELD_X(attr.tcx, expected_revision);
+		tprint_struct_end();
+		attr_size = offsetofend(typeof(attr), tcx.expected_revision);
+		break;
+
 	/* TODO: prog type == BPF_PROG_TYPE_KPROBE */
 	case BPF_TRACE_KPROBE_MULTI: {
 		/* Introduced in Linux commit v5.18-rc1~136^2~11^2~28^2~10 */
@@ -1733,6 +1796,51 @@ BEGIN_BPF_CMD_DECODER(BPF_LINK_CREATE)
 			    tfetch_mem, print_xint_array_member, 0);
 		tprint_struct_end();
 		attr_size = offsetofend(typeof(attr), kprobe_multi.cookies);
+		break;
+	}
+
+	case BPF_TRACE_UPROBE_MULTI: {
+		/*
+		 * Introduced in Linux commit v6.6-rc1~10^2~4^2~16^2~25,
+		 * v6.6-rc1~10^2~4^2~16^2~24, and v6.6-rc1~10^2~4^2~16^2~23.
+		 */
+		uint64_t addr;
+
+		tprint_struct_next();
+		tprints_field_name("uprobe_multi");
+		tprint_struct_begin();
+		tprints_field_name("path");
+		print_big_u64_addr(attr.uprobe_multi.path);
+		printpath(tcp, attr.uprobe_multi.path);
+		tprint_struct_next();
+		tprints_field_name("offsets");
+		print_big_u64_addr(attr.uprobe_multi.offsets);
+		print_array(tcp, attr.uprobe_multi.offsets, attr.uprobe_multi.cnt,
+			    &addr, sizeof(addr),
+			    tfetch_mem, print_xint_array_member, 0);
+		tprint_struct_next();
+		tprints_field_name("ref_ctr_offsets");
+		print_big_u64_addr(attr.uprobe_multi.ref_ctr_offsets);
+		print_array(tcp, attr.uprobe_multi.ref_ctr_offsets,
+			    attr.uprobe_multi.cnt,
+			    &addr, sizeof(addr), tfetch_mem,
+			    print_xint_array_member, 0);
+		tprint_struct_next();
+		tprints_field_name("cookies");
+		print_big_u64_addr(attr.uprobe_multi.cookies);
+		print_array(tcp, attr.uprobe_multi.cookies, attr.uprobe_multi.cnt,
+			    &addr, sizeof(addr), tfetch_mem,
+			    print_xint_array_member, 0);
+		tprint_struct_next();
+		PRINT_FIELD_U(attr.uprobe_multi, cnt);
+		tprint_struct_next();
+		PRINT_FIELD_FLAGS(attr.uprobe_multi, flags,
+				  bpf_link_create_uprobe_multi_flags,
+				  "BPF_F_UPROBE_MULTI_???");
+		tprint_struct_next();
+		PRINT_FIELD_TGID(attr.uprobe_multi, pid, tcp);
+		tprint_struct_end();
+		attr_size = offsetofend(typeof(attr), uprobe_multi.pid);
 		break;
 	}
 
