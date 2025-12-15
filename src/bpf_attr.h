@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2015-2018 Dmitry V. Levin <ldv@strace.io>
- * Copyright (c) 2018-2024 The strace developers.
+ * Copyright (c) 2018-2025 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -290,11 +290,14 @@ struct BPF_BTF_LOAD_struct {
 	uint32_t btf_size;
 	uint32_t btf_log_size;
 	uint32_t btf_log_level;
+	uint32_t btf_log_true_size;
+	uint32_t btf_flags;
+	int32_t btf_token_fd;
 };
 
 # define BPF_BTF_LOAD_struct_size \
-	offsetofend(struct BPF_BTF_LOAD_struct, btf_log_level)
-# define expected_BPF_BTF_LOAD_struct_size 28
+	offsetofend(struct BPF_BTF_LOAD_struct, btf_token_fd)
+# define expected_BPF_BTF_LOAD_struct_size 40
 
 struct BPF_BTF_GET_FD_BY_ID_struct {
 	uint32_t btf_id;
@@ -342,13 +345,15 @@ struct bpf_map_info_struct {
 	uint32_t btf_id;
 	uint32_t btf_key_type_id;
 	uint32_t btf_value_type_id;
-	uint32_t pad;
+	uint32_t btf_vmlinux_id;
 	uint64_t ATTRIBUTE_ALIGNED(8) map_extra;
+	uint64_t ATTRIBUTE_ALIGNED(8) hash;
+	uint32_t hash_size;
 };
 
 # define bpf_map_info_struct_size \
-	sizeof(struct bpf_map_info_struct)
-# define expected_bpf_map_info_struct_size 88
+	offsetofend(struct bpf_map_info_struct, hash_size)
+# define expected_bpf_map_info_struct_size 100
 
 struct bpf_prog_info_struct {
 	uint32_t type;
@@ -391,11 +396,13 @@ struct bpf_prog_info_struct {
 	uint64_t ATTRIBUTE_ALIGNED(8) run_cnt;
 	uint64_t ATTRIBUTE_ALIGNED(8) recursion_misses;
 	uint32_t verified_insns;
+	uint32_t attach_btf_obj_id;
+	uint32_t attach_btf_id;
 };
 
 # define bpf_prog_info_struct_size \
-	offsetofend(struct bpf_prog_info_struct, verified_insns)
-# define expected_bpf_prog_info_struct_size 220
+	offsetofend(struct bpf_prog_info_struct, attach_btf_id)
+# define expected_bpf_prog_info_struct_size 228
 
 struct BPF_MAP_LOOKUP_BATCH_struct /* batch */ {
 	uint64_t ATTRIBUTE_ALIGNED(8) in_batch;
@@ -486,6 +493,30 @@ struct BPF_LINK_CREATE_struct /* link_create */ {
 			uint32_t flags;
 			uint32_t pid;
 		} uprobe_multi;
+
+		struct {
+			union {
+				uint32_t relative_fd;
+				uint32_t relative_id;
+			};
+			/*
+			 * The kernel UAPI is broken by Linux commit
+			 * v6.7-rc1~160^2~22^2~6^2~6.
+			 */
+			uint64_t ATTRIBUTE_ALIGNED(8) expected_revision;
+		} netkit; /* skip check */
+
+		struct {
+			union {
+				uint32_t relative_fd;
+				uint32_t relative_id;
+			};
+			/*
+			 * The kernel UAPI is broken by Linux commit
+			 * v6.17-rc1~125^2~101^2~3.
+			 */
+			uint64_t ATTRIBUTE_ALIGNED(8) expected_revision;
+		} cgroup; /* skip check */
 	};
 };
 
@@ -555,5 +586,16 @@ struct BPF_TOKEN_CREATE_struct /* token_create */ {
 # define BPF_TOKEN_CREATE_struct_size \
 	sizeof(struct BPF_TOKEN_CREATE_struct)
 # define expected_BPF_TOKEN_CREATE_struct_size 8
+
+struct BPF_PROG_STREAM_READ_BY_FD_struct /* prog_stream_read */ {
+	uint64_t ATTRIBUTE_ALIGNED(8) stream_buf;
+	uint32_t stream_buf_len;
+	uint32_t stream_id;
+	uint32_t prog_fd;
+};
+
+# define BPF_PROG_STREAM_READ_BY_FD_struct_size \
+	offsetofend(struct BPF_PROG_STREAM_READ_BY_FD_struct, prog_fd)
+# define expected_BPF_PROG_STREAM_READ_BY_FD_struct_size 20
 
 #endif /* !STRACE_BPF_ATTR_H */
