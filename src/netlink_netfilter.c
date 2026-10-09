@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018 Chen Jingpiao <chenjingpiao@gmail.com>
- * Copyright (c) 2018-2021 The strace developers.
+ * Copyright (c) 2018-2026 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -57,9 +57,9 @@ decode_netlink_netfilter(struct tcb *const tcp,
 			print_xlat_ex(nfmsg.res_id, "NFNL_SUBSYS_NFTABLES",
 				      XLAT_STYLE_DEFAULT);
 		} else {
-			tprints_arg_begin("htons");
+			tprints_fn_begin("htons");
 			PRINT_VAL_U(res_id);
-			tprint_arg_end();
+			tprint_fn_end();
 		}
 		tprint_struct_end();
 

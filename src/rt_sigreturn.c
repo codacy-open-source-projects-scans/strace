@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2021 Dmitry V. Levin <ldv@strace.io>
+ * Copyright (c) 2017-2026 Dmitry V. Levin <ldv@strace.io>
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -25,6 +25,7 @@ SYS_FUNC(rt_sigreturn)
 	if (sf_addr) {
 		const kernel_ulong_t sm_addr =
 			sf_addr + OFFSETOF_SIGMASK_IN_RT_SIGFRAME;
+		tprints_arg_name("sigmask");
 		print_sigset_addr(tcp, sm_addr);
 	}
 

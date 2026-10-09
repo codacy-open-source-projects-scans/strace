@@ -2,7 +2,7 @@
  * Decoder of classic BPF programs.
  *
  * Copyright (c) 2015-2017 Dmitry V. Levin <ldv@strace.io>
- * Copyright (c) 2017-2022 The strace developers.
+ * Copyright (c) 2017-2026 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -114,34 +114,34 @@ static void
 print_bpf_filter_stmt(const struct bpf_filter_block *const filter,
 		      const print_bpf_filter_fn print_k)
 {
-	tprints_arg_begin("BPF_STMT");
+	tprints_fn_begin("BPF_STMT");
 
 	print_bpf_filter_code(filter->code, false);
-	tprint_arg_next();
+	tprint_fn_next();
 
 	if (!print_k || !print_k(filter))
 		PRINT_VAL_X(filter->k);
 
-	tprint_arg_end();
+	tprint_fn_end();
 }
 
 static void
 print_bpf_filter_jump(const struct bpf_filter_block *const filter)
 {
-	tprints_arg_begin("BPF_JUMP");
+	tprints_fn_begin("BPF_JUMP");
 
 	print_bpf_filter_code(filter->code, false);
-	tprint_arg_next();
+	tprint_fn_next();
 
 	PRINT_VAL_X(filter->k);
-	tprint_arg_next();
+	tprint_fn_next();
 
 	PRINT_VAL_X(filter->jt);
-	tprint_arg_next();
+	tprint_fn_next();
 
 	PRINT_VAL_X(filter->jf);
 
-	tprint_arg_end();
+	tprint_fn_end();
 }
 
 struct bpf_filter_block_data {

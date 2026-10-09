@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2015 Dmitry V. Levin <ldv@strace.io>
- * Copyright (c) 2015-2022 The strace developers.
+ * Copyright (c) 2015-2026 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -52,10 +52,12 @@
 #  define ATTRIBUTE_FORMAT(args)	__attribute__((__format__ args))
 #  define ATTRIBUTE_ALIGNED(arg)	__attribute__((__aligned__(arg)))
 #  define ATTRIBUTE_PACKED	__attribute__((__packed__))
+#  define ATTRIBUTE_UNUSED	__attribute__((__unused__))
 # else
 #  define ATTRIBUTE_FORMAT(args)	/* empty */
 #  define ATTRIBUTE_ALIGNED(arg)	/* empty */
 #  define ATTRIBUTE_PACKED	/* empty */
+#  define ATTRIBUTE_UNUSED	/* empty */
 # endif
 
 /*

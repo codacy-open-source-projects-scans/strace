@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2021 The strace developers.
+ * Copyright (c) 2017-2026 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -53,7 +53,6 @@
 # define NF	SYSCALL_NEVER_FAILS
 # define MA	MAX_ARGS
 # define SI	MEMORY_MAPPING_CHANGE
-# define SE	STACKTRACE_CAPTURE_ON_ENTER
 # define CST	COMPAT_SYSCALL_TYPES
 # define TSD	TRACE_SECCOMP_DEFAULT
 # define TC	TRACE_CREDS

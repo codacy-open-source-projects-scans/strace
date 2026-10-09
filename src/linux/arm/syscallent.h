@@ -1,14 +1,14 @@
 /*
  * Copyright (c) 1993 Branko Lankester <branko@hacktic.nl>
  * Copyright (c) 1993, 1994, 1995 Rick Sladkey <jrs@world.std.com>
- * Copyright (c) 1995-2021 The strace developers.
+ * Copyright (c) 1995-2026 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 [  0] = { 0,	0,		SEN(restart_syscall),		"restart_syscall"	},
-[  1] = { 1,	TP|SE,		SEN(exit),			"exit"			},
+[  1] = { 1,	TP,		SEN(exit),			"exit"			},
 [  2] = { 0,	TP,		SEN(fork),			"fork"			},
 [  3] = { 3,	TD,		SEN(read),			"read"			},
 [  4] = { 3,	TD,		SEN(write),			"write"			},
@@ -18,7 +18,7 @@
 [  8] = { 2,	TD|TF,		SEN(creat),			"creat"			},
 [  9] = { 2,	TF,		SEN(link),			"link"			},
 [ 10] = { 1,	TF,		SEN(unlink),			"unlink"		},
-[ 11] = { 3,	CC|TF|TP|TSD|SE|SI,	SEN(execve),			"execve"		},
+[ 11] = { 3,	CC|TF|TP|TSD|SI,	SEN(execve),			"execve"		},
 [ 12] = { 1,	TF,		SEN(chdir),			"chdir"			},
 [ 13] = { 1,	TCL,		SEN(time),			"time"			},
 [ 14] = { 3,	TF,		SEN(mknod),			"mknod"			},
@@ -255,7 +255,7 @@
 [245] = { 5,	0,		SEN(io_getevents_time32),	"io_getevents"		},
 [246] = { 3,	0,		SEN(io_submit),			"io_submit"		},
 [247] = { 3,	0,		SEN(io_cancel),			"io_cancel"		},
-[248] = { 1,	TP|SE,		SEN(exit),			"exit_group"		},
+[248] = { 1,	TP,		SEN(exit),			"exit_group"		},
 [249] = { 4,	0,		SEN(lookup_dcookie),		"lookup_dcookie"	},
 [250] = { 1,	TD,		SEN(epoll_create),		"epoll_create"		},
 [251] = { 4,	TD,		SEN(epoll_ctl),			"epoll_ctl"		},
@@ -394,7 +394,7 @@
 [384] = { 3,	0,		SEN(getrandom),			"getrandom"		},
 [385] = { 2,	TD,		SEN(memfd_create),		"memfd_create"		},
 [386] = { 3,	TD,		SEN(bpf),			"bpf"			},
-[387] = { 5,	CC|TD|TF|TP|TSD|SE|SI,	SEN(execveat),			"execveat"		},
+[387] = { 5,	CC|TD|TF|TP|TSD|SI,	SEN(execveat),			"execveat"		},
 [388] = { 1,	TD,		SEN(userfaultfd),		"userfaultfd"		},
 [389] = { 3,	0,		SEN(membarrier),		"membarrier"		},
 [390] = { 3,	TM,		SEN(mlock2),			"mlock2"		},

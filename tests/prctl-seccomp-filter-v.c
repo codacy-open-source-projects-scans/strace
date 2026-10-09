@@ -2,7 +2,7 @@
  * Check verbose decoding of prctl PR_SET_SECCOMP SECCOMP_MODE_FILTER.
  *
  * Copyright (c) 2015-2016 Dmitry V. Levin <ldv@strace.io>
- * Copyright (c) 2016-2021 The strace developers.
+ * Copyright (c) 2016-2026 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
@@ -49,6 +49,9 @@ static const struct sock_filter filter[] = {
 	SOCK_FILTER_ALLOW_SYSCALL(close),
 	SOCK_FILTER_ALLOW_SYSCALL(exit),
 	SOCK_FILTER_ALLOW_SYSCALL(exit_group),
+#ifdef __NR_get_thread_area
+	SOCK_FILTER_ALLOW_SYSCALL(get_thread_area),
+#endif
 
 	/* deny syscalls */
 	SOCK_FILTER_DENY_SYSCALL(sync, EBUSY),
@@ -81,6 +84,9 @@ main(void)
 	PRINT_ALLOW_SYSCALL(close);
 	PRINT_ALLOW_SYSCALL(exit);
 	PRINT_ALLOW_SYSCALL(exit_group);
+#ifdef __NR_get_thread_area
+	PRINT_ALLOW_SYSCALL(get_thread_area);
+#endif
 
 	PRINT_DENY_SYSCALL(sync, EBUSY),
 	PRINT_DENY_SYSCALL(setsid, EPERM),

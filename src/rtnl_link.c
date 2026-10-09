@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2016 Fabien Siron <fabien.siron@epita.fr>
  * Copyright (c) 2017 JingPiao Chen <chenjingpiao@gmail.com>
- * Copyright (c) 2016-2025 The strace developers.
+ * Copyright (c) 2016-2026 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -38,6 +38,7 @@
 #include "xlat/rtnl_ifla_events.h"
 #include "xlat/rtnl_ifla_ext_filter_flags.h"
 #include "xlat/rtnl_ifla_info_attrs.h"
+#include "xlat/rtnl_br_stp_mode.h"
 #include "xlat/rtnl_ifla_info_data_bridge_attrs.h"
 #include "xlat/rtnl_ifla_info_data_tun_attrs.h"
 #include "xlat/rtnl_ifla_port_attrs.h"
@@ -216,6 +217,7 @@ static const nla_decoder_t ifla_brport_nla_decoders[] = {
 	[IFLA_BRPORT_MCAST_MAX_GROUPS]		= decode_nla_u32,
 	[IFLA_BRPORT_NEIGH_VLAN_SUPPRESS]	= decode_nla_u8,
 	[IFLA_BRPORT_BACKUP_NHID]		= decode_nla_u32,
+	[IFLA_BRPORT_NEIGH_FORWARD_GRAT]	= decode_nla_u8,
 };
 
 static bool
@@ -532,6 +534,21 @@ decode_ifla_br_mcast_qstate(struct tcb *const tcp,
 	return true;
 }
 
+static bool
+decode_ifla_br_stp_mode(struct tcb *const tcp,
+			const kernel_ulong_t addr,
+			const unsigned int len,
+			const void *const opaque_data)
+{
+	static const struct decode_nla_xlat_opts opts = {
+		.xlat = rtnl_br_stp_mode,
+		.dflt = "BR_STP_MODE_???",
+		.size = sizeof(uint32_t),
+	};
+
+	return decode_nla_xval(tcp, addr, len, &opts);
+}
+
 static const nla_decoder_t ifla_info_data_bridge_nla_decoders[] = {
 	[IFLA_BR_UNSPEC]			= NULL,
 	[IFLA_BR_FORWARD_DELAY]			= decode_nla_clock_t,
@@ -581,6 +598,9 @@ static const nla_decoder_t ifla_info_data_bridge_nla_decoders[] = {
 	[IFLA_BR_VLAN_STATS_PER_PORT]		= decode_nla_u8,
 	[IFLA_BR_MULTI_BOOLOPT]			= decode_ifla_br_boolopt,
 	[IFLA_BR_MCAST_QUERIER_STATE]		= decode_ifla_br_mcast_qstate,
+	[IFLA_BR_FDB_N_LEARNED]			= decode_nla_u32,
+	[IFLA_BR_FDB_MAX_LEARNED]		= decode_nla_u32,
+	[IFLA_BR_STP_MODE]			= decode_ifla_br_stp_mode,
 };
 
 static
@@ -995,9 +1015,9 @@ decode_ifla_vf_vlan_info(struct tcb *const tcp,
 	PRINT_FIELD_U(ivvi, qos);
 	tprint_struct_next();
 	tprints_field_name("vlan_proto");
-	tprints_arg_begin("htons");
+	tprints_fn_begin("htons");
 	printxval(ethernet_protocols, ntohs(ivvi.vlan_proto), "ETH_P_???");
-	tprint_arg_end();
+	tprint_fn_end();
 	tprint_struct_end();
 
 	return true;

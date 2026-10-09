@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2025 The strace developers.
+ * Copyright (c) 2017-2026 The strace developers.
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
@@ -692,8 +692,8 @@ test_nla_ops_family(const int fd)
 
 	static const struct strval32 nl80211_cmds[] = {
 		{ ARG_STR(NL80211_CMD_GET_WIPHY) },
-		{ ARG_STR(NL80211_CMD_NAN_CHANNEL_EVAC) },
-		{ NL80211_CMD_NAN_CHANNEL_EVAC + 1, "NL80211_CMD_???" },
+		{ ARG_STR(NL80211_CMD_STOP_PD) },
+		{ NL80211_CMD_STOP_PD + 1, "NL80211_CMD_???" },
 	};
 	TEST_NLA_OPS_FAMILY(NL80211_GENL_NAME, nl80211_cmds);
 

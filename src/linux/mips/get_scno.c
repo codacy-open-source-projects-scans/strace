@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2025 The strace developers.
+ * Copyright (c) 2015-2026 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -9,6 +9,10 @@
 static int
 arch_get_scno(struct tcb *tcp)
 {
+	/* v0 is a reliable source of the syscall number only on entering.  */
+	if (ptrace_get_syscall_info_supported && !ptrace_syscall_info_is_entry())
+		return 0;
+
 	tcp->scno = mips_REG_V0;
 
 	if (!scno_in_range(tcp->scno)) {

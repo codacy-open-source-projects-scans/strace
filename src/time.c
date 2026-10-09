@@ -2,7 +2,7 @@
  * Copyright (c) 1991, 1992 Paul Kranenburg <pk@cs.few.eur.nl>
  * Copyright (c) 1993 Branko Lankester <branko@hacktic.nl>
  * Copyright (c) 1993, 1994, 1995, 1996 Rick Sladkey <jrs@world.std.com>
- * Copyright (c) 1996-2025 The strace developers.
+ * Copyright (c) 1996-2026 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -257,18 +257,18 @@ printclockname(int clockid)
 			tprint_comment_begin();
 
 		if ((clockid & CLOCKFD_MASK) == CLOCKFD)
-			tprints_arg_begin("FD_TO_CLOCKID");
+			tprints_fn_begin("FD_TO_CLOCKID");
 			PRINT_VAL_D(CLOCKID_TO_FD(clockid));
 		else {
-			tprints_arg_begin(CPUCLOCK_PERTHREAD(clockid) ?
+			tprints_fn_begin(CPUCLOCK_PERTHREAD(clockid) ?
 					  "MAKE_THREAD_CPUCLOCK" :
 					  "MAKE_PROCESS_CPUCLOCK");
 			PRINT_VAL_D(CPUCLOCK_PID(clockid));
-			tprint_arg_next();
+			tprint_fn_next();
 			printxval(cpuclocknames, clockid & CLOCKFD_MASK,
 				  "CPUCLOCK_???");
 		}
-		tprint_arg_end();
+		tprint_fn_end();
 
 		if (xlat_verbose(xlat_verbosity) == XLAT_STYLE_VERBOSE)
 			tprint_comment_end();

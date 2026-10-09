@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2014 Mike Frysinger <vapier@gentoo.org>
  * Copyright (c) 2015-2016 Dmitry V. Levin <ldv@strace.io>
- * Copyright (c) 2016-2025 The strace developers.
+ * Copyright (c) 2016-2026 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -51,6 +51,21 @@ decode_fsxattr(struct tcb *const tcp, const kernel_ulong_t arg,
 	}
 }
 
+#include "xlat/fs_shutdown_flags.h"
+
+static void
+decode_fs_shutdown(struct tcb *const tcp, const kernel_ulong_t arg)
+{
+	uint32_t flags;
+
+	if (umove_or_printaddr(tcp, arg, &flags))
+		return;
+
+	tprint_indirect_begin();
+	printxval(fs_shutdown_flags, flags, "FS_SHUTDOWN_FLAGS_???");
+	tprint_indirect_end();
+}
+
 int
 fs_x_ioctl(struct tcb *const tcp, const unsigned int code,
 	   const kernel_ulong_t arg)
@@ -71,6 +86,11 @@ fs_x_ioctl(struct tcb *const tcp, const unsigned int code,
 	case FS_IOC_FSSETXATTR:
 		tprints_arg_next_name("arg");
 		decode_fsxattr(tcp, arg, false);
+		break;
+
+	case FS_IOC_SHUTDOWN:
+		tprints_arg_next_name("argp");
+		decode_fs_shutdown(tcp, arg);
 		break;
 
 	/* No arguments */

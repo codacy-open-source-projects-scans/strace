@@ -40,6 +40,7 @@ block_reset_raise_run
 block_reset_run
 bpf
 bpf-obj_get_info_by_fd
+bpf-obj_get_info_by_fd-link
 bpf-obj_get_info_by_fd-prog
 bpf-obj_get_info_by_fd-prog-v
 bpf-obj_get_info_by_fd-v
@@ -89,6 +90,9 @@ clone_ptrace-qq
 close_range
 copy_file_range
 count-f
+count_unknown
+count_unknown_many
+count_unknown_mixed
 creat
 delay
 delete_module
@@ -120,6 +124,7 @@ dup3
 dup3-P
 dup3-y
 dup3-yy
+env-i
 epoll_create
 epoll_create1
 epoll_ctl
@@ -160,6 +165,8 @@ fchmodat2
 fchown
 fchown32
 fchownat
+fchroot
+fchroot-y
 fcntl
 fcntl--pidns-translation
 fcntl64
@@ -416,6 +423,12 @@ ioctl_nsfs
 ioctl_nsfs-ns_get_pid
 ioctl_nsfs-ns_get_pid--pidns-translation
 ioctl_nsfs-ns_mnt_get
+ioctl_pidfd_get_info
+ioctl_pidfd_get_info-success
+ioctl_pidfd_get_info-success-Xabbrev
+ioctl_pidfd_get_info-success-Xraw
+ioctl_pidfd_get_info-success-Xverbose
+ioctl_pidfd_namespace
 ioctl_perf
 ioctl_perf-success
 ioctl_ptp
@@ -451,6 +464,12 @@ ioctl_tee
 ioctl_termios
 ioctl_termios-v
 ioctl_tiocm
+ioctl_tun
+ioctl_tun-success
+ioctl_tun-v
+ioctl_tun-v-success
+ioctl_tun-y
+ioctl_tun-y-success
 ioctl_ubi
 ioctl_ubi-success
 ioctl_udmabuf
@@ -696,6 +715,9 @@ nlattr_dcbmsg
 nlattr_fib_rule_hdr
 nlattr_ifaddrlblmsg
 nlattr_ifaddrmsg
+nlattr_ifaddrmsg-Xabbrev
+nlattr_ifaddrmsg-Xraw
+nlattr_ifaddrmsg-Xverbose
 nlattr_ifinfomsg
 nlattr_ifla_af_spec
 nlattr_ifla_brport
@@ -1136,6 +1158,7 @@ sigprocmask
 sigreturn
 sigsuspend
 sleep
+sleep-timing
 so_error
 so_linger
 so_peercred
@@ -1205,6 +1228,7 @@ strace--syscall-limit-status-c
 strace--syscall-limit-status-summary
 strace--syscall-limit-summary
 strace-Y-0123456789
+strace-k-z
 strace-n
 strace-no-x
 strace-p-Y-p2

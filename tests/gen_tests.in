@@ -31,6 +31,7 @@ arch_prctl-success-Xverbose	+prctl-success.sh ARCH_PRCTL_INJECT_RETVALS="0 1 2 3
 at_fdcwd-pathmax	-a36 --trace=openat -y -P sample
 bpf	-a20
 bpf-obj_get_info_by_fd	-a20 -y -e trace=bpf
+bpf-obj_get_info_by_fd-link	-a20 -y -v -e trace=bpf
 bpf-obj_get_info_by_fd-prog	-a20 -y -e trace=bpf
 bpf-obj_get_info_by_fd-prog-v	-a20 -y -v -e trace=bpf
 bpf-obj_get_info_by_fd-v	-a20 -y -v -e trace=bpf
@@ -109,7 +110,7 @@ epoll_create	-a17
 epoll_create1	-a28
 epoll_ctl
 epoll_pwait
-epoll_pwait2	9>>/dev/full
+epoll_pwait2	--trace=epoll_pwait2 9>>/dev/full
 epoll_pwait2-P	--trace=epoll_pwait2 -P /dev/full 9>>/dev/full
 epoll_pwait2-y	--trace=epoll_pwait2 -y 9>>/dev/full
 epoll_wait	-a26
@@ -179,6 +180,8 @@ fchownat--secontext	--secontext -e trace=fchownat
 fchownat--secontext_full	--secontext=full -e trace=fchownat
 fchownat--secontext_full_mismatch	-e secontext=full,mismatch -e trace=fchownat
 fchownat--secontext_mismatch	-e secontext=mismatch -e trace=fchownat
+fchroot	-a14
+fchroot-y	-e trace=fchroot -y -a14 </dev/full
 fcntl	-a8
 fcntl--pidns-translation	test_pidns -a8 -e trace=fcntl
 fcntl64	-a8
@@ -437,6 +440,12 @@ ioctl_nsfs	+ioctl.test -esignal=none
 ioctl_nsfs-ns_get_pid	+ioctl.test -a33
 ioctl_nsfs-ns_get_pid--pidns-translation	test_pidns -etrace=ioctl -a25 "QUIRK:START-OF-TEST-OUTPUT:ioctl(-1, NS_GET_USERNS)"
 ioctl_nsfs-ns_mnt_get	+ioctl.test
+ioctl_pidfd_get_info	+ioctl.test
+ioctl_pidfd_get_info-success	+ioctl-success.sh -a32
+ioctl_pidfd_get_info-success-Xabbrev	+ioctl-success.sh -a32 -Xabbrev
+ioctl_pidfd_get_info-success-Xraw	+ioctl-success.sh -a24 -Xraw
+ioctl_pidfd_get_info-success-Xverbose	+ioctl-success.sh -a49 -Xverbose
+ioctl_pidfd_namespace	+ioctl.test
 ioctl_perf	+ioctl.test
 ioctl_perf-success +ioctl-success.sh -a35
 ioctl_ptp			+ioctl.test -a29
@@ -472,6 +481,12 @@ ioctl_tee	+ioctl.test
 ioctl_termios	+ioctl.test
 ioctl_termios-v	+ioctl.test -v
 ioctl_tiocm	+ioctl.test
+ioctl_tun	+ioctl.test -a25
+ioctl_tun-success	+ioctl-success.sh -a25
+ioctl_tun-v	+ioctl.test -a25 -v
+ioctl_tun-v-success	+ioctl-success.sh -a25 -v
+ioctl_tun-y	+ioctl.test -a25 -y
+ioctl_tun-y-success	+ioctl-success.sh -a25 -y
 ioctl_ubi	+ioctl.test
 ioctl_ubi-success	+ioctl-success.sh -a24
 ioctl_udmabuf	+ioctl.test -y
@@ -698,6 +713,9 @@ nlattr_dcbmsg			+netlink_sock_diag.test
 nlattr_fib_rule_hdr		+netlink_sock_diag.test
 nlattr_ifaddrlblmsg		+netlink_sock_diag.test
 nlattr_ifaddrmsg		+netlink_sock_diag.test
+nlattr_ifaddrmsg-Xabbrev	+netlink_sock_diag.test -Xabbrev
+nlattr_ifaddrmsg-Xraw		+netlink_sock_diag.test -Xraw
+nlattr_ifaddrmsg-Xverbose	+netlink_sock_diag.test -Xverbose
 nlattr_ifinfomsg		+netlink_sock_diag.test
 nlattr_ifla_af_spec		+netlink_sock_diag.test
 nlattr_ifla_brport		+netlink_sock_diag.test

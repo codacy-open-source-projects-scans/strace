@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2016 Fabien Siron <fabien.siron@epita.fr>
  * Copyright (c) 2017 JingPiao Chen <chenjingpiao@gmail.com>
- * Copyright (c) 2016-2021 The strace developers.
+ * Copyright (c) 2016-2026 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -65,9 +65,9 @@ decode_mdba_mdb_entry_info(struct tcb *const tcp,
 				sizeof(entry.addr.u), "u");
 		tprint_struct_next();
 		tprints_field_name("proto");
-		tprints_arg_begin("htons");
+		tprints_fn_begin("htons");
 		printxval(addrfams, proto, "AF_???");
-		tprint_arg_end();
+		tprint_fn_end();
 		tprint_struct_end();
 		tprint_struct_end();
 	}

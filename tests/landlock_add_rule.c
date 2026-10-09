@@ -2,7 +2,7 @@
  * Check decoding of landlock_add_rule syscall.
  *
  * Copyright (c) 2021 Eugene Syromyatnikov <evgsyr@gmail.com>
- * Copyright (c) 2021-2024 The strace developers.
+ * Copyright (c) 2021-2026 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
@@ -75,12 +75,13 @@ main(void)
 	/* Bogus values */
 	sys_landlock_add_rule(0xdeadc0de, 0xfacebeef, attr_path + 1, 1);
 	printf("landlock_add_rule(-559038242"
-	       ", 0xfacebeef /* LANDLOCK_RULE_??? */, %p, 0x1) = %s\n",
+	       ", 0xfacebeef /* LANDLOCK_RULE_??? */, %p"
+	       ", LANDLOCK_ADD_RULE_QUIET) = %s\n",
 	       attr_path + 1, errstr);
 
 	sys_landlock_add_rule(1729, 3, attr_path + 1, 0xffffffff);
 	printf("landlock_add_rule(1729, 0x3 /* LANDLOCK_RULE_??? */, %p"
-	       ", 0xffffffff) = %s\n",
+	       ", LANDLOCK_ADD_RULE_QUIET|0xfffffffe) = %s\n",
 	       attr_path + 1, errstr);
 
 	/* Invalid pointer */
@@ -106,8 +107,10 @@ main(void)
 	}, net_vals[] = {
 		{ ARG_STR(LANDLOCK_ACCESS_NET_BIND_TCP) },
 		{ ARG_STR(LANDLOCK_ACCESS_NET_CONNECT_TCP) },
-		{ ARG_ULL_STR(LANDLOCK_ACCESS_NET_BIND_TCP|LANDLOCK_ACCESS_NET_CONNECT_TCP|0xfffffffffffffffc) },
-		{ ARG_ULL_STR(0xfffffffffffffffc)
+		{ ARG_STR(LANDLOCK_ACCESS_NET_BIND_UDP) },
+		{ ARG_STR(LANDLOCK_ACCESS_NET_CONNECT_SEND_UDP) },
+		{ ARG_ULL_STR(LANDLOCK_ACCESS_NET_BIND_TCP|LANDLOCK_ACCESS_NET_CONNECT_TCP|LANDLOCK_ACCESS_NET_BIND_UDP|LANDLOCK_ACCESS_NET_CONNECT_SEND_UDP|0xfffffffffffffff0) },
+		{ ARG_ULL_STR(0xfffffffffffffff0)
 			" /* LANDLOCK_ACCESS_NET_??? */" },
 	};
 	static const struct strival32 parent_fd_vals[] = {

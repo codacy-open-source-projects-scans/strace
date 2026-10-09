@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2016 Fabien Siron <fabien.siron@epita.fr>
  * Copyright (c) 2017 JingPiao Chen <chenjingpiao@gmail.com>
- * Copyright (c) 2016-2025 The strace developers.
+ * Copyright (c) 2016-2026 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -267,10 +267,10 @@ DECL_NLA(xval)
 		if (opts->process_fn)
 			data = opts->process_fn(data);
 		if (opts->fn_str)
-			tprints_arg_begin(opts->fn_str);
+			tprints_fn_begin(opts->fn_str);
 		printxval_ex(opts->xlat, data, opts->dflt, opts->style);
 		if (opts->fn_str)
-			tprint_arg_end();
+			tprint_fn_end();
 	}
 
 	return true;
@@ -359,12 +359,12 @@ DECL_NLA(flags)
 		if (opts->process_fn)
 			data = opts->process_fn(data);
 		if (opts->fn_str)
-			tprints_arg_begin(opts->fn_str);
+			tprints_fn_begin(opts->fn_str);
 		tprint_flags_begin();
 		printflags_ex(data, opts->dflt, opts->style, opts->xlat, NULL);
 		tprint_flags_end();
 		if (opts->fn_str)
-			tprint_arg_end();
+			tprint_fn_end();
 	}
 
 	return true;
@@ -404,9 +404,9 @@ DECL_NLA(be16)
 	if (len < sizeof(num))
 		return false;
 	else if (!umove_or_printaddr(tcp, addr, &num)) {
-		tprints_arg_begin("htons");
+		tprints_fn_begin("htons");
 		PRINT_VAL_U(ntohs(num));
-		tprint_arg_end();
+		tprint_fn_end();
 	}
 
 	return true;
@@ -419,9 +419,9 @@ DECL_NLA(be32)
 	if (len < sizeof(num))
 		return false;
 	else if (!umove_or_printaddr(tcp, addr, &num)) {
-		tprints_arg_begin("htonl");
+		tprints_fn_begin("htonl");
 		PRINT_VAL_U(ntohl(num));
-		tprint_arg_end();
+		tprint_fn_end();
 	}
 
 	return true;
@@ -435,9 +435,9 @@ DECL_NLA(be64)
 	if (len < sizeof(num))
 		return false;
 	else if (!umove_or_printaddr(tcp, addr, &num)) {
-		tprints_arg_begin("htobe64");
+		tprints_fn_begin("htobe64");
 		PRINT_VAL_U(be64toh(num));
-		tprint_arg_end();
+		tprint_fn_end();
 	}
 
 	return true;

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2015-2021 Dmitry V. Levin <ldv@strace.io>
- * Copyright (c) 2021-2023 The strace developers.
+ * Copyright (c) 2021-2026 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -15,8 +15,8 @@
 # include <asm/sigcontext.h>
 #endif
 
-/* The following function might be unused, hence the inline qualifier.  */
-static inline void
+/* The following function might be unused.  */
+static void ATTRIBUTE_UNUSED
 print_sigmask_addr_size(const void *const addr, const unsigned int size)
 {
 	tprint_struct_begin();

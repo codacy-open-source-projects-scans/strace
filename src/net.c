@@ -3,7 +3,7 @@
  * Copyright (c) 1993 Branko Lankester <branko@hacktic.nl>
  * Copyright (c) 1993, 1994, 1995, 1996 Rick Sladkey <jrs@world.std.com>
  * Copyright (c) 1996-2000 Wichert Akkerman <wichert@cistron.nl>
- * Copyright (c) 1999-2025 The strace developers.
+ * Copyright (c) 1999-2026 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -135,10 +135,10 @@ SYS_FUNC(socket)
 		break;
 
 	case AF_PACKET:
-		tprints_arg_begin("htons");
+		tprints_fn_begin("htons");
 		printxval(ethernet_protocols, ntohs(tcp->u_arg[2]),
 			  "ETH_P_???");
-		tprint_arg_end();
+		tprint_fn_end();
 		break;
 
 	case AF_IRDA:
@@ -1080,6 +1080,7 @@ print_getsockopt(struct tcb *const tcp, const unsigned int level,
 		case SO_RCVPRIORITY:
 		case SO_PASSRIGHTS:
 		case SO_INQ:
+		case SO_RIGHTS_NOTRUNC:
 			if (rlen >= (int) sizeof(int))
 				printnum_int(tcp, addr, "%d");
 			else
@@ -1394,6 +1395,7 @@ print_setsockopt(struct tcb *const tcp, const unsigned int level,
 		case SO_RCVPRIORITY:
 		case SO_PASSRIGHTS:
 		case SO_INQ:
+		case SO_RIGHTS_NOTRUNC:
 			if (len < (int) sizeof(int))
 				printaddr(addr);
 			else

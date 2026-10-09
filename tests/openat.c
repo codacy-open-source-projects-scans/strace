@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2016 Katerina Koukiou <k.koukiou@gmail.com>
- * Copyright (c) 2016-2024 The strace developers.
+ * Copyright (c) 2016-2026 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
@@ -76,6 +76,9 @@ main(void)
 # endif
 # ifdef __O_SYNC
 		{ ARG_STR(__O_SYNC) },
+# endif
+# ifdef O_EMPTYPATH
+		{ ARG_STR(O_EMPTYPATH) },
 # endif
 # ifdef O_PATH
 		{ ARG_STR(O_PATH) },

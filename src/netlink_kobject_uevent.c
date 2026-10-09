@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018 Harsha Sharma <harshasharmaiitr@gmail.com>
- * Copyright (c) 2018-2021 The strace developers.
+ * Copyright (c) 2018-2026 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -14,9 +14,9 @@
 #define PRINT_FIELD_HTONL_X(where_, field_)				\
 	do {								\
 		tprints_field_name(#field_);				\
-		tprints_arg_begin("htonl");				\
+		tprints_fn_begin("htonl");				\
 		PRINT_VAL_X(ntohl((where_).field_));			\
-		tprint_arg_end();					\
+		tprint_fn_end();					\
 	} while (0)
 
 void

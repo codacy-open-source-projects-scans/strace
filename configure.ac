@@ -389,9 +389,6 @@ AC_CHECK_TYPES([struct mmsghdr],,, [#include <sys/socket.h>])
 AC_CHECK_TYPES([__kernel_long_t, __kernel_ulong_t],,,
 [#include <asm/posix_types.h>])
 
-AC_CHECK_TYPES([struct __kernel_timespec, struct __kernel_sock_timeval],,,
-[#include <linux/time_types.h>])
-
 AC_CHECK_TYPES([struct stat64, struct __old_kernel_stat],,,
 [#include <sys/types.h>
 #include <asm/stat.h>])
@@ -490,15 +487,6 @@ AC_CHECK_HEADERS(m4_normalize([
 	linux/netfilter_ipv6/ip6_tables.h
 ]),,, [#include <netinet/in.h>
 #include <net/if.h>])
-
-AC_CHECK_HEADERS([linux/bpf.h], [
-	AC_CHECK_TYPES(m4_normalize([
-		struct bpf_insn,
-		struct bpf_map_info,
-		struct bpf_prog_info
-	]),,, [#include <linux/bpf.h>])
-	st_BPF_ATTR
-])
 
 AC_CHECK_HEADERS([bluetooth/bluetooth.h], [
 	AC_CHECK_MEMBERS([struct sockaddr_hci.hci_channel],,,

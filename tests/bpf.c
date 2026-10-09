@@ -18,10 +18,7 @@
 
 #include "scno.h"
 
-#ifdef HAVE_LINUX_BPF_H
-# include <linux/bpf.h>
-#endif
-
+#include <linux/bpf.h>
 #include "bpf_attr.h"
 #include "print_fields.h"
 #include "xmalloc.h"
@@ -48,16 +45,6 @@
 
 #ifndef FD0_PATH
 # define FD0_PATH ""
-#endif
-
-#ifndef HAVE_STRUCT_BPF_INSN
-struct bpf_insn {
-	uint8_t	code;
-	uint8_t	dst_reg:4;
-	uint8_t	src_reg:4;
-	int16_t	off;
-	int32_t	imm;
-};
 #endif
 
 #define BPF_ATTR_DATA_FIELD(cmd_) struct cmd_ ## _struct cmd_ ## _data
@@ -280,7 +267,7 @@ init_BPF_MAP_CREATE_attr7(struct bpf_attr_check *check, size_t idx)
 	attr->map_ifindex = ifindex_lo();
 }
 
-static_assert(ARRAY_SIZE(bpf_map_types_xdata) == 35,
+static_assert(ARRAY_SIZE(bpf_map_types_xdata) == 36,
 	      "The map_type for tests 1 and 2 below needs to be updated");
 static struct bpf_attr_check BPF_MAP_CREATE_checks[] = {
 	{
@@ -291,7 +278,7 @@ static struct bpf_attr_check BPF_MAP_CREATE_checks[] = {
 	},
 	{ /* 1 */
 		.data = { .BPF_MAP_CREATE_data = {
-			.map_type = 34,
+			.map_type = 35,
 			.key_size = 4,
 			.value_size = 8,
 			.max_entries = 256,
@@ -301,7 +288,7 @@ static struct bpf_attr_check BPF_MAP_CREATE_checks[] = {
 			.map_name = "0123456789abcde",
 		} },
 		.size = offsetof(struct BPF_MAP_CREATE_struct, map_name) + 8,
-		.str = "map_type=BPF_MAP_TYPE_INSN_ARRAY, key_size=4"
+		.str = "map_type=BPF_MAP_TYPE_RHASH, key_size=4"
 		       ", value_size=8, max_entries=256"
 		       ", map_flags=BPF_F_NO_PREALLOC|BPF_F_NO_COMMON_LRU"
 				   "|BPF_F_NUMA_NODE|BPF_F_RDONLY|BPF_F_WRONLY"
@@ -313,7 +300,7 @@ static struct bpf_attr_check BPF_MAP_CREATE_checks[] = {
 	},
 	{ /* 2 */
 		.data = { .BPF_MAP_CREATE_data = {
-			.map_type = 35,
+			.map_type = 36,
 			.key_size = 0xface1e55,
 			.value_size = 0xbadc0ded,
 			.max_entries = 0xbeefcafe,
@@ -324,7 +311,7 @@ static struct bpf_attr_check BPF_MAP_CREATE_checks[] = {
 			.map_ifindex = 3141592653,
 		} },
 		.size = offsetofend(struct BPF_MAP_CREATE_struct, map_ifindex),
-		.str = "map_type=0x23 /* BPF_MAP_TYPE_??? */"
+		.str = "map_type=0x24 /* BPF_MAP_TYPE_??? */"
 		       ", key_size=4207812181, value_size=3134983661"
 		       ", max_entries=3203386110"
 		       ", map_flags=0xffffc000 /* BPF_F_??? */"
@@ -1716,7 +1703,7 @@ static struct bpf_attr_check BPF_PROG_QUERY_checks[] = {
 	{ /* 2 */
 		.data = { .BPF_PROG_QUERY_data = {
 			.target_fd = 3141592653U,
-			.attach_type = 59,
+			.attach_type = 62,
 			.query_flags = 0xfffffffe,
 			.attach_flags = 0xffffdf80,
 			.prog_ids = 0xffffffffffffffffULL,
@@ -1724,7 +1711,7 @@ static struct bpf_attr_check BPF_PROG_QUERY_checks[] = {
 		} },
 		.size = offsetofend(struct BPF_PROG_QUERY_struct, prog_cnt),
 		.str = "query={target_fd=-1153374643"
-		       ", attach_type=0x3b /* BPF_??? */"
+		       ", attach_type=0x3e /* BPF_??? */"
 		       ", query_flags=0xfffffffe /* BPF_F_QUERY_??? */"
 		       ", attach_flags=0xffffdf80 /* BPF_F_??? */"
 		       ", prog_ids="
@@ -2160,6 +2147,9 @@ static const uint8_t special_attach_types[] = {
 	54 /* BPF_NETKIT_PRIMARY */,
 	55 /* BPF_NETKIT_PEER */,
 	58 /* BPF_TRACE_FSESSION */,
+	59 /* BPF_TRACE_FENTRY_MULTI */,
+	60 /* BPF_TRACE_FEXIT_MULTI */,
+	61 /* BPF_TRACE_FSESSION_MULTI */,
 };
 
 static size_t
@@ -2297,6 +2287,52 @@ print_BPF_LINK_CREATE_attr12(const struct bpf_attr_check *check,
 		}
 	}
 	printf("]}}");
+}
+
+static const uint32_t tm_ids_data[] = { 1, 42, 0xfacefeed, 0xbadc0ded };
+static uint32_t *tm_ids_data_p;
+static const uint64_t tm_cookies_data[] = { 0, 0xdeadc0defacecafeULL,
+					    0x123456789abcdef0ULL,
+					    0xfeedface00000001ULL };
+static uint64_t *tm_cookies_data_p;
+
+static_assert(ARRAY_SIZE(tm_ids_data) == ARRAY_SIZE(tm_cookies_data),
+	      "tm_ids_data and tm_cookies_data must have the same count");
+
+static void
+init_BPF_LINK_CREATE_tracing_multi(struct bpf_attr_check *check, size_t idx)
+{
+	struct BPF_LINK_CREATE_struct *attr = &check->data.BPF_LINK_CREATE_data;
+
+	if (!tm_ids_data_p)
+		tm_ids_data_p = tail_memdup(tm_ids_data, sizeof(tm_ids_data));
+	if (!tm_cookies_data_p)
+		tm_cookies_data_p = tail_memdup(tm_cookies_data,
+						sizeof(tm_cookies_data));
+
+	attr->tracing_multi.cnt = ARRAY_SIZE(tm_ids_data) + idx;
+	attr->tracing_multi.ids = (uintptr_t) tm_ids_data_p;
+	attr->tracing_multi.cookies = (uintptr_t) tm_cookies_data_p;
+}
+
+static void
+print_BPF_LINK_CREATE_tracing_multi(const struct bpf_attr_check *check,
+				    unsigned long addr, size_t idx)
+{
+	printf("link_create={prog_fd=0" FD0_PATH ", target_fd=0" FD0_PATH
+	       ", attach_type=BPF_TRACE_FENTRY_MULTI, flags=0"
+	       ", tracing_multi={ids=[1, 42, 4207869677, 3134983661");
+	if (idx) {
+		printf(", ... /* %p */",
+		       tm_ids_data_p + ARRAY_SIZE(tm_ids_data));
+	}
+	printf("], cookies=[0, 0xdeadc0defacecafe"
+	       ", 0x123456789abcdef0, 0xfeedface00000001");
+	if (idx) {
+		printf(", ... /* %p */",
+		       tm_cookies_data_p + ARRAY_SIZE(tm_cookies_data));
+	}
+	printf("], cnt=%zu}}", ARRAY_SIZE(tm_ids_data) + idx);
 }
 
 static struct bpf_attr_check BPF_LINK_CREATE_checks[] = {
@@ -2594,7 +2630,7 @@ static struct bpf_attr_check BPF_LINK_CREATE_checks[] = {
 	},
 
 	/* uprobe_multi struct tests */
-	{ /* 22 */
+	{ /* 22: old struct size (without path_fd) */
 		.data = { .BPF_LINK_CREATE_data = {
 			.attach_type = 48, /* BPF_TRACE_UPROBE_MULTI */
 		} },
@@ -2603,9 +2639,23 @@ static struct bpf_attr_check BPF_LINK_CREATE_checks[] = {
 		.str = "link_create={prog_fd=0" FD0_PATH", target_fd=0" FD0_PATH
 		       ", attach_type=BPF_TRACE_UPROBE_MULTI, flags=0"
 		       ", uprobe_multi={path=NULL, offsets=NULL"
-		       ", ref_ctr_offsets=NULL, cookies=NULL, cnt=0, flags=0, pid=0}}"
+		       ", ref_ctr_offsets=NULL, cookies=NULL"
+		       ", cnt=0, flags=0, pid=0}}"
 	},
 	{ /* 23 */
+		.data = { .BPF_LINK_CREATE_data = {
+			.attach_type = 48, /* BPF_TRACE_UPROBE_MULTI */
+		} },
+		.size = offsetofend(struct BPF_LINK_CREATE_struct,
+				    uprobe_multi.path_fd),
+		.str = "link_create={prog_fd=0" FD0_PATH", target_fd=0" FD0_PATH
+		       ", attach_type=BPF_TRACE_UPROBE_MULTI, flags=0"
+		       ", uprobe_multi={path=NULL, offsets=NULL"
+		       ", ref_ctr_offsets=NULL, cookies=NULL"
+		       ", cnt=0, flags=0, pid=0"
+		       ", path_fd=0" FD0_PATH"}}"
+	},
+	{ /* 24 */
 		.data = { .BPF_LINK_CREATE_data = {
 			.attach_type = 48, /* BPF_TRACE_UPROBE_MULTI */
 			.uprobe_multi = {
@@ -2616,21 +2666,23 @@ static struct bpf_attr_check BPF_LINK_CREATE_checks[] = {
 				.cnt = 5,
 				.flags = 1, /* BPF_F_UPROBE_MULTI_RETURN */
 				.pid = 1735928559,
+				.path_fd = 718425901,
 			},
 		} },
 		.size = offsetofend(struct BPF_LINK_CREATE_struct,
-				    uprobe_multi.pid),
+				    uprobe_multi.path_fd),
 		.str = "link_create={prog_fd=0" FD0_PATH", target_fd=0" FD0_PATH
 		       ", attach_type=BPF_TRACE_UPROBE_MULTI, flags=0"
 		       ", uprobe_multi={path=" BIG_ADDR("0xffffffff00000000", "NULL")
 		       ", offsets=" BIG_ADDR("0xffffffff00000001", "0x1")
 		       ", ref_ctr_offsets=" BIG_ADDR("0xffffffff00000002", "0x2")
 		       ", cookies=" BIG_ADDR("0xffffffff00000003", "0x3")
-		       ", cnt=5, flags=BPF_F_UPROBE_MULTI_RETURN, pid=1735928559}}"
+		       ", cnt=5, flags=BPF_F_UPROBE_MULTI_RETURN"
+		       ", pid=1735928559, path_fd=718425901}}"
 	},
 
 	/* netkit struct tests */
-	{ /* 24 */
+	{ /* 25 */
 		.data = { .BPF_LINK_CREATE_data = {
 			.target_ifindex = BE_LE(0xdeadbeef, 0xefbeadde),
 			.attach_type = 54, /* BPF_NETKIT_PRIMARY */
@@ -2643,7 +2695,7 @@ static struct bpf_attr_check BPF_LINK_CREATE_checks[] = {
 		       ", netkit={relative_fd=0" FD0_PATH
 		       ", expected_revision=0}}"
 	},
-	{ /* 25 */
+	{ /* 26 */
 		.data = { .BPF_LINK_CREATE_data = {
 			.target_ifindex = BE_LE(0xdeadbeef, 0xefbeadde),
 			.attach_type = 55, /* BPF_NETKIT_PEER */
@@ -2663,7 +2715,7 @@ static struct bpf_attr_check BPF_LINK_CREATE_checks[] = {
 	},
 
 	/* cgroup struct tests */
-	{ /* 26 */
+	{ /* 27 */
 		.data = { .BPF_LINK_CREATE_data = {
 			.attach_type = 0, /* BPF_CGROUP_INET_INGRESS */
 			.flags = 8, /* BPF_F_BEFORE */
@@ -2675,7 +2727,7 @@ static struct bpf_attr_check BPF_LINK_CREATE_checks[] = {
 		       ", cgroup={relative_fd=0" FD0_PATH
 		       ", expected_revision=0}}"
 	},
-	{ /* 27 */
+	{ /* 28 */
 		.data = { .BPF_LINK_CREATE_data = {
 			.attach_type = 1, /* BPF_CGROUP_INET_EGRESS */
 			.flags = 0x30, /* BPF_F_AFTER | BPF_F_ID */
@@ -2692,7 +2744,7 @@ static struct bpf_attr_check BPF_LINK_CREATE_checks[] = {
 		       ", cgroup={relative_id=4207869677"
 		       ", expected_revision=0x123456789abcdef0}}"
 	},
-	{ /* 28 - cgroup without BPF_F_BEFORE/AFTER should use target_btf_id */
+	{ /* 29 - cgroup without BPF_F_BEFORE/AFTER should use target_btf_id */
 		.data = { .BPF_LINK_CREATE_data = {
 			.attach_type = 34, /* BPF_CGROUP_INET_SOCK_RELEASE */
 			.target_btf_id = 0xfacefeed,
@@ -2702,6 +2754,56 @@ static struct bpf_attr_check BPF_LINK_CREATE_checks[] = {
 		.str = "link_create={prog_fd=0" FD0_PATH", target_fd=0" FD0_PATH
 		       ", attach_type=BPF_CGROUP_INET_SOCK_RELEASE, flags=0"
 		       ", target_btf_id=4207869677}"
+	},
+
+	{ /* 30 - tracing_multi with cnt=0 */
+		.data = { .BPF_LINK_CREATE_data = {
+			.attach_type = 59, /* BPF_TRACE_FENTRY_MULTI */
+			.tracing_multi = {
+				.cnt = 0,
+			},
+		} },
+		.size = offsetofend(struct BPF_LINK_CREATE_struct,
+				    tracing_multi.cnt),
+		.str = "link_create={prog_fd=0" FD0_PATH", target_fd=0" FD0_PATH
+		       ", attach_type=BPF_TRACE_FENTRY_MULTI, flags=0"
+		       ", tracing_multi={ids=NULL, cookies=NULL, cnt=0}}"
+	},
+	{ /* 31 - tracing_multi with arrays */
+		.data = { .BPF_LINK_CREATE_data = {
+			.attach_type = 59, /* BPF_TRACE_FENTRY_MULTI */
+		} },
+		.size = offsetofend(struct BPF_LINK_CREATE_struct,
+				    tracing_multi.cnt),
+		.iters = 2,
+		.init_fn = init_BPF_LINK_CREATE_tracing_multi,
+		.print_fn = print_BPF_LINK_CREATE_tracing_multi,
+	},
+	{ /* 32 - BPF_TRACE_FEXIT_MULTI */
+		.data = { .BPF_LINK_CREATE_data = {
+			.attach_type = 60, /* BPF_TRACE_FEXIT_MULTI */
+			.tracing_multi = {
+				.cnt = 0,
+			},
+		} },
+		.size = offsetofend(struct BPF_LINK_CREATE_struct,
+				    tracing_multi.cnt),
+		.str = "link_create={prog_fd=0" FD0_PATH", target_fd=0" FD0_PATH
+		       ", attach_type=BPF_TRACE_FEXIT_MULTI, flags=0"
+		       ", tracing_multi={ids=NULL, cookies=NULL, cnt=0}}"
+	},
+	{ /* 33 - BPF_TRACE_FSESSION_MULTI */
+		.data = { .BPF_LINK_CREATE_data = {
+			.attach_type = 61, /* BPF_TRACE_FSESSION_MULTI */
+			.tracing_multi = {
+				.cnt = 0,
+			},
+		} },
+		.size = offsetofend(struct BPF_LINK_CREATE_struct,
+				    tracing_multi.cnt),
+		.str = "link_create={prog_fd=0" FD0_PATH", target_fd=0" FD0_PATH
+		       ", attach_type=BPF_TRACE_FSESSION_MULTI, flags=0"
+		       ", tracing_multi={ids=NULL, cookies=NULL, cnt=0}}"
 	},
 };
 

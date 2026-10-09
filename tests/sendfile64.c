@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2015-2016 Dmitry V. Levin <ldv@strace.io>
- * Copyright (c) 2015-2023 The strace developers.
+ * Copyright (c) 2015-2026 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
@@ -68,12 +68,12 @@ main(void)
 
 	assert(syscall(__NR_sendfile64, sv[1], reg_in, p_off, alen)
 	       == (long) alen);
-	printf("sendfile64(%d, %d, [0] => [%u], %u) = %u\n",
+	printf("sendfile64(%d, %d, [0 => %u], %u) = %u\n",
 	       sv[1], reg_in, alen, alen, alen);
 
 	assert(syscall(__NR_sendfile64, sv[1], reg_in, p_off, file_size + 1)
 	       == (long) blen);
-	printf("sendfile64(%d, %d, [%u] => [%u], %u) = %u\n",
+	printf("sendfile64(%d, %d, [%u => %u], %u) = %u\n",
 	       sv[1], reg_in, alen, file_size, file_size + 1, blen);
 
 	*p_off = 0xcafef00dfacefeedULL;

@@ -35,6 +35,7 @@
 #include "xlat/uring_mem_region_reg_flags.h"
 #include "xlat/uring_query_ops.h"
 #include "xlat/uring_zcrx_ctrl_ops.h"
+#include "xlat/uring_zcrx_event_types.h"
 #include "xlat/uring_rw_attr_flags.h"
 #include "xlat/uring_nop_flags.h"
 #include "xlat/uring_fixed_fd_flags.h"
@@ -99,6 +100,7 @@ SYS_FUNC(io_uring_setup)
 	const uint32_t entries = tcp->u_arg[0];
 	const kernel_ulong_t params_addr = tcp->u_arg[1];
 	struct io_uring_params params;
+	CHECK_TYPE_SIZE(params.resv, 3 * sizeof(uint32_t));
 
 	if (entering(tcp)) {
 		/* entries */
@@ -155,8 +157,7 @@ static void
 print_io_uring_getevents_arg(struct tcb *tcp, const kernel_ulong_t addr)
 {
 	struct io_uring_getevents_arg arg;
-
-	CHECK_TYPE_SIZE(struct io_uring_getevents_arg, 24);
+	CHECK_TYPE_SIZE(arg, 24);
 
 	if (umove_or_printaddr(tcp, addr, &arg))
 		return;
@@ -308,6 +309,8 @@ print_io_uring_probe(struct tcb *tcp, const kernel_ulong_t addr,
 		     const unsigned int nargs)
 {
 	struct io_uring_probe *probe;
+	CHECK_TYPE_SIZE(*probe, 16);
+	CHECK_TYPE_SIZE(probe->resv2, 3 * sizeof(uint32_t));
 	unsigned long printed = exiting(tcp) ? get_tcb_priv_ulong(tcp) : false;
 
 	if (exiting(tcp) && syserror(tcp)) {
@@ -640,7 +643,8 @@ print_io_uring_buf_reg(struct tcb *tcp, const kernel_ulong_t addr,
 	struct io_uring_buf_reg arg;
 	CHECK_TYPE_SIZE(arg, 40);
 	CHECK_TYPE_SIZE(arg.flags, sizeof(uint16_t));
-	CHECK_TYPE_SIZE(arg.resv, sizeof(uint64_t) * 3);
+	CHECK_TYPE_SIZE(arg.min_left, sizeof(uint32_t));
+	CHECK_TYPE_SIZE(arg.resv, sizeof(uint32_t) * 5);
 
 	if (nargs != 1) {
 		printaddr(addr);
@@ -662,6 +666,9 @@ print_io_uring_buf_reg(struct tcb *tcp, const kernel_ulong_t addr,
 	tprint_struct_next();
 	PRINT_FIELD_X(arg, flags);
 
+	tprint_struct_next();
+	PRINT_FIELD_U(arg, min_left);
+
 	if (!IS_ARRAY_ZERO(arg.resv)) {
 		tprint_struct_next();
 		PRINT_FIELD_ARRAY(arg, resv, tcp, print_xint_array_member);
@@ -675,6 +682,9 @@ print_io_uring_sync_cancel_reg(struct tcb *tcp, const kernel_ulong_t addr,
 			       const unsigned int nargs)
 {
 	struct io_uring_sync_cancel_reg arg;
+	CHECK_TYPE_SIZE(arg, 64);
+	CHECK_TYPE_SIZE(arg.pad, 7 * sizeof(uint8_t));
+	CHECK_TYPE_SIZE(arg.pad2, 3 * sizeof(uint64_t));
 
 	if (nargs != 1) {
 		printaddr(addr);
@@ -751,6 +761,8 @@ print_io_uring_buf_status(struct tcb *tcp, const kernel_ulong_t addr,
 			  const unsigned int nargs)
 {
 	struct io_uring_buf_status arg;
+	CHECK_TYPE_SIZE(arg, 40);
+	CHECK_TYPE_SIZE(arg.resv, 8 * sizeof(uint32_t));
 
 	if (nargs != 1) {
 		printaddr(addr);
@@ -783,6 +795,8 @@ static int
 print_io_uring_napi(struct tcb *tcp, const kernel_ulong_t addr)
 {
 	struct io_uring_napi arg;
+	CHECK_TYPE_SIZE(arg, 16);
+	CHECK_TYPE_SIZE(arg.pad, 2 * sizeof(uint8_t));
 
 	if (umove_or_printaddr(tcp, addr, &arg))
 		return RVAL_DECODED;
@@ -936,8 +950,7 @@ static void
 print_io_uring_attr_pi(struct tcb *tcp, const uint64_t addr)
 {
 	struct io_uring_attr_pi attr;
-
-	CHECK_TYPE_SIZE(struct io_uring_attr_pi, 32);
+	CHECK_TYPE_SIZE(attr, 32);
 
 	if (umove_or_printaddr64(tcp, addr, &attr))
 		return;
@@ -1088,11 +1101,10 @@ static void
 print_io_uring_sqe(struct tcb *tcp, const kernel_ulong_t addr)
 {
 	struct io_uring_sqe sqe;
+	CHECK_TYPE_SIZE(sqe, 64);
 
 	if (umove_or_printaddr(tcp, addr, &sqe))
 		return;
-
-	CHECK_TYPE_SIZE(struct io_uring_sqe, 64);
 
 	tprint_struct_begin();
 
@@ -1205,6 +1217,9 @@ static void
 print_io_uring_zcrx_offsets(struct tcb *tcp,
 			    const struct io_uring_zcrx_offsets *const offsets)
 {
+	CHECK_TYPE_SIZE(*offsets, 32);
+	CHECK_TYPE_SIZE(offsets->__resv, 2 * sizeof(uint64_t));
+
 	tprint_struct_begin();
 
 	PRINT_FIELD_U(*offsets, head);
@@ -1230,8 +1245,8 @@ static void
 print_io_uring_zcrx_ifq_reg(struct tcb *tcp, const kernel_ulong_t addr)
 {
 	struct io_uring_zcrx_ifq_reg arg;
-
-	CHECK_TYPE_SIZE(struct io_uring_zcrx_ifq_reg, 96);
+	CHECK_TYPE_SIZE(arg, 96);
+	CHECK_TYPE_SIZE(arg.__resv, sizeof(uint64_t) * 2);
 
 	if (umove_or_printaddr(tcp, addr, &arg))
 		return;
@@ -1250,12 +1265,14 @@ print_io_uring_zcrx_ifq_reg(struct tcb *tcp, const kernel_ulong_t addr)
 	tprint_struct_next();
 	PRINT_FIELD_ADDR64(arg, region_ptr);
 	tprint_struct_next();
-	tprints_field_name("offsets");
-	print_io_uring_zcrx_offsets(tcp, &arg.offsets);
+	PRINT_FIELD_OBJ_TCB_PTR(arg, offsets,
+				tcp, print_io_uring_zcrx_offsets);
 	tprint_struct_next();
 	PRINT_FIELD_U(arg, zcrx_id);
 	tprint_struct_next();
 	PRINT_FIELD_U(arg, rx_buf_len);
+	tprint_struct_next();
+	PRINT_FIELD_ADDR64(arg, event_desc);
 
 	if (!IS_ARRAY_ZERO(arg.__resv)) {
 		tprint_struct_next();
@@ -1281,6 +1298,9 @@ static void
 print_zcrx_ctrl_flush_rq(struct tcb *tcp,
 			 const struct zcrx_ctrl_flush_rq *const flush)
 {
+	CHECK_TYPE_SIZE(*flush, 6 * sizeof(uint64_t));
+	CHECK_TYPE_SIZE(flush->__resv, 6 * sizeof(uint64_t));
+
 	tprint_struct_begin();
 
 	/* All fields are reserved, only print if non-zero */
@@ -1295,6 +1315,9 @@ static void
 print_zcrx_ctrl_export(struct tcb *tcp,
 		      const struct zcrx_ctrl_export *const export)
 {
+	CHECK_TYPE_SIZE(*export, 12 * sizeof(uint32_t));
+	CHECK_TYPE_SIZE(export->__resv1, 11 * sizeof(uint32_t));
+
 	tprint_struct_begin();
 
 	/* zcrx_fd is an output field: kernel fills it with new fd on output */
@@ -1309,13 +1332,51 @@ print_zcrx_ctrl_export(struct tcb *tcp,
 	tprint_struct_end();
 }
 
+static void
+print_zcrx_ctrl_arm_event(struct tcb *tcp,
+			  const struct zcrx_ctrl_arm_event *const arm)
+{
+	CHECK_TYPE_SIZE(*arm, 12 * sizeof(uint32_t));
+	CHECK_TYPE_SIZE(arm->__resv, 11 * sizeof(uint32_t));
+
+	tprint_struct_begin();
+
+	PRINT_FIELD_XVAL(*arm, event_type, uring_zcrx_event_types,
+			 "ZCRX_EVENT_???");
+
+	if (!IS_ARRAY_ZERO(arm->__resv)) {
+		tprint_struct_next();
+		PRINT_FIELD_ARRAY(*arm, __resv, tcp, print_xint_array_member);
+	}
+
+	tprint_struct_end();
+}
+
+static void
+print_zcrx_ctrl_add_area(struct tcb *tcp,
+			  const struct zcrx_ctrl_add_area *const area)
+{
+	CHECK_TYPE_SIZE(*area, 6 * sizeof(uint64_t));
+	CHECK_TYPE_SIZE(area->__resv, 5 * sizeof(uint64_t));
+
+	tprint_struct_begin();
+
+	PRINT_FIELD_ADDR64(*area, area_ptr);
+
+	if (!IS_ARRAY_ZERO(area->__resv)) {
+		tprint_struct_next();
+		PRINT_FIELD_ARRAY(*area, __resv, tcp, print_xint_array_member);
+	}
+
+	tprint_struct_end();
+}
+
 static int
 print_io_uring_zcrx_ctrl(struct tcb *tcp, const kernel_ulong_t addr)
 {
 	struct zcrx_ctrl arg;
-
-	/* Compile-time size check - catches ABI mismatches */
-	CHECK_TYPE_SIZE(struct zcrx_ctrl, 72);
+	CHECK_TYPE_SIZE(arg, 72);
+	CHECK_TYPE_SIZE(arg.__resv, 2 * sizeof(uint64_t));
 
 	if (exiting(tcp)) {
 		/*
@@ -1324,8 +1385,8 @@ print_io_uring_zcrx_ctrl(struct tcb *tcp, const kernel_ulong_t addr)
 		 */
 		if (tfetch_obj(tcp, addr, &arg)) {
 			tprint_struct_next();
-			tprints_field_name("zc_export");
-			print_zcrx_ctrl_export(tcp, &arg.zc_export);
+			PRINT_FIELD_OBJ_TCB_PTR(arg, zc_export,
+					tcp, print_zcrx_ctrl_export);
 		}
 		tprint_struct_end();
 		return RVAL_DECODED;
@@ -1357,8 +1418,8 @@ print_io_uring_zcrx_ctrl(struct tcb *tcp, const kernel_ulong_t addr)
 	switch (arg.op) {
 	case ZCRX_CTRL_FLUSH_RQ:
 		tprint_struct_next();
-		tprints_field_name("zc_flush");
-		print_zcrx_ctrl_flush_rq(tcp, &arg.zc_flush);
+		PRINT_FIELD_OBJ_TCB_PTR(arg, zc_flush,
+					tcp, print_zcrx_ctrl_flush_rq);
 		/* No output fields, nothing to decode on exit */
 		tprint_struct_end();
 		return RVAL_DECODED;
@@ -1368,6 +1429,20 @@ print_io_uring_zcrx_ctrl(struct tcb *tcp, const kernel_ulong_t addr)
 		/* Don't close structure - it will be closed on exit after adding zc_export */
 		/* Return 0 to indicate we need to decode on exit */
 		return 0;
+
+	case ZCRX_CTRL_ARM_EVENT:
+		tprint_struct_next();
+		PRINT_FIELD_OBJ_TCB_PTR(arg, zc_arm_event,
+					tcp, print_zcrx_ctrl_arm_event);
+		tprint_struct_end();
+		return RVAL_DECODED;
+
+	case ZCRX_CTRL_ADD_AREA:
+		tprint_struct_next();
+		PRINT_FIELD_OBJ_TCB_PTR(arg, zc_area,
+					tcp, print_zcrx_ctrl_add_area);
+		tprint_struct_end();
+		return RVAL_DECODED;
 
 	default:
 		/* Unknown opcode - skip union printing */
@@ -1393,11 +1468,11 @@ static void
 print_io_uring_params_input(struct tcb *tcp, const kernel_ulong_t addr)
 {
 	struct io_uring_params params;
+	CHECK_TYPE_SIZE(params, 120);
+	CHECK_TYPE_SIZE(params.resv, 3 * sizeof(uint32_t));
 
 	if (umove_or_printaddr(tcp, addr, &params))
 		return;
-
-	CHECK_TYPE_SIZE(struct io_uring_params, 120);
 
 	tprint_struct_begin();
 	PRINT_FIELD_U(params, sq_entries);
@@ -1449,8 +1524,8 @@ static void
 print_io_uring_mem_region_reg(struct tcb *tcp, const kernel_ulong_t addr)
 {
 	struct io_uring_mem_region_reg arg;
-
-	CHECK_TYPE_SIZE(struct io_uring_mem_region_reg, 32);
+	CHECK_TYPE_SIZE(arg, 32);
+	CHECK_TYPE_SIZE(arg.__resv, 2 * sizeof(uint64_t));
 
 	if (umove_or_printaddr(tcp, addr, &arg))
 		return;
@@ -1486,11 +1561,10 @@ static void
 print_io_uring_query_opcode(struct tcb *tcp, const kernel_ulong_t addr)
 {
 	struct io_uring_query_opcode opcode;
+	CHECK_TYPE_SIZE(opcode, 48);
 
 	if (umove_or_printaddr(tcp, addr, &opcode))
 		return;
-
-	CHECK_TYPE_SIZE(struct io_uring_query_opcode, 48);
 
 	tprint_struct_begin();
 	PRINT_FIELD_U(opcode, nr_request_opcodes);
@@ -1523,11 +1597,10 @@ static void
 print_io_uring_query_zcrx(struct tcb *tcp, const kernel_ulong_t addr)
 {
 	struct io_uring_query_zcrx zcrx;
+	CHECK_TYPE_SIZE(zcrx, 40);
 
 	if (umove_or_printaddr(tcp, addr, &zcrx))
 		return;
-
-	CHECK_TYPE_SIZE(struct io_uring_query_zcrx, 40);
 
 	tprint_struct_begin();
 	PRINT_FIELD_FLAGS(zcrx, register_flags, uring_zcrx_reg_flags,
@@ -1553,14 +1626,42 @@ print_io_uring_query_zcrx(struct tcb *tcp, const kernel_ulong_t addr)
 }
 
 static void
+print_io_uring_query_zcrx_event(struct tcb *tcp, const kernel_ulong_t addr)
+{
+	struct io_uring_query_zcrx_event event;
+	CHECK_TYPE_SIZE(event, 48);
+	CHECK_TYPE_SIZE(event.__resv2, 4 * sizeof(uint64_t));
+
+	if (umove_or_printaddr(tcp, addr, &event))
+		return;
+
+	tprint_struct_begin();
+	PRINT_FIELD_X(event, event_flags);
+	tprint_struct_next();
+	PRINT_FIELD_U(event, stats_size);
+	tprint_struct_next();
+	PRINT_FIELD_U(event, stats_off_alignment);
+
+	if (event.__resv1) {
+		tprint_struct_next();
+		PRINT_FIELD_X(event, __resv1);
+	}
+	if (!IS_ARRAY_ZERO(event.__resv2)) {
+		tprint_struct_next();
+		PRINT_FIELD_ARRAY(event, __resv2, tcp, print_xint_array_member);
+	}
+
+	tprint_struct_end();
+}
+
+static void
 print_io_uring_query_scq(struct tcb *tcp, const kernel_ulong_t addr)
 {
 	struct io_uring_query_scq scq;
+	CHECK_TYPE_SIZE(scq, 16);
 
 	if (umove_or_printaddr(tcp, addr, &scq))
 		return;
-
-	CHECK_TYPE_SIZE(struct io_uring_query_scq, 16);
 
 	tprint_struct_begin();
 	PRINT_FIELD_U(scq, hdr_size);
@@ -1575,6 +1676,7 @@ print_io_uring_query_list(struct tcb *tcp, kernel_ulong_t addr)
 #define IO_MAX_QUERY_ENTRIES 1000
 	struct io_uring_query_hdr hdr;
 	CHECK_TYPE_SIZE(hdr, 40);
+	CHECK_TYPE_SIZE(hdr.__resv, 3 * sizeof(uint32_t));
 
 	unsigned int count = 0;
 
@@ -1620,6 +1722,10 @@ print_io_uring_query_list(struct tcb *tcp, kernel_ulong_t addr)
 				break;
 			case IO_URING_QUERY_SCQ:
 				print_io_uring_query_scq(tcp, hdr.query_data);
+				break;
+			case IO_URING_QUERY_ZCRX_EVENT:
+				print_io_uring_query_zcrx_event(tcp,
+								hdr.query_data);
 				break;
 			default:
 				printaddr(hdr.query_data);

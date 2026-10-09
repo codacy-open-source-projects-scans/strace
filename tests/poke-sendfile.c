@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 The strace developers.
+ * Copyright (c) 2021-2026 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
@@ -47,7 +47,7 @@ main(void)
 	static const unsigned long long expected = (kernel_ulong_t) -1ULL;
 #endif
 
-	printf("%s(%d, %d, [0] => [%llu], %u) = %u (INJECTED: args)\n",
+	printf("%s(%d, %d, [0 => %llu], %u) = %u (INJECTED: args)\n",
 	       name, sv[1], reg_in, expected, file_size, file_size);
 
 	puts("+++ exited with 0 +++");

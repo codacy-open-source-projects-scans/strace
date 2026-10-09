@@ -2,7 +2,7 @@
  * Support for decoding of personality-dependent VT ioctl commands.
  *
  * Copyright (c) 2019-2021 Eugene Syromyatnikov <evgsyr@gmail.com>
- * Copyright (c) 2019-2025 The strace developers.
+ * Copyright (c) 2019-2026 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -74,7 +74,7 @@ kd_unimap(struct tcb *const tcp, const kernel_ulong_t arg, const bool get)
 
 		if (get)
 			return 0;
-	} else {
+	} else if (val.entry_ct != (uint16_t) get_tcb_priv_ulong(tcp)) {
 		tprint_value_changed();
 		PRINT_VAL_U(val.entry_ct);
 	}

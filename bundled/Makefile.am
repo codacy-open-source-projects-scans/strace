@@ -20,10 +20,13 @@ EXTRA_DIST = \
 	linux/arch/sparc/include/uapi/asm/fcntl.h \
 	linux/include/uapi/asm-generic/fcntl.h \
 	linux/include/uapi/asm-generic/hugetlb_encode.h \
+	linux/include/uapi/asm-generic/posix_types.h \
 	linux/include/uapi/linux/audit.h \
 	linux/include/uapi/linux/blkpg.h \
 	linux/include/uapi/linux/blktrace_api.h \
 	linux/include/uapi/linux/blkzoned.h \
+	linux/include/uapi/linux/bpf.h \
+	linux/include/uapi/linux/bpf_common.h \
 	linux/include/uapi/linux/bsg.h \
 	linux/include/uapi/linux/btrfs.h \
 	linux/include/uapi/linux/btrfs_tree.h \
@@ -59,6 +62,7 @@ EXTRA_DIST = \
 	linux/include/uapi/linux/if_bridge.h \
 	linux/include/uapi/linux/if_ether.h \
 	linux/include/uapi/linux/if_link.h \
+	linux/include/uapi/linux/if_tun.h \
 	linux/include/uapi/linux/if_xdp.h \
 	linux/include/uapi/linux/in.h \
 	linux/include/uapi/linux/in6.h \
@@ -113,7 +117,9 @@ EXTRA_DIST = \
 	linux/include/uapi/linux/openat2.h \
 	linux/include/uapi/linux/packet_diag.h \
 	linux/include/uapi/linux/perf_event.h \
+	linux/include/uapi/linux/pidfd.h \
 	linux/include/uapi/linux/pkt_sched.h \
+	linux/include/uapi/linux/posix_types.h \
 	linux/include/uapi/linux/prctl.h \
 	linux/include/uapi/linux/ptp_clock.h \
 	linux/include/uapi/linux/qrtr.h \
@@ -135,6 +141,7 @@ EXTRA_DIST = \
 	linux/include/uapi/linux/tcp_metrics.h \
 	linux/include/uapi/linux/tee.h \
 	linux/include/uapi/linux/thermal.h \
+	linux/include/uapi/linux/time_types.h \
 	linux/include/uapi/linux/tipc.h \
 	linux/include/uapi/linux/tls.h \
 	linux/include/uapi/linux/typelimits.h \

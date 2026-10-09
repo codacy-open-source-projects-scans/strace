@@ -47,10 +47,12 @@ strace_LDADD = libstrace.a $(clock_LIBS) $(timer_LIBS) $(termcap_LIBS)
 strace_SOURCES = strace.c
 
 noinst_PROGRAMS = \
+	disable_ptrace	\
 	disable_ptrace_get_syscall_info	\
 	disable_ptrace_getregset	\
 	disable_ptrace_set_syscall_info	\
 	#
+disable_ptrace_LDADD = $(strace_LDADD)
 disable_ptrace_get_syscall_info_LDADD = $(strace_LDADD)
 disable_ptrace_getregset_LDADD = $(strace_LDADD)
 disable_ptrace_set_syscall_info_LDADD = $(strace_LDADD)
@@ -118,6 +120,7 @@ libstrace_a_SOURCES =	\
 	fallocate.c	\
 	fanotify.c	\
 	fchownat.c	\
+	fchroot.c	\
 	fcntl.c		\
 	fetch_bpf_fprog.c \
 	fetch_indirect_syscall_args.c \
@@ -272,6 +275,7 @@ libstrace_a_SOURCES =	\
 	perf_ioctl.c	\
 	personality.c	\
 	pidfd_getfd.c	\
+	pidfd_ioctl.c	\
 	pidfd_open.c	\
 	pidns.c		\
 	pkeys.c		\
@@ -280,6 +284,7 @@ libstrace_a_SOURCES =	\
 	poll.c		\
 	prctl.c		\
 	print_dev_t.c	\
+	print_fields.c	\
 	print_fields.h	\
 	print_group_req.c \
 	print_ifindex.c	\
@@ -404,6 +409,7 @@ libstrace_a_SOURCES =	\
 	trie.c		\
 	trie.h		\
 	truncate.c	\
+	tun_ioctl.c	\
 	ubi.c		\
 	ucopy.c		\
 	udmabuf.c	\
@@ -1069,6 +1075,7 @@ EXTRA_DIST =				\
 	mpers_test.sh			\
 	mpers_xlat.h			\
 	scno.head			\
+	scno_hook.mk			\
 	strace-graph			\
 	strace-log-merge		\
 	$(XLAT_INPUT_FILES)		\
@@ -1159,8 +1166,6 @@ DISTCLEANFILES = gnu/stubs-32.h \
 		 #
 
 include scno.am
-
-$(strace_OBJECTS): scno.h
 
 # defines mpers_source_files
 include mpers.am

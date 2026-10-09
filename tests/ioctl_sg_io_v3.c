@@ -1,7 +1,7 @@
 /*
  * Check decoding of ioctl SG_IO v3 commands.
  *
- * Copyright (c) 2017-2023 Dmitry V. Levin <ldv@strace.io>
+ * Copyright (c) 2017-2026 Dmitry V. Levin <ldv@strace.io>
  * All rights reserved.
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
@@ -310,7 +310,7 @@ main(void)
 	       ", dxfer_len=%u"
 	       ", timeout=%u"
 	       ", flags=SG_FLAG_UNUSED_LUN_INHIBIT"
-	       ", dxferp=\"\\x%x\\x%x\\x%x\" => dxferp=\"\\x%x\\x%x\""
+	       ", dxferp=\"\\x%x\\x%x\\x%x\" => \"\\x%x\\x%x\""
 	       ", status=%#x"
 	       ", masked_status=%#x"
 	       ", msg_status=%#x"

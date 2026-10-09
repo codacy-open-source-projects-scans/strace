@@ -71,6 +71,7 @@ libtests_a_SOURCES = \
 	pidns.h \
 	pipe_maxfd.c \
 	prctl_marker.c \
+	print_fields.c \
 	print_quoted_string.c \
 	print_time.c \
 	printflags.c \
@@ -118,6 +119,7 @@ check_PROGRAMS = $(PURE_EXECUTABLES) \
 	block_reset_raise_run \
 	block_reset_run \
 	bpf-obj_get_info_by_fd \
+	bpf-obj_get_info_by_fd-link \
 	bpf-obj_get_info_by_fd-prog \
 	bpf-obj_get_info_by_fd-prog-v \
 	bpf-obj_get_info_by_fd-v \
@@ -142,8 +144,12 @@ check_PROGRAMS = $(PURE_EXECUTABLES) \
 	clone_ptrace-qq \
 	close_range \
 	count-f \
+	count_unknown \
+	count_unknown_many \
+	count_unknown_mixed \
 	delay \
 	detach-vfork \
+	env-i \
 	execve-v \
 	execveat-v \
 	fcntl--pidns-translation \
@@ -228,6 +234,10 @@ check_PROGRAMS = $(PURE_EXECUTABLES) \
 	ioctl_nsfs-ns_get_pid \
 	ioctl_nsfs-ns_get_pid--pidns-translation \
 	ioctl_perf-success \
+	ioctl_pidfd_get_info-success \
+	ioctl_pidfd_get_info-success-Xabbrev \
+	ioctl_pidfd_get_info-success-Xraw \
+	ioctl_pidfd_get_info-success-Xverbose \
 	ioctl_ptp-success \
 	ioctl_ptp-success-Xabbrev \
 	ioctl_ptp-success-Xraw \
@@ -246,6 +256,9 @@ check_PROGRAMS = $(PURE_EXECUTABLES) \
 	ioctl_seccomp-y-success-Xabbrev \
 	ioctl_seccomp-y-success-Xraw \
 	ioctl_seccomp-y-success-Xverbose \
+	ioctl_tun-success \
+	ioctl_tun-v-success \
+	ioctl_tun-y-success \
 	ioctl_ubi-success \
 	ioctl_v4l2-success \
 	ioctl_v4l2-success-Xabbrev \
@@ -410,6 +423,7 @@ check_PROGRAMS = $(PURE_EXECUTABLES) \
 	signal_receive \
 	signal_receive--pidns-translation \
 	sleep \
+	sleep-timing \
 	so_peercred--pidns-translation \
 	sockopt-sol_socket-success \
 	sockopt-sol_socket-success-Xabbrev \
@@ -447,6 +461,7 @@ check_PROGRAMS = $(PURE_EXECUTABLES) \
 	strace--syscall-limit-status-summary \
 	strace--syscall-limit-summary \
 	strace-Y-0123456789 \
+	strace-k-z \
 	strace-p-Y-p2 \
 	strace-p1-Y-p \
 	symlink-P \
@@ -552,7 +567,7 @@ include gen_tests.am
 if ENABLE_STACKTRACE
 STACKTRACE_TESTS = strace-k.test strace-k-p.test strace-k-with-depth-limit.test
 if USE_LIBDW
-STACKTRACE_TESTS += strace-kk.test strace-kk-p.test
+STACKTRACE_TESTS += strace-kk.test strace-kk-p.test strace-k-z.test
 endif
 if USE_DEMANGLE
 STACKTRACE_TESTS += strace-k-demangle.test
@@ -635,10 +650,17 @@ DECODER_TESTS = \
 MISC_TESTS = \
 	attach-f-p.test \
 	attach-p-cmd.test \
+	attach-p-eperm-already-traced.test \
+	attach-p-eperm-signal.test \
+	attach-p-eperm-yama.test \
 	bexecve.test \
 	clone_ptrace.test \
 	count-f.test \
-	count.test \
+	count_unknown.test \
+	count_unknown-S.test \
+	count_unknown-wall.test \
+	count_unknown_many.test \
+	count_unknown_mixed.test \
 	delay.test \
 	detach-running.test \
 	detach-sleeping.test \
@@ -713,6 +735,9 @@ MISC_TESTS = \
 	strace-S.test \
 	strace-T_upper.test \
 	strace-V.test \
+	strace-c-wall-col.test \
+	strace-c.test \
+	strace-cw.test \
 	strace-ff.test \
 	strace-log-merge-error.test \
 	strace-log-merge-suffix.test \
@@ -763,6 +788,7 @@ check_SCRIPTS = \
 	strace-k-demangle.test \
 	strace-k-p.test \
 	strace-k-with-depth-limit.test \
+	strace-k-z.test \
 	strace-k.test \
 	strace-kk-p.test \
 	strace-kk.test \
@@ -792,7 +818,6 @@ check_DATA = \
 	qual_inject-signal.expected \
 	qualify_personality_empty.in \
 	regex.in \
-	restart_syscall-p.expected \
 	rt_sigaction.awk \
 	sched.in \
 	sigaltstack.expected \
@@ -883,6 +908,7 @@ EXTRA_DIST = \
 	lstatx.c \
 	nlattr_ifla.h \
 	nlattr_ifla_af_inet6.h \
+	nsyscalls.h \
 	print_user_desc.c \
 	printsignal.c \
 	printxval.c \
@@ -930,10 +956,7 @@ ksysent.h: $(srcdir)/ksysent.sed
 	mv -f $@.t2 $@
 	rm -f $@.t1
 
-ksysent.$(OBJEXT): ksysent.h
-
-objects = $(filter %.$(OBJEXT),$(SOURCES:.c=.$(OBJEXT)))
-$(objects): scno.h
+$(ksysent_OBJECTS): ksysent.h
 
 clean-local: clean-local-check
 .PHONY: clean-local-check
@@ -946,7 +969,6 @@ check-prerequisites-local: $(check_LIBRARIES) $(check_PROGRAMS)
 .PHONY: check-valgrind-local
 check-valgrind-local: $(check_LIBRARIES) $(check_PROGRAMS)
 
-BUILT_SOURCES = ksysent.h
 CLEANFILES = ksysent.h
 
 include ../src/scno.am

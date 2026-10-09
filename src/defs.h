@@ -24,6 +24,7 @@
 # include <unistd.h>
 # include <stdlib.h>
 # include <stdio.h>
+# include <stdarg.h>
 /* Open-coding isprint(ch) et al proved more efficient than calling
  * generalized libc interface. We don't *want* to do non-ASCII anyway.
  */
@@ -778,6 +779,24 @@ umoven_or_printaddr(struct tcb *tcp, const kernel_ulong_t addr,
  * Retrieves up to 8 bytes (that are treated as a single unsigned integer value)
  * and puts it into variable pointed by laddr;
  *
+ * @return true on success, false (and print addr) on error or if len is more
+ *         than size of uint64_t.
+ */
+extern bool
+tfetch_to_uint64_64(struct tcb *, uint64_t addr,
+		    unsigned int len, uint64_t *laddr);
+
+static inline bool
+tfetch_to_uint64(struct tcb *tcp, const kernel_ulong_t addr,
+		 unsigned int len, uint64_t *laddr)
+{
+	return tfetch_to_uint64_64(tcp, addr, len, laddr);
+}
+
+/**
+ * Retrieves up to 8 bytes (that are treated as a single unsigned integer value)
+ * and puts it into variable pointed by laddr;
+ *
  * @return 0 on success, -1 (and print addr) on error or if len is more
  *         than size of uint64_t.
  */
@@ -1038,6 +1057,8 @@ extern int printargs(struct tcb *);
 extern int printflags_ex(uint64_t flags, const char *dflt,
 			 enum xlat_style, const struct xlat *, ...)
 	ATTRIBUTE_SENTINEL;
+extern const char *sprintflags_exv(const char *prefix, uint64_t flags, char sep,
+				   enum xlat_style, va_list xlats);
 extern const char *sprintflags_ex(const char *prefix, const struct xlat *,
 				  uint64_t flags, char sep, enum xlat_style);
 
@@ -1360,6 +1381,7 @@ print_sigset_addr(struct tcb *, kernel_ulong_t addr);
 
 extern const char *sprintsigmask_n(const char *, const void *, unsigned int);
 extern void printsignal(int);
+extern void print_wait_status(int);
 
 extern void
 tprint_iov_upto(struct tcb *, kernel_ulong_t len, kernel_ulong_t addr,
@@ -1475,12 +1497,14 @@ DECL_IOCTL(kvm);
 DECL_IOCTL(lirc);
 DECL_IOCTL(nbd);
 DECL_IOCTL(nsfs);
+DECL_IOCTL(pidfd);
 DECL_IOCTL(ptp);
 DECL_IOCTL(random);
 DECL_IOCTL(seccomp);
 DECL_IOCTL(scsi);
 DECL_IOCTL(tee);
 DECL_IOCTL(term);
+DECL_IOCTL(tun);
 DECL_IOCTL(ubi);
 DECL_IOCTL(udmabuf);
 DECL_IOCTL(uffdio);
@@ -1604,6 +1628,7 @@ extern void unwind_tcb_init(struct tcb *);
 extern void unwind_tcb_fin(struct tcb *);
 extern void unwind_tcb_print(struct tcb *);
 extern void unwind_tcb_capture(struct tcb *);
+extern void unwind_tcb_discard(struct tcb *);
 # endif
 
 # ifdef HAVE_LINUX_KVM_H

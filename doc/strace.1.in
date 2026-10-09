@@ -1135,7 +1135,7 @@ Custom color schemes can be specified with the
 environment variable, for example:
 .br
 .RS
-STRACE_COLORS="syscall=1;33:argname=39:argval=35:const=1;36:comment=36:punct=0:retval=32:error=31"
+STRACE_COLORS="syscall=1;33:argname=39:argval=35:call=1;34:const=1;36:comment=36:punct=0:retval=32:error=31"
 .RE
 .IP
 The format of this value is
@@ -1152,6 +1152,7 @@ Recognized color keys are:
 .BR syscall ,
 .BR argname ,
 .BR argval ,
+.BR call ,
 .BR const ,
 .BR comment ,
 .BR punct ,
@@ -1452,6 +1453,8 @@ This is useful for overriding the default heuristic, which estimates the time
 spent in the measurement process itself when timing system calls with the
 .B \-c
 option.
+The same overhead is subtracted from polymorphic time columns and from
+.BR wall\-total ", " wall\-min ", " wall\-max ", and " wall\-avg .
 The accuracy of the heuristic can be gauged by timing a given program run
 without tracing (using
 .BR time (1))
@@ -1474,6 +1477,10 @@ Valid values are
 .BR min\-time " (or " shortest " or " time\-min ),
 .BR max\-time " (or " longest " or " time\-max ),
 .BR avg\-time " (or " time\-avg ),
+.BR wall\-total " (or " total\-wall ),
+.BR wall\-min " (or " min\-wall ),
+.BR wall\-max " (or " max\-wall ),
+.BR wall\-avg " (or " avg\-wall ),
 .BR calls " (or " count ),
 .BR errors " (or " error ),
 .BR name " (or " syscall " or " syscall\-name ),
@@ -1500,13 +1507,30 @@ Total system (or wall clock, if
 option is provided) time consumed by a specific system call.
 .TQ
 .BR min\-time " (or " shortest " or " time\-min )
-Minimum observed call duration.
+Minimum observed call duration in seconds.
 .TQ
 .BR max\-time " (or " longest " or " time\-max )
-Maximum observed call duration.
+Maximum observed call duration in seconds.
 .TQ
 .BR avg\-time " (or " time\-avg )
-Average call duration.
+Average call duration in microseconds per call.
+.TQ
+.BR wall\-total " (or " total\-wall )
+Total wall-clock time consumed by a specific system call.  Always wall-clock,
+regardless of the
+.B \-w
+option, allowing it to be displayed alongside
+.B total\-time
+in a single run.
+.TQ
+.BR wall\-min " (or " min\-wall )
+Minimum observed wall-clock call duration in seconds.
+.TQ
+.BR wall\-max " (or " max\-wall )
+Maximum observed wall-clock call duration in seconds.
+.TQ
+.BR wall\-avg " (or " avg\-wall )
+Average wall-clock call duration in microseconds per call.
 .TQ
 .BR calls " (or " count )
 Call count.

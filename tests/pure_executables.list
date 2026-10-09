@@ -113,6 +113,8 @@ fchmodat2
 fchown
 fchown32
 fchownat
+fchroot
+fchroot-y
 fcntl
 fcntl64
 fdatasync
@@ -287,6 +289,8 @@ ioctl_loop
 ioctl_mtd
 ioctl_nbd
 ioctl_nsfs-ns_mnt_get
+ioctl_pidfd_get_info
+ioctl_pidfd_namespace
 ioctl_perf
 ioctl_ptp
 ioctl_ptp-Xabbrev
@@ -303,6 +307,9 @@ ioctl_tee
 ioctl_termios
 ioctl_termios-v
 ioctl_tiocm
+ioctl_tun
+ioctl_tun-v
+ioctl_tun-y
 ioctl_ubi
 ioctl_udmabuf
 ioctl_uffdio
@@ -503,6 +510,9 @@ nlattr_dcbmsg
 nlattr_fib_rule_hdr
 nlattr_ifaddrlblmsg
 nlattr_ifaddrmsg
+nlattr_ifaddrmsg-Xabbrev
+nlattr_ifaddrmsg-Xraw
+nlattr_ifaddrmsg-Xverbose
 nlattr_ifinfomsg
 nlattr_ifla_af_spec
 nlattr_ifla_brport

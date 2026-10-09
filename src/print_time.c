@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2015-2016 Dmitry V. Levin <ldv@strace.io>
- * Copyright (c) 2015-2023 The strace developers.
+ * Copyright (c) 2015-2026 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -19,6 +19,8 @@ SYS_FUNC(time)
 	if (exiting(tcp)) {
 		kernel_time_t t;
 
+		/* tloc */
+		tprints_arg_name("tloc");
 		if (!umove_or_printaddr(tcp, tcp->u_arg[0], &t)) {
 			tprint_indirect_begin();
 			PRINT_VAL_D(t);

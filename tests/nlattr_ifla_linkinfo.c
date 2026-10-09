@@ -1,7 +1,7 @@
 /*
  * IFLA_LINKINFO netlink attribute decoding check.
  *
- * Copyright (c) 2018-2025 The strace developers.
+ * Copyright (c) 2018-2026 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
@@ -361,7 +361,7 @@ main(void)
 		{ 0, "IFLA_BR_UNSPEC" },
 		{ 21, "IFLA_BR_FDB_FLUSH" },
 		{ 40, "IFLA_BR_PAD" },
-		{ 48, "0x30 /* IFLA_BR_??? */" },
+		{ 51, "0x33 /* IFLA_BR_??? */" },
 	};
 
 	for (size_t k = 0; k < ARRAY_SIZE(und_br_attrs); k++) {
@@ -439,6 +439,8 @@ main(void)
 		{ 27, "IFLA_BR_MCAST_HASH_MAX" },
 		{ 28, "IFLA_BR_MCAST_LAST_MEMBER_CNT" },
 		{ 29, "IFLA_BR_MCAST_STARTUP_QUERY_CNT" },
+		{ 48, "IFLA_BR_FDB_N_LEARNED" },
+		{ 49, "IFLA_BR_FDB_MAX_LEARNED" },
 	};
 
 	for (size_t k = 0; k < ARRAY_SIZE(u32_br_attrs); k++) {
@@ -450,6 +452,30 @@ main(void)
 						"\"\\xed\\x0d\\xdc\"") },
 				     { 4, "3134983661" },
 				     { 5, "3134983661" });
+	}
+
+	static const struct {
+		struct strval32 u32;
+		const char *sz3;
+	} stp_mode_xlat[] = {
+		{ { 0, "BR_STP_MODE_AUTO" },
+		  BE_LE("\"\\x00\\x00\\x00\"", "\"\\x00\\x00\\x00\"") },
+		{ { 1, "BR_STP_MODE_USER" },
+		  BE_LE("\"\\x00\\x00\\x00\"", "\"\\x01\\x00\\x00\"") },
+		{ { 2, "BR_STP_MODE_KERNEL" },
+		  BE_LE("\"\\x00\\x00\\x00\"", "\"\\x02\\x00\\x00\"") },
+		{ { 0xbadc0dedU, "0xbadc0ded /* BR_STP_MODE_??? */" },
+		  BE_LE("\"\\xba\\xdc\\x0d\"", "\"\\xed\\x0d\\xdc\"") },
+	};
+
+	for (size_t k = 0; k < ARRAY_SIZE(stp_mode_xlat); k++) {
+		TEST_NESTED_LINKINFO(fd, nlh0, IFLA_INFO_KIND,
+				     2, "IFLA_INFO_DATA", "bridge",
+				     IFLA_BR_STP_MODE, "IFLA_BR_STP_MODE",
+				     stp_mode_xlat[k].u32.val, pattern,
+				     { 3, stp_mode_xlat[k].sz3 },
+				     { 4, stp_mode_xlat[k].u32.str },
+				     { 5, stp_mode_xlat[k].u32.str });
 	}
 
 	static const struct strval32 u16_br_attrs[] = {
@@ -894,7 +920,7 @@ main(void)
 		{ 0, "IFLA_BRPORT_UNSPEC" },
 		{ 24, "IFLA_BRPORT_FLUSH" },
 		{ 26, "IFLA_BRPORT_PAD" },
-		{ 45, "0x2d /* IFLA_BRPORT_??? */" },
+		{ 46, "0x2e /* IFLA_BRPORT_??? */" },
 		{ 2989, "0xbad /* IFLA_BRPORT_??? */" },
 	};
 
@@ -939,6 +965,7 @@ main(void)
 		{ ARG_STR(IFLA_BRPORT_LOCKED) },
 		{ ARG_STR(IFLA_BRPORT_MAB) },
 		{ ARG_STR(IFLA_BRPORT_NEIGH_VLAN_SUPPRESS) },
+		{ ARG_STR(IFLA_BRPORT_NEIGH_FORWARD_GRAT) },
 	};
 
 	for (size_t k = 0; k < ARRAY_SIZE(u8_brport_attrs); k++) {

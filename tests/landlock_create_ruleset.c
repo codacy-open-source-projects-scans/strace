@@ -2,7 +2,7 @@
  * Check decoding of landlock_create_ruleset syscall.
  *
  * Copyright (c) 2021 Eugene Syromyatnikov <evgsyr@gmail.com>
- * Copyright (c) 2021-2025 The strace developers.
+ * Copyright (c) 2021-2026 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
@@ -106,6 +106,9 @@ main(void)
 		uint64_t handled_access_fs;
 		uint64_t handled_access_net;
 		uint64_t scoped;
+		uint64_t quiet_access_fs;
+		uint64_t quiet_access_net;
+		uint64_t quiet_scoped;
 	};
 	TAIL_ALLOC_OBJECT_CONST_PTR(struct attr, attr);
 	long rc;
@@ -169,8 +172,10 @@ main(void)
 	}, net_vals[] = {
 		{ ARG_STR(LANDLOCK_ACCESS_NET_BIND_TCP) },
 		{ ARG_STR(LANDLOCK_ACCESS_NET_CONNECT_TCP) },
-		{ ARG_ULL_STR(LANDLOCK_ACCESS_NET_BIND_TCP|LANDLOCK_ACCESS_NET_CONNECT_TCP|0xfffffffffffffffc) },
-		{ ARG_ULL_STR(0xfffffffffffffffc) " /* LANDLOCK_ACCESS_NET_??? */" },
+		{ ARG_STR(LANDLOCK_ACCESS_NET_BIND_UDP) },
+		{ ARG_STR(LANDLOCK_ACCESS_NET_CONNECT_SEND_UDP) },
+		{ ARG_ULL_STR(LANDLOCK_ACCESS_NET_BIND_TCP|LANDLOCK_ACCESS_NET_CONNECT_TCP|LANDLOCK_ACCESS_NET_BIND_UDP|LANDLOCK_ACCESS_NET_CONNECT_SEND_UDP|0xfffffffffffffff0) },
+		{ ARG_ULL_STR(0xfffffffffffffff0) " /* LANDLOCK_ACCESS_NET_??? */" },
 	}, landlock_scope_flags[] = {
 		{ ARG_STR(LANDLOCK_SCOPE_ABSTRACT_UNIX_SOCKET) },
 		{ ARG_STR(LANDLOCK_SCOPE_SIGNAL) },
@@ -203,16 +208,71 @@ main(void)
 		       errstr, get_fd_str(rc));
 	}
 
+	for (size_t i = 0; i < ARRAY_SIZE(landlock_scope_flags); i++) {
+		unsigned int size = offsetofend(typeof(*attr), scoped);
+
+		attr->handled_access_fs = 0;
+		attr->handled_access_net = 0;
+		attr->scoped = landlock_scope_flags[i].val;
+		rc = sys_landlock_create_ruleset(attr, size, 0);
+
+		printf("landlock_create_ruleset({handled_access_fs=0"
+		       ", handled_access_net=0, scoped=%s}, %u, 0)"
+		       " = %s%s" INJ_STR,
+		       landlock_scope_flags[i].str,
+		       size, errstr, get_fd_str(rc));
+	}
+
+	for (size_t i = 0; i < ARRAY_SIZE(fs_vals); i++) {
+		unsigned int size = offsetofend(typeof(*attr), quiet_access_fs);
+
+		attr->handled_access_fs = 0;
+		attr->handled_access_net = 0;
+		attr->scoped = 0;
+		attr->quiet_access_fs = fs_vals[i].val;
+		rc = sys_landlock_create_ruleset(attr, size, 0);
+
+		printf("landlock_create_ruleset({handled_access_fs=0"
+		       ", handled_access_net=0, scoped=0"
+		       ", quiet_access_fs=%s}, %u, 0)"
+		       " = %s%s" INJ_STR,
+		       fs_vals[i].str,
+		       size, errstr, get_fd_str(rc));
+	}
+
+	for (size_t i = 0; i < ARRAY_SIZE(net_vals); i++) {
+		unsigned int size = offsetofend(typeof(*attr), quiet_access_net);
+
+		attr->handled_access_fs = 0;
+		attr->handled_access_net = 0;
+		attr->scoped = 0;
+		attr->quiet_access_fs = 0;
+		attr->quiet_access_net = net_vals[i].val;
+		rc = sys_landlock_create_ruleset(attr, size, 0);
+
+		printf("landlock_create_ruleset({handled_access_fs=0"
+		       ", handled_access_net=0, scoped=0"
+		       ", quiet_access_fs=0, quiet_access_net=%s}, %u, 0)"
+		       " = %s%s" INJ_STR,
+		       net_vals[i].str,
+		       size, errstr, get_fd_str(rc));
+	}
+
 	static const unsigned int sizes[] = { sizeof(*attr), sizeof(*attr) + 4 };
 	for (size_t i = 0; i < ARRAY_SIZE(landlock_scope_flags); i++) {
 		for (size_t j = 0; j < ARRAY_SIZE(sizes); j++) {
 			attr->handled_access_fs = 0;
 			attr->handled_access_net = 0;
-			attr->scoped = landlock_scope_flags[i].val;
+			attr->scoped = 0;
+			attr->quiet_access_fs = 0;
+			attr->quiet_access_net = 0;
+			attr->quiet_scoped = landlock_scope_flags[i].val;
 			rc = sys_landlock_create_ruleset(attr, sizes[j], 0);
 
 			printf("landlock_create_ruleset({handled_access_fs=0"
-			       ", handled_access_net=0, scoped=%s%s}, %u, 0)"
+			       ", handled_access_net=0, scoped=0"
+			       ", quiet_access_fs=0, quiet_access_net=0"
+			       ", quiet_scoped=%s%s}, %u, 0)"
 			       " = %s%s" INJ_STR,
 			       landlock_scope_flags[i].str,
 			       sizes[j] > sizeof(*attr) ? ", ..." : "",

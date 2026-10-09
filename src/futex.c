@@ -3,7 +3,7 @@
  * Copyright (c) 2007-2008 Ulrich Drepper <drepper@redhat.com>
  * Copyright (c) 2009 Andreas Schwab <schwab@redhat.com>
  * Copyright (c) 2014-2015 Dmitry V. Levin <ldv@strace.io>
- * Copyright (c) 2014-2025 The strace developers.
+ * Copyright (c) 2014-2026 The strace developers.
  * All rights reserved.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -16,6 +16,12 @@
 #endif
 #ifndef FUTEX_CLOCK_REALTIME
 # define FUTEX_CLOCK_REALTIME 256
+#endif
+#ifndef FUTEX_ROBUST_UNLOCK
+# define FUTEX_ROBUST_UNLOCK 512
+#endif
+#ifndef FUTEX_ROBUST_LIST32
+# define FUTEX_ROBUST_LIST32 1024
 #endif
 #ifndef FUTEX_OP_OPARG_SHIFT
 # define FUTEX_OP_OPARG_SHIFT 8
